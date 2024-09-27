@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"internal/models"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,42 +49,4 @@ func main() {
 	}
 
 	fmt.Println("Сервер завершил работу.")
-
-	//--------------------------------------
-	//начинается работа с пользователем
-	ctx = context.Background()
-
-	userRepo := &inMemoryUserRepo{}
-	userUC := NewUserUsecase(userRepo)
-
-	// Регистрация пользователя
-	newUser := models.User{
-		Name:      "Alice",
-		Age:       25,
-		Gender:    "female",
-		Email:     "alice@example.com",
-		Phone:     "1234567890",
-		Bio:       "Loves hiking and outdoor activities.",
-		Interests: []string{"hiking", "reading"},
-		Location:  "Wonderland",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	createdUser, err := userUC.RegisterUser(ctx, newUser)
-	if err != nil {
-		fmt.Println("Error creating user:", err)
-		return
-	}
-
-	fmt.Println("Created user:", createdUser)
-
-	// Получение списка пользователей
-	users, err := userUC.ListUsers(ctx, 10, 0)
-	if err != nil {
-		fmt.Println("Error listing users:", err)
-		return
-	}
-
-	fmt.Println("Users:", users)
 }

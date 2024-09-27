@@ -31,3 +31,10 @@ type Message struct {
 	Content  string    `json:"content" validate:"required,min=1,max=500"`
 	SentAt   time.Time `json:"sent_at" validate:"required"`
 }
+
+type Session struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}

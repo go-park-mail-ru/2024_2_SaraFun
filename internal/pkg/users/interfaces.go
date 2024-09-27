@@ -79,3 +79,84 @@ func (u *userUsecase) GetUser(ctx context.Context, id string) (models.User, erro
 func (u *userUsecase) ListUsers(ctx context.Context, count int64, offset int64) ([]models.User, error) {
 	return u.userRepo.GetUsers(ctx, count, offset)
 }
+
+//-----------------------------------------------------
+//работа с сессией
+
+type SessionRepo interface {
+	CreateSession(ctx context.Context, session models.Session) (models.Session, error)
+	GetSessionByID(ctx context.Context, id string) (models.Session, error)
+	GetSessionsByUserID(ctx context.Context, userID string) ([]models.Session, error)
+	DeleteSession(ctx context.Context, id string) error
+}
+   
+type inMemorySessionRepo struct {
+s	essions []models.Session
+}
+
+func (repo *inMemorySessionRepo) CreateSession(ctx context.Context, session models.Session) (models.Session, error) {
+	session.ID = fmt.Sprintf("%d", len(repo.sessions)+1) // генерация ID
+	session.CreatedAt = time.Now()
+	repo.sessions = append(repo.sessions, session)
+	return session, nil
+}
+
+func (repo *inMemorySessionRepo) GetSessionByID(ctx context.Context, id string) (models.Session, error) {
+	for _, session := range repo.sessions {
+		if session.ID == id {
+		return session, nil
+		}
+	}
+	return models.Session{}, fmt.Errorf("session not found")
+}
+
+func (repo *inMemorySessionRepo) GetSessionsByUserID(ctx context.Context, userID string) ([]models.Session, error) {
+	var userSessions []models.Session
+	for _, session := range repo.sessions {
+		if session.UserID == userID {
+		userSessions = append(userSessions, session)
+		}
+	}
+	return userSessions, nil
+}
+
+func (repo *inMemorySessionRepo) DeleteSession(ctx context.Context, id string) error {
+	for i, session := range repo.sessions {
+		if session.ID == id {
+		repo.sessions = append(repo.sessions[:i], repo.sessions[i+1:]...)
+		return nil
+		}
+	}
+	return fmt.Errorf("session not found")
+}
+
+type SessionUsecase interface {
+	RegisterSession(ctx context.Context, session models.Session) (models.Session, error)
+	GetSession(ctx context.Context, id string) (models.Session, error)
+	ListSessionsByUserID(ctx context.Context, userID string) ([]models.Session, error)
+	DeleteSession(ctx context.Context, id string) error
+}
+
+type sessionUsecase struct {
+	sessionRepo SessionRepo
+}
+
+func NewSessionUsecase(repo SessionRepo) SessionUsecase {
+	return &sessionUsecase{sessionRepo: repo}
+}
+
+func (u *sessionUsecase) RegisterSession(ctx context.Context, session models.Session) (models.Session, error) {
+	return u.sessionRepo.CreateSession(ctx, session)
+}
+
+func (u *sessionUsecase) GetSession(ctx context.Context, id string) (models.Session, error) {
+	return u.sessionRepo.GetSessionByID(ctx, id)
+}
+
+func (u *sessionUsecase) ListSessionsByUserID(ctx context.Context, userID string) ([]models.Session, error) {
+	return u.sessionRepo.GetSessionsByUserID(ctx, userID)
+}
+
+func (u *sessionUsecase) DeleteSession(ctx context.Context, id string) error {
+	return u.sessionRepo.DeleteSession(ctx, id)
+}
