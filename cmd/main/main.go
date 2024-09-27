@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-//go:generate mockgen -source=*.go -destination=*_mock.go -package=*
 
 func main() {
 
