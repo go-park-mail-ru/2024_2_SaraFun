@@ -94,6 +94,13 @@ func infixToPostfix(expression string) ([]string, error) {
 				stack = append(stack, char)
 				lastWasOperator = true // Устанавливаем, что последний символ - не оператор
 			case '(':
+				if !lastWasOperator { // Если перед скобкой нет оператора, добавляем '*'
+					for len(stack) > 0 && precedence(stack[len(stack)-1]) >= precedence('*') {
+						result = append(result, string(stack[len(stack)-1]))
+						stack = stack[:len(stack)-1]
+					}
+					stack = append(stack, '*')
+				}
 				stack = append(stack, '(')
 				lastWasOperator = true // '(' может быть перед унарным оператором
 			case ')':
