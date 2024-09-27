@@ -33,6 +33,15 @@ func (repo *inMemoryUserRepo) GetUserByID(ctx context.Context, id string) (model
 	return models.User{}, fmt.Errorf("user not found")
 }
 
+func (repo *inMemoryUserRepo) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
+	for _, user := range repo.users {
+		if user.email == email {
+			return user, nil
+		}
+	}
+	return models.User{}, fmt.Errorf("user not found")
+}
+
 func (repo *inMemoryUserRepo) GetUsers(ctx context.Context, count int64, offset int64) ([]models.User, error) {
 	start := offset
 	end := offset + count
