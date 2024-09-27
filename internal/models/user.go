@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=*.go -destination=*_mock.go -package=*
+
 type User struct {
 	ID        string    `json:"id" validate:"required"`
 	Name      string    `json:"name" validate:"required,min=2,max=50"`
