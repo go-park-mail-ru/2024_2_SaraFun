@@ -31,6 +31,8 @@ func TestEvaluateExpression(t *testing.T) {
 		{"-8", -8, false},
 		{"0-8", -8, false},
 		{"5*-8", -40, false},
+		{"5(-8)", -40, false},
+		{"(5 + 1)(5 - 1)", 24, false},
 		{"-(90 - 91 + 1) / 3", 0, false},
 		{"-1 + (90 - 91 + 1) / 3", -1, false},
 		{"-(-11-(1*20/2)-11/2*3)", 37.5, false},
