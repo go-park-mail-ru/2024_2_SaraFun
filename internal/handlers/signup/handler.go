@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sparkit/cmd/hashing"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/hashing"
 )
 
 type UserService interface {
