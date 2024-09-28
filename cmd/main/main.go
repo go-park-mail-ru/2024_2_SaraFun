@@ -6,14 +6,27 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sparkit/internal/handlers/signin"
+	"sparkit/internal/handlers/signup"
+	pkg "sparkit/internal/pkg/users"
 	"syscall"
 	"time"
 )
 
-
 func main() {
+	ctx := context.Background()
+	userRepo := pkg.InMemoryUserRepository{}
+	sessionRepo := pkg.InMemorySessionRepository{}
+	userService := pkg.NewUserService(userRepo)
+	sessionService := pkg.NewSessionService(sessionRepo)
+	signUp := signup.NewHandler(userService)
+	signIn := signin.NewHandler(userService, sessionService)
 
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/signup", signUp.Handle)
+	mux.HandleFunc("/signin", signIn.Handle)
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 	})
