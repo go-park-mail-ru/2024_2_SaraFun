@@ -7,7 +7,7 @@ import (
 //go:generate mockgen -source=*.go -destination=*_mock.go -package=*
 
 //type User struct {
-//	ID        string    `json:"id" validate:"required"`
+//	UUID        string    `json:"id" validate:"required"`
 //	Name      string    `json:"name" validate:"required,min=2,max=50"`
 //	Age       int       `json:"age" validate:"required,min=18,max=100"`
 //	Gender    string    `json:"gender" validate:"required,oneof=male female"`
@@ -41,7 +41,7 @@ type Message struct {
 }
 
 type Session struct {
-	ID        int       `json:"id"`
+	SessionID string    `json:"session_id"`
 	UserID    int       `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`

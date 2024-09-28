@@ -7,7 +7,6 @@ import (
 	"net/http"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
-	"strconv"
 	"time"
 )
 
@@ -53,7 +52,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.SetCookie(w, &http.Cookie{
 				Name:    "session_id",
-				Value:   strconv.Itoa(session.ID),
+				Value:   session.SessionID,
 				Expires: time.Now().Add(time.Hour * 24),
 			})
 		}
