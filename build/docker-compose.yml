@@ -1,0 +1,13 @@
+services:
+  sparkit-postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: "reufee"
+      POSTGRES_PASSWORD: "sparkit"
+      POSTGRES_DB: "sparkitDB"
+    ports:
+     - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
