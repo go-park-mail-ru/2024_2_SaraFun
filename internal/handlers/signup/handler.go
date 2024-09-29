@@ -6,20 +6,28 @@ import (
 	"fmt"
 	"net/http"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"sparkit/internal/utils/hashing"
+	"time"
 )
 
 type UserService interface {
 	RegisterUser(ctx context.Context, user models.User) error
 }
 
-type Handler struct {
-	userService UserService
+type SessionService interface {
+	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 }
 
-func NewHandler(userService UserService) *Handler {
+type Handler struct {
+	userService    UserService
+	sessionService SessionService
+}
+
+func NewHandler(userService UserService, sessionsService SessionService) *Handler {
 	return &Handler{
-		userService: userService,
+		userService:    userService,
+		sessionService: sessionsService,
 	}
 }
 
@@ -48,5 +56,15 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if session, err := h.sessionService.CreateSession(ctx, user); err != nil {
+		http.Error(w, "Не удалось создать сессию", http.StatusInternalServerError)
+		return
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:    consts.SessionCookie,
+			Value:   session.SessionID,
+			Expires: time.Now().Add(time.Hour * 24),
+		})
+	}
 	fmt.Fprintf(w, "ok")
 }

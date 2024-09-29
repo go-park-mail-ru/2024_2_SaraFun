@@ -24,7 +24,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	connStr := "user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
+	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +60,7 @@ func main() {
 	userUsecase := userusecase.New(userStorage)
 	sessionUsecase := sessionusecase.New(sessionStorage)
 
-	signUp := signup.NewHandler(userUsecase)
+	signUp := signup.NewHandler(userUsecase, sessionUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
