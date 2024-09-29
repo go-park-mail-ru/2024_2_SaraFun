@@ -1,7 +1,7 @@
 services:
   service-sparkit:
-    image: sparkit-gateway
-    container_name: sparkit-gateway
+    image: sparkit-service
+    container_name: sparkit-service
     depends_on:
       sparkit-postgres:
         condition: service_healthy
