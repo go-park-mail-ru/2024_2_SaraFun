@@ -1,0 +1,31 @@
+services:
+  service-sparkit:
+    image: sparkit-gateway
+    container_name: sparkit-gateway
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: "reufee"
+      PSQL_PASSWORD: "sparkit"
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8080:8080'
+
+  sparkit-postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: "reufee"
+      POSTGRES_PASSWORD: "sparkit"
+      POSTGRES_DB: "sparkitDB"
+    ports:
+     - "5432:5432"
+    volumes:
+      - ~/postgresdata:/var/lib/postgresql/data
+
+
+
+
+

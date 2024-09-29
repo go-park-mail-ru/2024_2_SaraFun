@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"sparkit/internal/handlers/getuserlist"
+	"sparkit/internal/handlers/middleware/authcheck"
 	"sparkit/internal/handlers/signin"
 	"sparkit/internal/handlers/signup"
 	"sparkit/internal/repo/session"
@@ -61,20 +63,27 @@ func main() {
 	signUp := signup.NewHandler(userUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
-
+	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/signup", signUp.Handle)
 	mux.HandleFunc("/signin", signIn.Handle)
-	mux.HandleFunc("/getusers", getUsers.Handle)
-
+	mux.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 	})
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST"},
+		AllowCredentials: true,
+	})
+	handler := c.Handler(mux)
+
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: handler,
 	}
 	// Запускаем сервер в отдельной горутине
 	go func() {

@@ -32,14 +32,17 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	users, err := h.usecase.GetUserList(ctx)
 	if err != nil {
 		http.Error(w, "ошибка в получении списка пользователей", http.StatusInternalServerError)
+		return
 	}
 	//перевести в формат json
 	jsonData, err := json.Marshal(users)
 	if err != nil {
 		http.Error(w, "ошибка в сериализации в json", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		http.Error(w, "не получилось записать json", http.StatusInternalServerError)
+		return
 	}
 }

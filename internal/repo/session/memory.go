@@ -2,22 +2,35 @@ package session
 
 import (
 	"context"
+	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
+	"sync"
 )
 
 type InMemoryStorage struct {
+	mu       sync.RWMutex
 	sessions map[string]int
 }
 
 func New() *InMemoryStorage {
-	storage := InMemoryStorage{}
-	storage.sessions = make(map[string]int)
-	return &storage
+	return &InMemoryStorage{mu: sync.RWMutex{}, sessions: make(map[string]int)}
 }
 
 func (repo *InMemoryStorage) AddSession(ctx context.Context, session models.Session) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 	repo.sessions[session.SessionID] = session.UserID
 	return nil
+}
+
+func (repo *InMemoryStorage) GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error) {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+	if val, ok := repo.sessions[sessionID]; !ok {
+		return 0, sparkiterrors.ErrInvalidSession
+	} else {
+		return val, nil
+	}
 }
 
 //func (repo *InMemoryStorage) DeleteSessionByUserID(ctx context.Context, userID int) error {

@@ -23,7 +23,7 @@ import (
 type User struct {
 	ID       int    `json:"id" validate:"required"`
 	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password,omitempty" validate:"required"`
 }
 
 type Match struct {

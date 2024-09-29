@@ -26,13 +26,13 @@ func (repo *Storage) DeleteUser(ctx context.Context, username string) error {
 
 func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	var user models.User
-	err := repo.DB.QueryRow("SELECT * FROM users WHERE username=$1", username).Scan(&user.ID, &user.Username, &user.Password)
+	err := repo.DB.QueryRow("SELECT id, username, password FROM users WHERE username=$1", username).Scan(&user.ID, &user.Username, &user.Password)
 	return user, err
 }
 
 func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 	var users []models.User
-	rows, err := repo.DB.Query("SELECT * FROM users")
+	rows, err := repo.DB.Query("SELECT id, username FROM users")
 	if err != nil {
 		return []models.User{}, err
 	}
@@ -40,7 +40,7 @@ func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Password); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username); err != nil {
 			return []models.User{}, err
 		}
 		users = append(users, user)

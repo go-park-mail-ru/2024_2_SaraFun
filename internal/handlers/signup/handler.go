@@ -40,10 +40,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	hashedPass, err := hashing.HashPassword(user.Password)
 	if err != nil {
 		http.Error(w, "bad password", http.StatusBadRequest)
+		return
 	}
 	user.Password = hashedPass
 	if err := h.userService.RegisterUser(ctx, user); err != nil {
 		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
+		return
 	}
 
+	fmt.Fprintf(w, "ok")
 }
