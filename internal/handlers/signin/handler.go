@@ -58,7 +58,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 				Name:     consts.SessionCookie,
 				Value:    session.SessionID,
 				Expires:  time.Now().Add(time.Hour * 24),
-				Secure:   false,
+				Secure:   true,
 				HttpOnly: true,
 				SameSite: http.SameSiteDefaultMode,
 				Path:     "/",
