@@ -67,6 +67,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Secure:   true,
 			HttpOnly: true,
 			SameSite: http.SameSiteNoneMode,
+			Path:     "/",
 		})
 	}
 	fmt.Fprintf(w, "ok")
