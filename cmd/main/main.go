@@ -66,8 +66,8 @@ func main() {
 	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/signup", signUp.Handle)
-	mux.HandleFunc("/signin", signIn.Handle)
+	mux.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
+	mux.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
 	mux.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
