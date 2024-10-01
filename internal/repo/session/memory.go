@@ -33,6 +33,30 @@ func (repo *InMemoryStorage) GetUserIDBySessionID(ctx context.Context, sessionID
 	}
 }
 
+func (repo *InMemoryStorage) CheckSession(ctx context.Context, sessionID string) error {
+	if sessionID == "" {
+		return sparkiterrors.ErrInvalidSession
+	}
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+	if _, ok := repo.sessions[sessionID]; !ok {
+		return sparkiterrors.ErrInvalidSession
+	} else {
+		return nil
+	}
+}
+
+func (repo *InMemoryStorage) DeleteSession(ctx context.Context, sessionID string) error {
+	if sessionID == "" {
+		return sparkiterrors.ErrInvalidSession
+	}
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	delete(repo.sessions, sessionID)
+	return nil
+
+}
+
 //func (repo *InMemoryStorage) DeleteSessionByUserID(ctx context.Context, userID int) error {
 //	//for i, u := range repo.sessions {
 //	//	if u.UserID == userID {

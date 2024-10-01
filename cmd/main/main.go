@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sparkit/internal/handlers/checkauth"
 	"sparkit/internal/handlers/getuserlist"
+	"sparkit/internal/handlers/logout"
 	"sparkit/internal/handlers/middleware/authcheck"
 	"sparkit/internal/handlers/middleware/corsMiddleware"
 	"sparkit/internal/handlers/signin"
@@ -65,12 +67,18 @@ func main() {
 	signUp := signup.NewHandler(userUsecase, sessionUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
+	//checkAuth handler
+	checkAuth := checkauth.NewHandler(sessionUsecase)
+	//logOut handler
+	logOut := logout.NewHandler(sessionUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
 
 	mux.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
 	mux.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
 	mux.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
+	mux.Handle("/checkauth", corsMiddleware.CORSMiddleware(http.HandlerFunc(checkAuth.Handle)))
+	mux.Handle("/logout", corsMiddleware.CORSMiddleware(http.HandlerFunc(logOut.Handle)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 	})
