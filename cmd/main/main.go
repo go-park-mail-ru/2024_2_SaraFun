@@ -5,13 +5,15 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sparkit/internal/handlers/checkauth"
 	"sparkit/internal/handlers/getuserlist"
+	"sparkit/internal/handlers/logout"
 	"sparkit/internal/handlers/middleware/authcheck"
+	"sparkit/internal/handlers/middleware/corsMiddleware"
 	"sparkit/internal/handlers/signin"
 	"sparkit/internal/handlers/signup"
 	"sparkit/internal/repo/session"
@@ -40,7 +42,9 @@ func main() {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(100),
-        password VARCHAR(100)
+        password VARCHAR(100),
+    	Age INT NOT NULL,
+    	Gender VARCHAR(100)
     );`
 
 	_, err = db.Exec(createTableSQL)
@@ -63,27 +67,33 @@ func main() {
 	signUp := signup.NewHandler(userUsecase, sessionUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
+	//checkAuth handler
+	checkAuth := checkauth.NewHandler(sessionUsecase)
+	//logOut handler
+	logOut := logout.NewHandler(sessionUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/signup", signUp.Handle)
-	mux.HandleFunc("/signin", signIn.Handle)
-	mux.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle)))
+	mux.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
+	mux.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
+	mux.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
+	mux.Handle("/checkauth", corsMiddleware.CORSMiddleware(http.HandlerFunc(checkAuth.Handle)))
+	mux.Handle("/logout", corsMiddleware.CORSMiddleware(http.HandlerFunc(logOut.Handle)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 	})
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST"},
-		AllowCredentials: true,
-	})
-	handler := c.Handler(mux)
+	//c := cors.New(cors.Options{
+	//	AllowedOrigins:   []string{"*"},
+	//	AllowedMethods:   []string{"GET", "POST"},
+	//	AllowCredentials: true,
+	//})
+	//handler := c.Handler(mux)
 
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: handler,
+		Handler: mux,
 	}
 	// Запускаем сервер в отдельной горутине
 	go func() {

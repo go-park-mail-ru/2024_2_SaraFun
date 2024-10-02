@@ -11,8 +11,9 @@ import (
 
 type Repository interface {
 	AddSession(ctx context.Context, session models.Session) error
-	//DeleteSessionByUserID(ctx context.Context, userID int) error
+	DeleteSession(ctx context.Context, sessionID string) error
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
+	CheckSession(ctx context.Context, sessionID string) error
 }
 
 type UseCase struct {
@@ -42,6 +43,21 @@ func (s *UseCase) GetUserIDBySessionID(ctx context.Context, sessionID string) (i
 		return 0, sparkiterrors.ErrInvalidSession
 	}
 	return userID, nil
+}
+func (s *UseCase) CheckSession(ctx context.Context, sessionID string) error {
+	err := s.repo.CheckSession(ctx, sessionID)
+	if err != nil {
+		return sparkiterrors.ErrInvalidSession
+	}
+	return nil
+}
+
+func (s *UseCase) DeleteSession(ctx context.Context, sessionID string) error {
+	err := s.repo.DeleteSession(ctx, sessionID)
+	if err != nil {
+		return sparkiterrors.ErrInvalidSession
+	}
+	return nil
 }
 
 //func (s *UseCase) DeleteSessionByUserID(ctx context.Context, userID int) error {

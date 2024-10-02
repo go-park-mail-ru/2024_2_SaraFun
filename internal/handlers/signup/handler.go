@@ -61,9 +61,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		http.SetCookie(w, &http.Cookie{
-			Name:    consts.SessionCookie,
-			Value:   session.SessionID,
-			Expires: time.Now().Add(time.Hour * 24),
+			Name:     consts.SessionCookie,
+			Value:    session.SessionID,
+			Expires:  time.Now().Add(time.Hour * 24),
+			Secure:   false,
+			HttpOnly: true,
+			SameSite: http.SameSiteNoneMode,
+			Path:     "/",
 		})
 	}
 	fmt.Fprintf(w, "ok")

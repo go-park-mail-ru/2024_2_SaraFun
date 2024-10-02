@@ -15,7 +15,7 @@ func New(db *sql.DB) *Storage {
 }
 
 func (repo *Storage) AddUser(ctx context.Context, user models.User) error {
-	_, err := repo.DB.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", user.Username, user.Password)
+	_, err := repo.DB.Exec("INSERT INTO users (username, password, age, gender) VALUES ($1, $2, $3, $4)", user.Username, user.Password, user.Age, user.Gender)
 	return err
 }
 
@@ -32,7 +32,7 @@ func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (mo
 
 func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 	var users []models.User
-	rows, err := repo.DB.Query("SELECT id, username FROM users")
+	rows, err := repo.DB.Query("SELECT id, username, age, gender FROM users")
 	if err != nil {
 		return []models.User{}, err
 	}
@@ -40,7 +40,7 @@ func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Age, &user.Gender); err != nil {
 			return []models.User{}, err
 		}
 		users = append(users, user)
