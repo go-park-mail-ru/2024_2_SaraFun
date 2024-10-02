@@ -24,6 +24,8 @@ type User struct {
 	ID       int    `json:"id" validate:"required"`
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
+	Age      int    `json:"age,omitempty" validate:"gte=0, lte=130"`
+	Gender   string `json:"gender,omitempty"`
 }
 
 type Match struct {
