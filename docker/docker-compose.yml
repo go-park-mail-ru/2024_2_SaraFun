@@ -1,0 +1,43 @@
+services:
+  service-sparkit:
+    image: sparkit-service
+    container_name: sparkit-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: "reufee"
+      PSQL_PASSWORD: "sparkit"
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8080:8080'
+
+  sparkit-postgres:
+    image: postgres:latest
+    container_name: sparkit-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: "reufee"
+      POSTGRES_PASSWORD: "sparkit"
+      POSTGRES_DB: "sparkitDB"
+    healthcheck:
+      test: [
+        "CMD", "pg_isready",
+        "--dbname", "sparkitDB",
+        "--host", "sparkit-postgres",
+        "--port", "5432",
+        "--username", "reufee"
+      ]
+      timeout: 2s
+      retries: 2
+      start_period: "3s"
+    ports:
+     - "5432:5432"
+    volumes:
+      - ~/postgresdata:/var/lib/postgresql/data
+
+
+
+
+
