@@ -2,24 +2,88 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
+	"github.com/rs/cors"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sparkit/internal/handlers/getuserlist"
+	"sparkit/internal/handlers/middleware/authcheck"
+	"sparkit/internal/handlers/signin"
+	"sparkit/internal/handlers/signup"
+	"sparkit/internal/repo/session"
+	"sparkit/internal/repo/user"
+	sessionusecase "sparkit/internal/usecase/session"
+	userusecase "sparkit/internal/usecase/user"
 	"syscall"
 	"time"
 )
 
 func main() {
+	ctx := context.Background()
+	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Successfully connected to PostgreSQL!")
+
+	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100),
+        password VARCHAR(100)
+    );`
+
+	_, err = db.Exec(createTableSQL)
+	if err != nil {
+		log.Fatalf("Error creating table: %s", err)
+	} else {
+		fmt.Println("Table created successfully!")
+	}
+
+	//userRepo := &pkg.InMemoryUserRepository{DB: db}
+	//sessionRepo := pkg.InMemorySessionRepository{}
+	//sessionService := pkg.NewSessionService(sessionRepo)
+	//userUseCase := userusecase.New(userRepo)
+	userStorage := user.New(db)
+	sessionStorage := session.New()
+
+	userUsecase := userusecase.New(userStorage)
+	sessionUsecase := sessionusecase.New(sessionStorage)
+
+	signUp := signup.NewHandler(userUsecase, sessionUsecase)
+	signIn := signin.NewHandler(userUsecase, sessionUsecase)
+	getUsers := getuserlist.NewHandler(userUsecase)
+	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/signup", signUp.Handle)
+	mux.HandleFunc("/signin", signIn.Handle)
+	mux.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 	})
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST"},
+		AllowCredentials: true,
+	})
+	handler := c.Handler(mux)
+
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: handler,
 	}
 	// Запускаем сервер в отдельной горутине
 	go func() {
