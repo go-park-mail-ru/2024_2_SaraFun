@@ -8,6 +8,7 @@ import (
 	"sparkit/internal/utils/hashing"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	AddUser(ctx context.Context, user models.User) error
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
@@ -25,7 +26,7 @@ func New(repo Repository) *UseCase {
 func (u *UseCase) RegisterUser(ctx context.Context, user models.User) error {
 	err := u.repo.AddUser(ctx, user)
 	if err != nil {
-		return errors.New("failed to register user")
+		return sparkiterrors.ErrRegistrationUser
 	}
 	return nil
 }

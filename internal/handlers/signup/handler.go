@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
 	RegisterUser(ctx context.Context, user models.User) error
 }
 
+//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 type SessionService interface {
 	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 }

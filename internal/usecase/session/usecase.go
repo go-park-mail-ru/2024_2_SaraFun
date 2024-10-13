@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	AddSession(ctx context.Context, session models.Session) error
 	DeleteSession(ctx context.Context, sessionID string) error
