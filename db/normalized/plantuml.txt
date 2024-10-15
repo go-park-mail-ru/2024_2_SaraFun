@@ -1,0 +1,124 @@
+@startuml
+
+entity "User" as e01{
+    id: number <<generated>>
+    --
+    username: text
+    --
+    email: text
+    --
+    password: text
+    --
+    profile: number <<FK>>
+    --
+    balance: number
+}
+entity "Profile" {
+    id: number <<generated>>
+    --
+    firstname: text
+    --
+    lastname: text
+    --
+    age: number
+    --
+    gender: text
+    --
+    target: text
+    --
+    about: text
+}
+
+entity "Photo" {
+    id: number <<generated>>
+    --
+    userId: number
+    --
+    link: text
+}
+
+entity "Match" {
+    id: number <<generated>>
+    --
+    firstUser: number <<FK>>
+    --
+    secondUser: number <<FK>>
+}
+
+entity "Message" as e02{
+    id: number <<generated>>
+    --
+    sender: number <<FK>>
+    --
+    receiver: number <<FK>>
+    --
+    body: text
+    --
+    status: text
+    --
+    sendDate: number
+}
+
+entity "Complaint" as e03 {
+    id: number <<generated>>
+    --
+    author: number <<FK>>
+    --
+    category: text
+    --
+    body: text
+    --
+    status: text
+    --
+    answer: text
+}
+
+entity "Dislike" {
+    id: number <<generated>>
+    --
+    dislikingUser: number <<FK>>
+    --
+    dislikedUser: number <<FK>>
+}
+
+entity "Like" {
+    id: number <<generated>>
+    --
+    likingUser: number <<FK>>
+    --
+    likedUser: number <<FK>>
+}
+
+entity "Subscription" {
+    id: number <<generated>>
+    --
+    userId: number <<FK>>
+    --
+    planId: number <<FK>>
+    --
+    status: text
+    --
+    start_date: text
+    --
+    end_date: text
+}
+
+entity "SubscriptionPlan" {
+    id: number <<generated>>
+    --
+    name: text
+    --
+    canBuyGifts: boolean
+}
+
+e02 }|..|| e01
+e03 }|..|| e01
+"Profile" ||--|| e01
+"Photo" }|--|| e01
+"Match" }|--|{ e01
+"Like" }|--|{ e01
+"Dislike" }|--|{ e01
+"Subscription" ||--|| e01
+"SubscriptionPlan" ||--|{ "Subscription"
+
+@enduml
