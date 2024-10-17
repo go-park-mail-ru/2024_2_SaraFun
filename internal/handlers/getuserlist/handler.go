@@ -7,6 +7,8 @@ import (
 	"sparkit/internal/models"
 )
 
+//go:generate mockgen -destination=./mocks/mock_UserUsecase.go -package=getuserlist_mocks . UserUsecase
+
 type UserUsecase interface {
 	GetUserList(ctx context.Context) ([]models.User, error)
 }
