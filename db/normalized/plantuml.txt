@@ -1,20 +1,24 @@
 @startuml
 
 entity "User" as e01{
-    id: number <<generated>>
+    id: number <<PK>>
     --
-    username: text
+    username: text <<AK>>
     --
     email: text
     --
-    password: text
+    password_hash: text
     --
     profile: number <<FK>>
     --
+    subscribe: number <<FK>>
+    --
     balance: number
+    --
+    created_at: time
 }
 entity "Profile" {
-    id: number <<generated>>
+    id: number <<PK>>
     --
     firstname: text
     --
@@ -27,26 +31,22 @@ entity "Profile" {
     target: text
     --
     about: text
+    --
+    created_at: time
 }
 
 entity "Photo" {
-    id: number <<generated>>
+    id: number <<PK>>
     --
     userId: number
     --
-    link: text
-}
-
-entity "Match" {
-    id: number <<generated>>
+    link: text <<AK>>
     --
-    firstUser: number <<FK>>
-    --
-    secondUser: number <<FK>>
+    created_at: time
 }
 
 entity "Message" as e02{
-    id: number <<generated>>
+    id: number <<PK>>
     --
     sender: number <<FK>>
     --
@@ -54,13 +54,15 @@ entity "Message" as e02{
     --
     body: text
     --
-    status: text
+    status: enum
     --
     sendDate: number
+    --
+    created_at: time
 }
 
 entity "Complaint" as e03 {
-    id: number <<generated>>
+    id: number <<PK>>
     --
     author: number <<FK>>
     --
@@ -71,54 +73,56 @@ entity "Complaint" as e03 {
     status: text
     --
     answer: text
+    --
+    created_at: time
 }
 
-entity "Dislike" {
-    id: number <<generated>>
-    --
-    dislikingUser: number <<FK>>
-    --
-    dislikedUser: number <<FK>>
-}
 
-entity "Like" {
-    id: number <<generated>>
+
+entity "Reaction" {
+    id: number <<PK>>
     --
-    likingUser: number <<FK>>
+    author: number <<FK>>
     --
-    likedUser: number <<FK>>
+    receiver: number <<FK>>
+    --
+    type: enum
+    --
+    created_at: time
 }
 
 entity "Subscription" {
-    id: number <<generated>>
-    --
-    userId: number <<FK>>
-    --
-    planId: number <<FK>>
+    id: number <<PK>>
     --
     status: text
     --
     start_date: text
     --
     end_date: text
+    --
+    created_at: time
 }
 
-entity "SubscriptionPlan" {
-    id: number <<generated>>
+entity "Purchase" {
+    id: number <<PK>>
     --
-    name: text
+    author: number <<FK>>
     --
-    canBuyGifts: boolean
+    price: number
+    --
+    about: text
+    --
+    created_at: time
 }
 
 e02 }|..|| e01
 e03 }|..|| e01
 "Profile" ||--|| e01
 "Photo" }|--|| e01
-"Match" }|--|{ e01
-"Like" }|--|{ e01
-"Dislike" }|--|{ e01
-"Subscription" ||--|| e01
-"SubscriptionPlan" ||--|{ "Subscription"
+
+e01 ||--|| "Subscription"
+Reaction }|--|| e01
+Purchase }|--|| e01
+
 
 @enduml
