@@ -2,7 +2,7 @@ package session
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
@@ -32,7 +32,7 @@ func (s *UseCase) CreateSession(ctx context.Context, user models.User) (models.S
 	}
 	err := s.repo.AddSession(ctx, session)
 	if err != nil {
-		return models.Session{}, errors.New("failed to create session")
+		return models.Session{}, fmt.Errorf("failed to create session: %v", err)
 	}
 	return session, nil
 }
