@@ -16,6 +16,8 @@ entity "User" as e01{
     balance: number
     --
     created_at: time
+    --
+    updated_at: time
 }
 entity "Profile" {
     id: number <<PK>>
@@ -33,6 +35,8 @@ entity "Profile" {
     about: text
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 entity "Photo" {
@@ -43,6 +47,8 @@ entity "Photo" {
     link: text <<AK>>
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 entity "Message" as e02{
@@ -59,6 +65,8 @@ entity "Message" as e02{
     sendDate: number
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 entity "Complaint" as e03 {
@@ -75,6 +83,8 @@ entity "Complaint" as e03 {
     answer: text
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 
@@ -89,6 +99,8 @@ entity "Reaction" {
     type: enum
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 entity "Subscription" {
@@ -101,6 +113,8 @@ entity "Subscription" {
     end_date: text
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 entity "Purchase" {
@@ -113,6 +127,8 @@ entity "Purchase" {
     about: text
     --
     created_at: time
+    --
+    updated_at: time
 }
 
 e02 }|..|| e01
