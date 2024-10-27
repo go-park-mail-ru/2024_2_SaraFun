@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -22,6 +21,10 @@ import (
 	userusecase "sparkit/internal/usecase/user"
 	"syscall"
 	"time"
+
+	_ "github.com/lib/pq"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -40,12 +43,12 @@ func main() {
 	fmt.Println("Successfully connected to PostgreSQL!")
 
 	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100),
-        password VARCHAR(100),
-    	Age INT NOT NULL,
-    	Gender VARCHAR(100)
-    );`
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(100),
+            password VARCHAR(100),
+            Age INT NOT NULL,
+            Gender VARCHAR(100)
+        );`
 
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
@@ -54,10 +57,14 @@ func main() {
 		fmt.Println("Table created successfully!")
 	}
 
-	//userRepo := &pkg.InMemoryUserRepository{DB: db}
-	//sessionRepo := pkg.InMemorySessionRepository{}
-	//sessionService := pkg.NewSessionService(sessionRepo)
-	//userUseCase := userusecase.New(userRepo)
+	// Инициализация логгера zap
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("Не удалось инициализировать zap logger: %v", err)
+	}
+	defer logger.Sync() // flushes buffer, if any
+	sugar := logger.Sugar()
+
 	userStorage := user.New(db)
 	sessionStorage := session.New()
 
@@ -67,9 +74,7 @@ func main() {
 	signUp := signup.NewHandler(userUsecase, sessionUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
-	//checkAuth handler
 	checkAuth := checkauth.NewHandler(sessionUsecase)
-	//logOut handler
 	logOut := logout.NewHandler(sessionUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
 	mux := http.NewServeMux()
@@ -83,18 +88,15 @@ func main() {
 		fmt.Fprintf(w, "Hello World\n")
 	})
 
-	//c := cors.New(cors.Options{
-	//	AllowedOrigins:   []string{"*"},
-	//	AllowedMethods:   []string{"GET", "POST"},
-	//	AllowCredentials: true,
-	//})
-	//handler := c.Handler(mux)
+	// Оборачиваем mux в accessLogMiddleware
+	loggedMux := accessLogMiddleware(sugar, mux)
 
-	// Создаем HTTP-сервер
+	// Создаем HTTP-сервер с обработчиком loggedMux
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: loggedMux,
 	}
+
 	// Запускаем сервер в отдельной горутине
 	go func() {
 		fmt.Println("starting a server")
@@ -121,4 +123,33 @@ func main() {
 	}
 
 	fmt.Println("Сервер завершил работу.")
+}
+
+func accessLogMiddleware(logger *zap.SugaredLogger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		// Оборачиваем ResponseWriter, чтобы захватить статус код
+		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(lrw, r)
+		duration := time.Since(start)
+
+		logger.Infow("HTTP Request",
+			"method", r.Method,
+			"url", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+			"status", lrw.statusCode,
+			"duration", duration,
+		)
+	})
+}
+
+// Обертка для ResponseWriter, чтобы захватить статус код
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
 }
