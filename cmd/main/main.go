@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
@@ -77,12 +78,27 @@ func main() {
 		fmt.Println("Table created successfully!")
 	}
 
+	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
+	opts, err := redis.ParseURL(url)
+	if err != nil {
+		log.Fatalf("Error parsing redis url: %s", err)
+	}
+	redisClient := redis.NewClient(opts)
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Error closing redis client: %s", err)
+		}
+	}()
+	fmt.Println(redisClient.String())
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("bad ping to redis: %v", err)
+	}
 	//userRepo := &pkg.InMemoryUserRepository{DB: db}
 	//sessionRepo := pkg.InMemorySessionRepository{}
 	//sessionService := pkg.NewSessionService(sessionRepo)
 	//userUseCase := userusecase.New(userRepo)
 	userStorage := user.New(db)
-	sessionStorage := session.New()
+	sessionStorage := session.New(redisClient)
 
 	userUsecase := userusecase.New(userStorage)
 	sessionUsecase := sessionusecase.New(sessionStorage)
