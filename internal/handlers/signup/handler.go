@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
@@ -59,6 +60,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if session, err := h.sessionService.CreateSession(ctx, user); err != nil {
+		log.Printf(err.Error())
 		http.Error(w, "Не удалось создать сессию", http.StatusInternalServerError)
 		return
 	} else {

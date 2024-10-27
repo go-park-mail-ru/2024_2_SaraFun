@@ -4,7 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +29,26 @@ import (
 )
 
 func main() {
+
+	// Создаем логгер
+	cfg := zap.Config{
+		Encoding:         "json",
+		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
+		OutputPaths:      []string{"stdout", "/tmp/sparkit_logs"},
+		ErrorOutputPaths: []string{"stderr", "/tmp/sparkit_err_logs"},
+		EncoderConfig: zapcore.EncoderConfig{
+			MessageKey: "message",
+			LevelKey:   "level",
+			TimeKey:    "ts",
+			EncodeTime: zapcore.ISO8601TimeEncoder,
+		},
+	}
+	logger, err := cfg.Build()
+	defer logger.Sync()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
@@ -54,12 +78,27 @@ func main() {
 		fmt.Println("Table created successfully!")
 	}
 
+	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
+	opts, err := redis.ParseURL(url)
+	if err != nil {
+		log.Fatalf("Error parsing redis url: %s", err)
+	}
+	redisClient := redis.NewClient(opts)
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Error closing redis client: %s", err)
+		}
+	}()
+	fmt.Println(redisClient.String())
+	if err := redisClient.Ping(ctx).Err(); err != nil {
+		log.Fatalf("bad ping to redis: %v", err)
+	}
 	//userRepo := &pkg.InMemoryUserRepository{DB: db}
 	//sessionRepo := pkg.InMemorySessionRepository{}
 	//sessionService := pkg.NewSessionService(sessionRepo)
 	//userUseCase := userusecase.New(userRepo)
 	userStorage := user.New(db)
-	sessionStorage := session.New()
+	sessionStorage := session.New(redisClient)
 
 	userUsecase := userusecase.New(userStorage)
 	sessionUsecase := sessionusecase.New(sessionStorage)
@@ -72,28 +111,32 @@ func main() {
 	//logOut handler
 	logOut := logout.NewHandler(sessionUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
-	mux := http.NewServeMux()
+	//router := http.NewServeMux()
+	router := mux.NewRouter()
+	//router.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
+	//router.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
+	//router.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
+	//router.Handle("/checkauth", corsMiddleware.CORSMiddleware(http.HandlerFunc(checkAuth.Handle)))
+	//router.Handle("/logout", corsMiddleware.CORSMiddleware(http.HandlerFunc(logOut.Handle)))
+	//router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+	//	fmt.Fprintf(w, "Hello World\n")
+	//})
 
-	mux.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
-	mux.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
-	mux.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
-	mux.Handle("/checkauth", corsMiddleware.CORSMiddleware(http.HandlerFunc(checkAuth.Handle)))
-	mux.Handle("/logout", corsMiddleware.CORSMiddleware(http.HandlerFunc(logOut.Handle)))
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST")
+	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST")
+	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET")
+	router.Handle("/checkauth", http.HandlerFunc(checkAuth.Handle)).Methods("GET")
+	router.Handle("/logout", http.HandlerFunc(logOut.Handle)).Methods("GET")
+	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
+		logger.Info("Hello World")
 	})
 
-	//c := cors.New(cors.Options{
-	//	AllowedOrigins:   []string{"*"},
-	//	AllowedMethods:   []string{"GET", "POST"},
-	//	AllowCredentials: true,
-	//})
-	//handler := c.Handler(mux)
-
+	router.Use(corsMiddleware.CORSMiddleware)
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: router,
 	}
 	// Запускаем сервер в отдельной горутине
 	go func() {
