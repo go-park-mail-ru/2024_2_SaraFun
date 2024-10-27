@@ -1,0 +1,144 @@
+@startuml
+
+entity "User" as e01{
+    id: number <<PK>>
+    --
+    username: text <<AK>>
+    --
+    email: text
+    --
+    password_hash: text
+    --
+    profile: number <<FK>>
+    --
+    subscribe: number <<FK>>
+    --
+    balance: number
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+entity "Profile" {
+    id: number <<PK>>
+    --
+    firstname: text
+    --
+    lastname: text
+    --
+    age: number
+    --
+    gender: text
+    --
+    target: text
+    --
+    about: text
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+entity "Photo" {
+    id: number <<PK>>
+    --
+    userId: number
+    --
+    link: text <<AK>>
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+entity "Message" as e02{
+    id: number <<PK>>
+    --
+    sender: number <<FK>>
+    --
+    receiver: number <<FK>>
+    --
+    body: text
+    --
+    status: enum
+    --
+    sendDate: number
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+entity "Complaint" as e03 {
+    id: number <<PK>>
+    --
+    author: number <<FK>>
+    --
+    category: text
+    --
+    body: text
+    --
+    status: text
+    --
+    answer: text
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+
+
+entity "Reaction" {
+    id: number <<PK>>
+    --
+    author: number <<FK>>
+    --
+    receiver: number <<FK>>
+    --
+    type: enum
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+entity "Subscription" {
+    id: number <<PK>>
+    --
+    status: text
+    --
+    start_date: text
+    --
+    end_date: text
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+entity "Purchase" {
+    id: number <<PK>>
+    --
+    author: number <<FK>>
+    --
+    price: number
+    --
+    about: text
+    --
+    created_at: time
+    --
+    updated_at: time
+}
+
+e02 }|..|| e01
+e03 }|..|| e01
+"Profile" ||--|| e01
+"Photo" }|--|| e01
+
+e01 ||--|| "Subscription"
+Reaction }|--|| e01
+Purchase }|--|| e01
+
+
+@enduml
