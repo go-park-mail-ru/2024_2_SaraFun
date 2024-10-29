@@ -20,8 +20,11 @@ import (
 	"sparkit/internal/handlers/middleware/corsMiddleware"
 	"sparkit/internal/handlers/signin"
 	"sparkit/internal/handlers/signup"
+	"sparkit/internal/handlers/uploadimage"
+	"sparkit/internal/repo/image"
 	"sparkit/internal/repo/session"
 	"sparkit/internal/repo/user"
+	imageusecase "sparkit/internal/usecase/image"
 	sessionusecase "sparkit/internal/usecase/session"
 	userusecase "sparkit/internal/usecase/user"
 	"syscall"
@@ -70,12 +73,23 @@ func main() {
     	Age INT NOT NULL,
     	Gender VARCHAR(100)
     );`
-
+	createPhotoTable := `CREATE TABLE IF NOT EXISTS photo (
+    id SERIAL PRIMARY KEY,
+    user_id bigint NOT NULL,
+    link text NOT NULL UNIQUE
+    );`
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
 		log.Fatalf("Error creating table: %s", err)
 	} else {
-		fmt.Println("Table created successfully!")
+		fmt.Println("Table users created successfully!")
+	}
+
+	_, err = db.Exec(createPhotoTable)
+	if err != nil {
+		log.Fatalf("Error creating table: %s", err)
+	} else {
+		fmt.Println("Table photo created successfully!")
 	}
 
 	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
@@ -99,9 +113,11 @@ func main() {
 	//userUseCase := userusecase.New(userRepo)
 	userStorage := user.New(db)
 	sessionStorage := session.New(redisClient)
+	imageStorage := image.New(db)
 
 	userUsecase := userusecase.New(userStorage)
 	sessionUsecase := sessionusecase.New(sessionStorage)
+	imageUseCase := imageusecase.New(imageStorage)
 
 	signUp := signup.NewHandler(userUsecase, sessionUsecase)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
@@ -110,6 +126,8 @@ func main() {
 	checkAuth := checkauth.NewHandler(sessionUsecase)
 	//logOut handler
 	logOut := logout.NewHandler(sessionUsecase)
+	//uploadimage handler
+	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
 	//router := http.NewServeMux()
 	router := mux.NewRouter()
@@ -131,6 +149,7 @@ func main() {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
+	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST")
 
 	router.Use(corsMiddleware.CORSMiddleware)
 	// Создаем HTTP-сервер
