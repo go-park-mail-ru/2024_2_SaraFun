@@ -12,6 +12,8 @@ services:
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8080:8080'
+    volumes:
+      - ~/imagedata:/home/reufee/imagedata
 
   sparkit-postgres:
     image: postgres:latest
