@@ -1,0 +1,70 @@
+package profile
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"go.uber.org/zap"
+	"sparkit/internal/models"
+)
+
+type Storage struct {
+	DB     *sql.DB
+	logger *zap.Logger
+}
+
+func New(db *sql.DB, logger *zap.Logger) *Storage {
+	return &Storage{
+		DB:     db,
+		logger: logger,
+	}
+}
+
+func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) (int64, error) {
+	res, err := repo.DB.Exec("INSERT INTO profile (firstname, lastname, age, gender, target, about) VALUES($1, $2, $3, $4, $5, $6)",
+		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About)
+	if err != nil {
+		repo.logger.Error("error inserting profile", zap.Error(err))
+		return -1, fmt.Errorf("CreateProfile err: %v", err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		repo.logger.Error("error getting LastInsertId", zap.Error(err))
+		return -1, fmt.Errorf("CreateProfile err: %v", err)
+	}
+	return id, nil
+}
+func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
+	_, err := repo.DB.Exec(`UPDATE profile SET (firstname) = $1,
+                   (lastname) = $2,
+                   (age) = $3,
+                   (gender) = $4,
+                   (target) = $5,
+                   (about) = $6`,
+		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About)
+	if err != nil {
+		repo.logger.Error("error updating profile", zap.Error(err))
+		return fmt.Errorf("UpdateProfile err: %v", err)
+	}
+	return nil
+}
+
+func (repo *Storage) GetProfile(ctx context.Context, id int) (models.Profile, error) {
+	var profile models.Profile
+	err := repo.DB.QueryRow("SELECT * FROM profile WHERE (id) = $1", id).Scan(profile.ID,
+		profile.FirstName, &profile.Age, &profile.Gender, &profile.Target, &profile.About)
+	if err != nil {
+		repo.logger.Error("error getting profile", zap.Error(err))
+		return models.Profile{}, fmt.Errorf("GetProfile err: %v", err)
+	}
+	return profile, nil
+}
+
+func (repo *Storage) DeleteProfile(ctx context.Context, id int) error {
+	_, err := repo.DB.Exec("DELETE FROM profile WHERE (id) = $1", id)
+	if err != nil {
+		repo.logger.Error("error deleting profile", zap.Error(err))
+		return fmt.Errorf("DeleteProfile err: %v", err)
+	}
+	return nil
+}
