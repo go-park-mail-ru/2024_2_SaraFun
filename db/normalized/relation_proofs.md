@@ -3,6 +3,7 @@
 **{id} -> username, email, password_hash, profile, subscribe, balance**
 **{username} -> email, password_hash, profile, subscribe, balance**
 **{email} -> username, password_hash, profile, subscribe, balance**
+**{profile} -> username, password_hash, email, subscribe, balance**
 Соблюдается первая нормальная форма, так как кортеж содержит только одно значение для каждого из атрибутов
 Соблюдается вторая форма, так как соблюдается первая и все неключевые атрибуты зависят от ключа
 Соблюдается третья форма, так как соблюдается вторая и отсутствуют транзитивные функциональные зависимости неключевых атрибутов от ключевых

@@ -29,7 +29,7 @@ CREATE TABLE "user" (
     "username" text NOT NULL UNIQUE,
     "email" text NOT NULL UNIQUE,
     "password_hash" text NOT NULL,
-    "profile" bigint NOT NULL,
+    "profile" bigint NOT NULL UNIQUE,
     "subscribe" bigint NOT NULL,
     "balance" bigint NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -65,6 +65,8 @@ CREATE TABLE "reaction" (
     REFERENCES "user" (id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
+
+    CONSTRAINT unique_pair UNIQUE (author, receiver)
 );
 
 CREATE TABLE "purchase" (
