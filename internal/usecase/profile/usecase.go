@@ -9,8 +9,8 @@ import (
 
 type Repository interface {
 	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
-	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
-	GetProfile(ctx context.Context, id int) (models.Profile, error)
+	UpdateProfile(ctx context.Context, id int64, profile models.Profile) error
+	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 	DeleteProfile(ctx context.Context, id int) error
 }
 
@@ -32,7 +32,7 @@ func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (in
 	return res, nil
 }
 
-func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
+func (u *UseCase) UpdateProfile(ctx context.Context, id int64, profile models.Profile) error {
 	if err := u.repo.UpdateProfile(ctx, id, profile); err != nil {
 		u.logger.Error("update profile err", zap.Error(err))
 		return fmt.Errorf("update profile err: %w", err)
@@ -40,7 +40,7 @@ func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Prof
 	return nil
 }
 
-func (u *UseCase) GetProfile(ctx context.Context, id int) (models.Profile, error) {
+func (u *UseCase) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
 	res, err := u.repo.GetProfile(ctx, id)
 	if err != nil {
 		u.logger.Error("get profile err", zap.Error(err))

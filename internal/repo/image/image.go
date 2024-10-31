@@ -45,10 +45,29 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 	return nil
 }
 
-//func (repo *Storage) DeleteImage(ctx context.Context, link string) error {
-//	_, dbErr := repo.DB.Exec("DELETE FROM photo WHERE link = $1", link)
-//	if dbErr != nil {
-//		return fmt.Errorf("deleteImage err: %w", dbErr)
-//	}
-//	return nil
-//}
+func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]string, error) {
+	var links []string
+	rows, err := repo.DB.Query("SELECT link FROM photo WHERE user_id = $1", id)
+	if err != nil {
+		log.Printf("error getting link: %v", err)
+		return nil, fmt.Errorf("GetImageLink err: %w", err)
+	}
+	for rows.Next() {
+		var link string
+		if err := rows.Scan(&link); err != nil {
+			log.Printf("error getting link: %v", err)
+			return nil, fmt.Errorf("GetImageLink err: %w", err)
+		}
+		links = append(links, link)
+	}
+
+	return links, nil
+}
+
+func (repo *Storage) DeleteImage(ctx context.Context, id int) error {
+	_, dbErr := repo.DB.Exec("DELETE FROM photo WHERE id = $1", id)
+	if dbErr != nil {
+		return fmt.Errorf("deleteImage err: %w", dbErr)
+	}
+	return nil
+}

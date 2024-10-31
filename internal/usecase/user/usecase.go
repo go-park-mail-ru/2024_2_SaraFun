@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
 	"sparkit/internal/utils/hashing"
@@ -13,6 +14,7 @@ type Repository interface {
 	AddUser(ctx context.Context, user models.User) error
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	GetUserList(ctx context.Context) ([]models.User, error)
+	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
 }
 
 type UseCase struct {
@@ -49,4 +51,12 @@ func (u *UseCase) GetUserList(ctx context.Context) ([]models.User, error) {
 		return []models.User{}, errors.New("failed to get user list")
 	}
 	return users, nil
+}
+
+func (u *UseCase) GetProfileIdByUserId(ctx context.Context, userId int) (int64, error) {
+	profileId, err := u.repo.GetProfileIdByUserId(ctx, userId)
+	if err != nil {
+		return -1, fmt.Errorf("failed to get profile id by user id: %w", err)
+	}
+	return profileId, nil
 }

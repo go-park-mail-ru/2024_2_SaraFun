@@ -25,12 +25,11 @@ type User struct {
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
-	Age      int    `json:"age,omitempty" validate:"gte=0, lte=130"`
-	Gender   string `json:"gender,omitempty"`
+	Profile  int64  `json:"profile" validate:"required"`
 }
 
 type Profile struct {
-	ID        int    `json:"id" validate:"required"`
+	ID        int64  `json:"id" validate:"required"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
 	Age       int    `json:"age,omitempty"`

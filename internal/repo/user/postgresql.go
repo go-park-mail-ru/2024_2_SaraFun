@@ -3,22 +3,26 @@ package user
 import (
 	"context"
 	"database/sql"
+	"go.uber.org/zap"
+
 	//sparkiterrors "sparkit/internal/errors"
 	"fmt"
 	"sparkit/internal/models"
 )
 
 type Storage struct {
-	DB *sql.DB
+	DB     *sql.DB
+	logger *zap.Logger
 }
 
-func New(db *sql.DB) *Storage {
-	return &Storage{DB: db}
+func New(db *sql.DB, logger *zap.Logger) *Storage {
+	return &Storage{DB: db, logger: logger}
 }
 
 func (repo *Storage) AddUser(ctx context.Context, user models.User) error {
-	_, err := repo.DB.Exec("INSERT INTO users (username, password, age, gender) VALUES ($1, $2, $3, $4)", user.Username, user.Password, user.Age, user.Gender)
+	_, err := repo.DB.Exec("INSERT INTO users (username, password, profile) VALUES ($1, $2, $3)", user.Username, user.Password, user.Profile)
 	if err != nil {
+		repo.logger.Error("failed to insert user", zap.Error(err))
 		return fmt.Errorf("AddUser err : %v: ", err)
 	}
 	return nil
@@ -43,7 +47,7 @@ func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (mo
 
 func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 	var users []models.User
-	rows, err := repo.DB.Query("SELECT id, username, age, gender FROM users")
+	rows, err := repo.DB.Query("SELECT id, username FROM users")
 	if err != nil {
 		return []models.User{}, fmt.Errorf("GetUserList err: %v", err)
 	}
@@ -51,10 +55,19 @@ func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error) {
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Age, &user.Gender); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username); err != nil {
 			return []models.User{}, fmt.Errorf("GetUserList err during scanning")
 		}
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func (repo *Storage) GetProfileIdByUserId(ctx context.Context, userId int) (int64, error) {
+	var profileId int64
+	err := repo.DB.QueryRow("SELECT profile FROM users WHERE id=$1", userId).Scan(&profileId)
+	if err != nil {
+		return -1, fmt.Errorf("GetProfileIdByUserId err: %v", err)
+	}
+	return profileId, nil
 }

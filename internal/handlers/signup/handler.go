@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
@@ -22,15 +22,28 @@ type SessionService interface {
 	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 }
 
+type ProfileService interface {
+	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
+}
+
 type Handler struct {
 	userService    UserService
 	sessionService SessionService
+	profileService ProfileService
+	logger         *zap.Logger
 }
 
-func NewHandler(userService UserService, sessionsService SessionService) *Handler {
+type Request struct {
+	User    models.User
+	Profile models.Profile
+}
+
+func NewHandler(userService UserService, sessionsService SessionService, profileService ProfileService, logger *zap.Logger) *Handler {
 	return &Handler{
 		userService:    userService,
 		sessionService: sessionsService,
+		profileService: profileService,
+		logger:         logger,
 	}
 }
 
@@ -42,25 +55,40 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.User{}
-	fmt.Println(r.Body)
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Неверный формат запроса", http.StatusBadRequest)
+	//User := models.User{}
+	//fmt.Println(r.Body)
+	//if err := json.NewDecoder(r.Body).Decode(&User); err != nil {
+	//	http.Error(w, "Неверный формат запроса", http.StatusBadRequest)
+	//	return
+	//}
+	request := Request{}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		h.logger.Error("failed to decode request", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	hashedPass, err := hashing.HashPassword(user.Password)
+	profileId, err := h.profileService.CreateProfile(ctx, request.Profile)
 	if err != nil {
+		h.logger.Error("failed to create Profile", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	request.User.Profile = profileId
+	hashedPass, err := hashing.HashPassword(request.User.Password)
+	if err != nil {
+		h.logger.Error("failed to hash password", zap.Error(err))
 		http.Error(w, "bad password", http.StatusBadRequest)
 		return
 	}
-	user.Password = hashedPass
-	if err := h.userService.RegisterUser(ctx, user); err != nil {
+	request.User.Password = hashedPass
+	if err := h.userService.RegisterUser(ctx, request.User); err != nil {
+		h.logger.Error("failed to register User", zap.Error(err))
 		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
 
-	if session, err := h.sessionService.CreateSession(ctx, user); err != nil {
-		log.Printf(err.Error())
+	if session, err := h.sessionService.CreateSession(ctx, request.User); err != nil {
+		h.logger.Error("failed to create session", zap.Error(err))
 		http.Error(w, "Не удалось создать сессию", http.StatusInternalServerError)
 		return
 	} else {

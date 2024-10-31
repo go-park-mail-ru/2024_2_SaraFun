@@ -14,17 +14,22 @@ import (
 	"os"
 	"os/signal"
 	"sparkit/internal/handlers/checkauth"
+	"sparkit/internal/handlers/deleteimage"
+	"sparkit/internal/handlers/getprofile"
 	"sparkit/internal/handlers/getuserlist"
 	"sparkit/internal/handlers/logout"
 	"sparkit/internal/handlers/middleware/authcheck"
 	"sparkit/internal/handlers/middleware/corsMiddleware"
 	"sparkit/internal/handlers/signin"
 	"sparkit/internal/handlers/signup"
+	"sparkit/internal/handlers/updateprofile"
 	"sparkit/internal/handlers/uploadimage"
 	"sparkit/internal/repo/image"
+	"sparkit/internal/repo/profile"
 	"sparkit/internal/repo/session"
 	"sparkit/internal/repo/user"
 	imageusecase "sparkit/internal/usecase/image"
+	profileusecase "sparkit/internal/usecase/profile"
 	sessionusecase "sparkit/internal/usecase/session"
 	userusecase "sparkit/internal/usecase/user"
 	"syscall"
@@ -66,19 +71,47 @@ func main() {
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
 
-	createTableSQL := `CREATE TABLE IF NOT EXISTS users (
+	createUsersTable := `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(100),
-        password VARCHAR(100),
-    	Age INT NOT NULL,
-    	Gender VARCHAR(100)
+        username text,
+        password text,
+    	profile INT NOT NULL,
+    
+		CONSTRAINT fk_profile FOREIGN KEY (profile)
+		REFERENCES profile (id)
+		ON DELETE SET NULL
+		ON UPDATE CASCADE
     );`
 	createPhotoTable := `CREATE TABLE IF NOT EXISTS photo (
     id SERIAL PRIMARY KEY,
     user_id bigint NOT NULL,
-    link text NOT NULL UNIQUE
+    link text NOT NULL UNIQUE,
+    
+    CONSTRAINT fk_user FOREIGN KEY (user_id)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
     );`
-	_, err = db.Exec(createTableSQL)
+
+	createProfileTable := `CREATE TABLE IF NOT EXISTS profile (
+		id SERIAL PRIMARY KEY,
+   firstname text NOT NULL,
+   lastname text NOT NULL,
+   age bigint NOT NULL,
+   gender text NOT NULL,
+   target text NOT NULL,
+   about text NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`
+	_, err = db.Exec(createProfileTable)
+	if err != nil {
+		log.Fatalf("Error creating table: %s", err)
+	} else {
+		fmt.Println("Table profile created successfully!")
+	}
+
+	_, err = db.Exec(createUsersTable)
 	if err != nil {
 		log.Fatalf("Error creating table: %s", err)
 	} else {
@@ -107,38 +140,28 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("bad ping to redis: %v", err)
 	}
-	//userRepo := &pkg.InMemoryUserRepository{DB: db}
-	//sessionRepo := pkg.InMemorySessionRepository{}
-	//sessionService := pkg.NewSessionService(sessionRepo)
-	//userUseCase := userusecase.New(userRepo)
-	userStorage := user.New(db)
+	userStorage := user.New(db, logger)
 	sessionStorage := session.New(redisClient)
 	imageStorage := image.New(db)
+	profileStorage := profile.New(db, logger)
 
 	userUsecase := userusecase.New(userStorage)
 	sessionUsecase := sessionusecase.New(sessionStorage)
-	imageUseCase := imageusecase.New(imageStorage)
+	imageUseCase := imageusecase.New(imageStorage, logger)
+	profileUseCase := profileusecase.New(profileStorage, logger)
 
-	signUp := signup.NewHandler(userUsecase, sessionUsecase)
+	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase)
 	getUsers := getuserlist.NewHandler(userUsecase)
-	//checkAuth handler
 	checkAuth := checkauth.NewHandler(sessionUsecase)
-	//logOut handler
 	logOut := logout.NewHandler(sessionUsecase)
-	//uploadimage handler
-	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase)
+	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)
+	deleteImage := deleteimage.NewHandler(imageUseCase)
+	getProfile := getprofile.NewHandler(imageUseCase, profileUseCase, userUsecase)
+	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase)
 	authMiddleware := authcheck.New(sessionUsecase)
-	//router := http.NewServeMux()
+
 	router := mux.NewRouter()
-	//router.Handle("/signup", corsMiddleware.CORSMiddleware(http.HandlerFunc(signUp.Handle)))
-	//router.Handle("/signin", corsMiddleware.CORSMiddleware(http.HandlerFunc(signIn.Handle)))
-	//router.Handle("/getusers", corsMiddleware.CORSMiddleware(authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))))
-	//router.Handle("/checkauth", corsMiddleware.CORSMiddleware(http.HandlerFunc(checkAuth.Handle)))
-	//router.Handle("/logout", corsMiddleware.CORSMiddleware(http.HandlerFunc(logOut.Handle)))
-	//router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-	//	fmt.Fprintf(w, "Hello World\n")
-	//})
 
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST")
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST")
@@ -150,6 +173,9 @@ func main() {
 		logger.Info("Hello World")
 	})
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST")
+	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE")
+	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET")
+	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT")
 
 	router.Use(corsMiddleware.CORSMiddleware)
 	// Создаем HTTP-сервер

@@ -21,27 +21,25 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) (int64, error) {
-	res, err := repo.DB.Exec("INSERT INTO profile (firstname, lastname, age, gender, target, about) VALUES($1, $2, $3, $4, $5, $6)",
-		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About)
+	var res int64
+	err := repo.DB.QueryRow("INSERT INTO profile (firstname, lastname, age, gender, target, about) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About).Scan(&res)
 	if err != nil {
 		repo.logger.Error("error inserting profile", zap.Error(err))
 		return -1, fmt.Errorf("CreateProfile err: %v", err)
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		repo.logger.Error("error getting LastInsertId", zap.Error(err))
-		return -1, fmt.Errorf("CreateProfile err: %v", err)
-	}
+	id := res
 	return id, nil
 }
-func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
-	_, err := repo.DB.Exec(`UPDATE profile SET (firstname) = $1,
-                   (lastname) = $2,
-                   (age) = $3,
-                   (gender) = $4,
-                   (target) = $5,
-                   (about) = $6`,
-		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About)
+func (repo *Storage) UpdateProfile(ctx context.Context, id int64, profile models.Profile) error {
+	_, err := repo.DB.Exec(`UPDATE profile SET firstname= $1,
+                   lastname= $2,
+                   age = $3,
+                   gender = $4,
+                   target = $5,
+                   about = $6
+                   WHERE id = $7`,
+		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About, id)
 	if err != nil {
 		repo.logger.Error("error updating profile", zap.Error(err))
 		return fmt.Errorf("UpdateProfile err: %v", err)
@@ -49,10 +47,10 @@ func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.P
 	return nil
 }
 
-func (repo *Storage) GetProfile(ctx context.Context, id int) (models.Profile, error) {
+func (repo *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
 	var profile models.Profile
-	err := repo.DB.QueryRow("SELECT * FROM profile WHERE (id) = $1", id).Scan(profile.ID,
-		profile.FirstName, &profile.Age, &profile.Gender, &profile.Target, &profile.About)
+	err := repo.DB.QueryRow("SELECT id, firstname, lastname, age, gender, target, about FROM profile WHERE (id) = $1", id).Scan(&profile.ID,
+		&profile.FirstName, &profile.LastName, &profile.Age, &profile.Gender, &profile.Target, &profile.About)
 	if err != nil {
 		repo.logger.Error("error getting profile", zap.Error(err))
 		return models.Profile{}, fmt.Errorf("GetProfile err: %v", err)
