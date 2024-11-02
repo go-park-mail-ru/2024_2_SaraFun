@@ -68,5 +68,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	h.logger.Info("image saved successfully")
 	fmt.Fprintln(w, "Image saved successfully")
 }

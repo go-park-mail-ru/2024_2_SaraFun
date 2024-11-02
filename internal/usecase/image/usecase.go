@@ -30,6 +30,7 @@ func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt st
 	log.Print("before repo save image")
 	err := u.imageRepo.SaveImage(ctx, file, fileExt, userId)
 	if err != nil {
+		u.logger.Error("save image failed", zap.Error(err))
 		return fmt.Errorf("UseCase SaveImage err: %w", err)
 	}
 	log.Print("after repo save image")

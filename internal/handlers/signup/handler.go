@@ -51,16 +51,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if r.Method != http.MethodPost {
+		h.logger.Error("bad method", zap.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	//User := models.User{}
-	//fmt.Println(r.Body)
-	//if err := json.NewDecoder(r.Body).Decode(&User); err != nil {
-	//	http.Error(w, "Неверный формат запроса", http.StatusBadRequest)
-	//	return
-	//}
 	request := Request{}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		h.logger.Error("failed to decode request", zap.Error(err))
@@ -102,5 +96,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 		})
 	}
+	h.logger.Info("good signup", zap.String("username", request.User.Username))
 	fmt.Fprintf(w, "ok")
 }

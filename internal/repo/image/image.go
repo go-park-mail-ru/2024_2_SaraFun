@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"io"
 	"log"
 	"mime/multipart"
@@ -12,11 +13,12 @@ import (
 )
 
 type Storage struct {
-	DB *sql.DB
+	DB     *sql.DB
+	logger *zap.Logger
 }
 
-func New(db *sql.DB) *Storage {
-	return &Storage{DB: db}
+func New(db *sql.DB, logger *zap.Logger) *Storage {
+	return &Storage{DB: db, logger: logger}
 }
 
 func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) error {
