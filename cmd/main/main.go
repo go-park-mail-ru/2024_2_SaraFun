@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"sparkit/internal/handlers/checkauth"
 	"sparkit/internal/handlers/deleteimage"
+	"sparkit/internal/handlers/getcurrentprofile"
 	"sparkit/internal/handlers/getprofile"
 	"sparkit/internal/handlers/getuserlist"
 	"sparkit/internal/handlers/logout"
@@ -158,6 +159,7 @@ func main() {
 	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
 	getProfile := getprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, logger)
+	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, sessionUsecase, logger)
 	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase, logger)
 	authMiddleware := authcheck.New(sessionUsecase, logger)
 
@@ -176,6 +178,7 @@ func main() {
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE")
 	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET")
 	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT")
+	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET")
 
 	router.Use(corsMiddleware.CORSMiddleware)
 	// Создаем HTTP-сервер
