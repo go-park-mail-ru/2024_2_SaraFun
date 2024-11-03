@@ -179,8 +179,6 @@ func main() {
 	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET")
 	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT")
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET")
-
-	router.Use(corsMiddleware.CORSMiddleware)
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
