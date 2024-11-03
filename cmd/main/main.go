@@ -151,6 +151,7 @@ func main() {
 	imageUseCase := imageusecase.New(imageStorage, logger)
 	profileUseCase := profileusecase.New(profileStorage, logger)
 
+	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase, logger)
 	getUsers := getuserlist.NewHandler(userUsecase, logger)
@@ -164,7 +165,7 @@ func main() {
 	authMiddleware := authcheck.New(sessionUsecase, logger)
 
 	router := mux.NewRouter()
-	router.Use(corsMiddleware.CORSMiddleware)
+	router.Use(cors.Middleware)
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST")
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST")
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET")
