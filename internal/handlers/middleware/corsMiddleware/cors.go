@@ -20,6 +20,7 @@ func (m *Middleware) Middleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		if r.Method == http.MethodOptions {
+			m.logger.Info("Handling request preflight", zap.String("method", r.Method), zap.String("url", r.URL.String()))
 			return
 		}
 		m.logger.Info("Handling request", zap.String("method", r.Method), zap.String("url", r.URL.String()))
