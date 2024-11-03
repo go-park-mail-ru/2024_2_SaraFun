@@ -166,20 +166,20 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Use(cors.Middleware)
-	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST")
-	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST")
-	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET")
-	router.Handle("/checkauth", http.HandlerFunc(checkAuth.Handle)).Methods("GET")
-	router.Handle("/logout", http.HandlerFunc(logOut.Handle)).Methods("GET")
+	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)
+	router.Handle("/checkauth", http.HandlerFunc(checkAuth.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/logout", http.HandlerFunc(logOut.Handle)).Methods("GET", http.MethodOptions)
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
-	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST")
-	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE")
-	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET")
-	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT")
-	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET")
+	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
+	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
+	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",
