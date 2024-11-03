@@ -178,7 +178,7 @@ func main() {
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
 	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/profile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
+	router.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
 	// Создаем HTTP-сервер
 	srv := &http.Server{
