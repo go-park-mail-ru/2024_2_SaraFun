@@ -164,7 +164,7 @@ func main() {
 	authMiddleware := authcheck.New(sessionUsecase, logger)
 
 	router := mux.NewRouter()
-
+	router.Use(corsMiddleware.CORSMiddleware)
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST")
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST")
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET")
