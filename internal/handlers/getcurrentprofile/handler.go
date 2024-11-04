@@ -10,7 +10,7 @@ import (
 )
 
 type ImageService interface {
-	GetImageLinksByUserId(ctx context.Context, id int) ([]string, error)
+	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
 type ProfileService interface {
@@ -26,8 +26,8 @@ type SessionService interface {
 }
 
 type Response struct {
-	Profile   models.Profile `json:"profile"`
-	ImageURLs []string       `json:"imageURLs"`
+	Profile models.Profile `json:"profile"`
+	Images  []models.Image `json:"images"`
 }
 
 type Handler struct {
@@ -65,7 +65,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var links []string
+	var links []models.Image
 	links, err = h.imageService.GetImageLinksByUserId(ctx, userId)
 	if err != nil {
 		h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
@@ -82,8 +82,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := Response{
-		Profile:   profile,
-		ImageURLs: links,
+		Profile: profile,
+		Images:  links,
 	}
 	jsonData, err := json.Marshal(response)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"sparkit/internal/models"
 )
 
 type Storage struct {
@@ -45,22 +46,29 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 	return id, nil
 }
 
-func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]string, error) {
-	var links []string
-	rows, err := repo.DB.Query("SELECT link FROM photo WHERE user_id = $1", id)
+func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error) {
+	var links []models.Image
+	rows, err := repo.DB.Query("SELECT id, link FROM photo WHERE user_id = $1", id)
 	if err != nil {
 		log.Printf("error getting link: %v", err)
 		return nil, fmt.Errorf("GetImageLink err: %w", err)
 	}
+	//for rows.Next() {
+	//	var link string
+	//	if err := rows.Scan(&link); err != nil {
+	//		log.Printf("error getting link: %v", err)
+	//		return nil, fmt.Errorf("GetImageLink err: %w", err)
+	//	}
+	//	links = append(links, link)
+	//}
 	for rows.Next() {
-		var link string
-		if err := rows.Scan(&link); err != nil {
+		var link models.Image
+		if err := rows.Scan(&link.Id, &link.Link); err != nil {
 			log.Printf("error getting link: %v", err)
 			return nil, fmt.Errorf("GetImageLink err: %w", err)
 		}
 		links = append(links, link)
 	}
-
 	return links, nil
 }
 

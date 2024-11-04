@@ -6,11 +6,12 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"mime/multipart"
+	"sparkit/internal/models"
 )
 
 type imageRepository interface {
 	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
-	GetImageLinksByUserId(ctx context.Context, id int) ([]string, error)
+	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 	DeleteImage(ctx context.Context, id int) error
 }
 
@@ -37,7 +38,7 @@ func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt st
 	return id, nil
 }
 
-func (u *UseCase) GetImageLinksByUserId(ctx context.Context, id int) ([]string, error) {
+func (u *UseCase) GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error) {
 	links, err := u.imageRepo.GetImageLinksByUserId(ctx, id)
 	if err != nil {
 		u.logger.Error("UseCase GetImageLink err", zap.Error(err))
