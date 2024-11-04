@@ -71,3 +71,12 @@ func (repo *Storage) GetProfileIdByUserId(ctx context.Context, userId int) (int6
 	}
 	return profileId, nil
 }
+
+func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (string, error) {
+	var username string
+	err := repo.DB.QueryRow("SELECT username FROM users WHERE id=$1", userId).Scan(&username)
+	if err != nil {
+		return "", fmt.Errorf("GetUserByUsername err: %v", err)
+	}
+	return username, nil
+}

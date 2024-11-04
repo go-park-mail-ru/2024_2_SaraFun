@@ -16,6 +16,7 @@ type Repository interface {
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	GetUserList(ctx context.Context) ([]models.User, error)
 	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
+	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 }
 
 type UseCase struct {
@@ -67,4 +68,13 @@ func (u *UseCase) GetProfileIdByUserId(ctx context.Context, userId int) (int64, 
 		return -1, fmt.Errorf("failed to get profile id by user id: %w", err)
 	}
 	return profileId, nil
+}
+
+func (u *UseCase) GetUsernameByUserId(ctx context.Context, userId int) (string, error) {
+	username, err := u.repo.GetUsernameByUserId(ctx, userId)
+	if err != nil {
+		u.logger.Error("failed to get username", zap.Int("user_id", userId), zap.Error(err))
+		return "", sparkiterrors.ErrWrongCredentials
+	}
+	return username, nil
 }

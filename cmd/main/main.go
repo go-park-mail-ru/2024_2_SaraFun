@@ -13,6 +13,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sparkit/internal/handlers/addreaction"
+	"sparkit/internal/handlers/getmatches"
+	"sparkit/internal/repo/reaction"
 	"syscall"
 	"time"
 
@@ -34,6 +37,7 @@ import (
 	"sparkit/internal/repo/user"
 	imageusecase "sparkit/internal/usecase/image"
 	profileusecase "sparkit/internal/usecase/profile"
+	reactionusecase "sparkit/internal/usecase/reaction"
 	sessionusecase "sparkit/internal/usecase/session"
 	userusecase "sparkit/internal/usecase/user"
 )
@@ -105,6 +109,26 @@ func main() {
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );`
+	createReactionTable := `CREATE TABLE IF NOT EXISTS reaction (
+    id SERIAL PRIMARY KEY ,
+    author bigint NOT NULL ,
+    receiver bigint NOT NULL,
+    type boolean,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_author FOREIGN KEY (author)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+    CONSTRAINT fk_receiver FOREIGN KEY (receiver)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+    CONSTRAINT unique_pair UNIQUE (author, receiver)
+);`
 	_, err = db.Exec(createProfileTable)
 	if err != nil {
 		log.Fatalf("Error creating table: %s", err)
@@ -126,6 +150,13 @@ func main() {
 		fmt.Println("Table photo created successfully!")
 	}
 
+	_, err = db.Exec(createReactionTable)
+	if err != nil {
+		log.Fatalf("Error creating reaction table: %s", err)
+	} else {
+		fmt.Println("Table reaction created successfully!")
+	}
+
 	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
 	if err != nil {
@@ -145,11 +176,13 @@ func main() {
 	sessionStorage := session.New(redisClient, logger)
 	imageStorage := image.New(db, logger)
 	profileStorage := profile.New(db, logger)
+	reactionStorage := reaction.New(db, logger)
 
 	userUsecase := userusecase.New(userStorage, logger)
 	sessionUsecase := sessionusecase.New(sessionStorage, logger)
 	imageUseCase := imageusecase.New(imageStorage, logger)
 	profileUseCase := profileusecase.New(profileStorage, logger)
+	reactionUsecase := reactionusecase.New(reactionStorage, logger)
 
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
@@ -162,10 +195,14 @@ func main() {
 	getProfile := getprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, logger)
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, sessionUsecase, logger)
 	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase, logger)
+	addReaction := addreaction.NewHandler(reactionUsecase, sessionUsecase, logger)
+	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, logger)
 	authMiddleware := authcheck.New(sessionUsecase, logger)
+	//accessLogMiddleware := middleware.NewAccessLogMiddleware(logger)
 
 	router := mux.NewRouter()
 	router.Use(cors.Middleware)
+	//router.Use(accessLogMiddleware.Handler)
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)
@@ -181,6 +218,9 @@ func main() {
 	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/matches", http.HandlerFunc(getMatches.Handle)).Methods("GET", http.MethodOptions)
+
 	// Создаем HTTP-сервер
 	srv := &http.Server{
 		Addr:    ":8080",

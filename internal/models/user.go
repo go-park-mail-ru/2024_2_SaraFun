@@ -43,6 +43,19 @@ type Image struct {
 	Link string `json:"link"`
 }
 
+type Reaction struct {
+	Id       int  `json:"id"`
+	Author   int  `json:"author"`
+	Receiver int  `json:"receiver"`
+	Type     bool `json:"type"`
+}
+
+type MatchedUser struct {
+	UserId   int     `json:"user"`
+	Username string  `json:"username"`
+	Profile  Profile `json:"profile"`
+}
+
 type Match struct {
 	UserID1   string    `json:"user_id_1" validate:"required"`
 	UserID2   string    `json:"user_id_2" validate:"required"`
