@@ -24,7 +24,7 @@ type UserService interface {
 
 type Response struct {
 	Profile models.Profile `json:"profile"`
-	Images  []models.Image `json:"image"`
+	Images  []models.Image `json:"images"`
 }
 
 type Handler struct {

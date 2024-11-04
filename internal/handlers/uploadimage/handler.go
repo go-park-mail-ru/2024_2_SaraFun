@@ -38,15 +38,18 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		h.logger.Error("parse multipart form", zap.Error(err))
 		http.Error(w, "bad ParseMultipartForm", http.StatusInternalServerError)
+		return
 	}
 	file, header, err := r.FormFile("image")
 	if err != nil {
 		h.logger.Error("failed to parse multipart form", zap.Error(err))
 		http.Error(w, "bad image file", http.StatusBadRequest)
+		return
 	}
 	if header == nil {
 		h.logger.Error("failed to parse multipart form")
 		http.Error(w, "bad image file", http.StatusBadRequest)
+		return
 	}
 	defer file.Close()
 	fileExt := filepath.Ext(header.Filename)
@@ -77,12 +80,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error("failed to marshal image", zap.Error(err))
 		http.Error(w, "save image err", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("failed to write response", zap.Error(err))
 		http.Error(w, "save image err", http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	h.logger.Info("image saved successfully")
