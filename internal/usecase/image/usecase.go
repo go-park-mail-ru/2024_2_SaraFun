@@ -9,7 +9,7 @@ import (
 )
 
 type imageRepository interface {
-	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) error
+	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
 	GetImageLinksByUserId(ctx context.Context, id int) ([]string, error)
 	DeleteImage(ctx context.Context, id int) error
 }
@@ -26,15 +26,15 @@ func New(imageRepo imageRepository, logger *zap.Logger) *UseCase {
 	}
 }
 
-func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) error {
+func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error) {
 	log.Print("before repo save image")
-	err := u.imageRepo.SaveImage(ctx, file, fileExt, userId)
+	id, err := u.imageRepo.SaveImage(ctx, file, fileExt, userId)
 	if err != nil {
 		u.logger.Error("save image failed", zap.Error(err))
-		return fmt.Errorf("UseCase SaveImage err: %w", err)
+		return -1, fmt.Errorf("UseCase SaveImage err: %w", err)
 	}
 	log.Print("after repo save image")
-	return nil
+	return id, nil
 }
 
 func (u *UseCase) GetImageLinksByUserId(ctx context.Context, id int) ([]string, error) {

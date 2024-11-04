@@ -2,7 +2,7 @@ package uploadimage
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"go.uber.org/zap"
 	"log"
 	"mime/multipart"
@@ -12,11 +12,15 @@ import (
 )
 
 type ImageService interface {
-	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) error
+	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
 }
 
 type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
+}
+
+type Response struct {
+	ImageId int64
 }
 
 type Handler struct {
@@ -61,13 +65,25 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user session err", http.StatusInternalServerError)
 		return
 	}
-	err = h.imageService.SaveImage(ctx, file, fileExt, userId)
+	id, err := h.imageService.SaveImage(ctx, file, fileExt, userId)
 	if err != nil {
 		h.logger.Error("failed to save image", zap.Error(err))
 		http.Error(w, "save image err", http.StatusInternalServerError)
 		return
 	}
+
+	response := Response{ImageId: id}
+	jsonData, err := json.Marshal(response)
+	if err != nil {
+		h.logger.Error("failed to marshal image", zap.Error(err))
+		http.Error(w, "save image err", http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonData)
+	if err != nil {
+		h.logger.Error("failed to write response", zap.Error(err))
+		http.Error(w, "save image err", http.StatusInternalServerError)
+	}
 	w.WriteHeader(http.StatusOK)
 	h.logger.Info("image saved successfully")
-	fmt.Fprintln(w, "Image saved successfully")
 }
