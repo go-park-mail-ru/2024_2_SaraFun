@@ -3,62 +3,21 @@ package session
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/usecase/session/mocks"
 	"testing"
 )
 
-//func TestCreateSession(t *testing.T) {
-//	session1 := models.Session{SessionID: uuid.New().String(),
-//		UserID:    1,
-//		CreatedAt: time.Now()}
-//	session2 := models.Session{}
-//	ctrl := gomock.NewController(t)
-//	defer ctrl.Finish()
-//	tests := []struct {
-//		name        string
-//		user        models.User
-//		session     models.Session
-//		wantErr     error
-//		wantSession models.Session
-//	}{
-//		{
-//			name:    "successful test",
-//			user:    models.User{ID: 1},
-//			session: session1,
-//			wantErr: nil,
-//			wantSession: models.Session{SessionID: uuid.New().String(),
-//				UserID:    1,
-//				CreatedAt: time.Now()},
-//		},
-//		{
-//			name:        "bad test",
-//			user:        models.User{ID: 2},
-//			session:     session2,
-//			wantErr:     errors.New("failed to create session"),
-//			wantSession: models.Session{},
-//		},
-//	}
-//	repo := mocks.NewMockRepository(ctrl)
-//	repo.EXPECT().AddSession(gomock.Any(), session1).Return(nil)
-//	repo.EXPECT().AddSession(gomock.Any(), session2).Return(sparkiterrors.ErrInvalidSession)
-//	s := New(repo)
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			_, err := s.CreateSession(context.Background(), tt.user)
-//			if err != tt.wantErr {
-//				t.Errorf("CreateSession() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//		})
-//	}
-//}
-
 func TestGetUserIDBySessionID(t *testing.T) {
+	logger := zap.NewNop()
+	defer logger.Sync()
 	tests := []struct {
 		name             string
 		sessionID        string
 		getUserError     error
 		getUserCallCount int
+		logger           *zap.Logger
 		want             int
 		wantErr          error
 	}{
@@ -68,6 +27,7 @@ func TestGetUserIDBySessionID(t *testing.T) {
 			want:             1,
 			getUserError:     nil,
 			getUserCallCount: 1,
+			logger:           logger,
 			wantErr:          nil,
 		},
 		{
@@ -75,6 +35,7 @@ func TestGetUserIDBySessionID(t *testing.T) {
 			sessionID:        "12342",
 			getUserError:     sparkiterrors.ErrInvalidSession,
 			getUserCallCount: 1,
+			logger:           logger,
 			want:             0,
 			wantErr:          sparkiterrors.ErrInvalidSession,
 		},
@@ -86,11 +47,9 @@ func TestGetUserIDBySessionID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			//repo.EXPECT().GetUserIDBySessionID(gomock.Any(), "12345").Return(1, nil).AnyTimes()
-			//repo.EXPECT().GetUserIDBySessionID(gomock.Any(), "12342").Return(0, sparkiterrors.ErrInvalidSession).AnyTimes()
 			repo.EXPECT().GetUserIDBySessionID(gomock.Any(), tt.sessionID).Return(1, tt.getUserError).Times(tt.getUserCallCount)
 
-			s := New(repo)
+			s := New(repo, logger)
 			res, err := s.GetUserIDBySessionID(context.Background(), tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("GetUserIDBySessionID() error = %v, wantErr %v", err, tt.wantErr)
@@ -103,11 +62,14 @@ func TestGetUserIDBySessionID(t *testing.T) {
 }
 
 func TestCheckSession(t *testing.T) {
+	logger := zap.NewNop()
+	defer logger.Sync()
 	tests := []struct {
 		name                  string
 		sessionID             string
 		checkSessionError     error
 		checkSessionCallCount int
+		logger                *zap.Logger
 		wantErr               error
 	}{
 		{
@@ -115,6 +77,7 @@ func TestCheckSession(t *testing.T) {
 			sessionID:             "12345",
 			checkSessionError:     nil,
 			checkSessionCallCount: 1,
+			logger:                logger,
 			wantErr:               nil,
 		},
 		{
@@ -122,6 +85,7 @@ func TestCheckSession(t *testing.T) {
 			sessionID:             "12342",
 			checkSessionError:     sparkiterrors.ErrInvalidSession,
 			checkSessionCallCount: 1,
+			logger:                logger,
 			wantErr:               sparkiterrors.ErrInvalidSession,
 		},
 	}
@@ -132,7 +96,7 @@ func TestCheckSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
 			repo.EXPECT().CheckSession(gomock.Any(), tt.sessionID).Return(tt.checkSessionError).Times(tt.checkSessionCallCount)
-			s := New(repo)
+			s := New(repo, logger)
 			err := s.CheckSession(context.Background(), tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("CheckSession() error = %v, wantErr %v", err, tt.wantErr)
@@ -143,11 +107,14 @@ func TestCheckSession(t *testing.T) {
 }
 
 func TestDeleteSession(t *testing.T) {
+	logger := zap.NewNop()
+	defer logger.Sync()
 	tests := []struct {
 		name                   string
 		sessionID              string
 		deleteSessionError     error
 		deleteSessionCallCount int
+		logger                 *zap.Logger
 		wantErr                error
 	}{
 		{
@@ -155,6 +122,7 @@ func TestDeleteSession(t *testing.T) {
 			sessionID:              "12345",
 			deleteSessionError:     nil,
 			deleteSessionCallCount: 1,
+			logger:                 logger,
 			wantErr:                nil,
 		},
 		{
@@ -162,6 +130,7 @@ func TestDeleteSession(t *testing.T) {
 			sessionID:              "12342",
 			deleteSessionError:     sparkiterrors.ErrInvalidSession,
 			deleteSessionCallCount: 1,
+			logger:                 logger,
 			wantErr:                sparkiterrors.ErrInvalidSession,
 		},
 	}
@@ -175,7 +144,7 @@ func TestDeleteSession(t *testing.T) {
 
 			repo.EXPECT().DeleteSession(gomock.Any(), tt.sessionID).Return(tt.deleteSessionError).Times(tt.deleteSessionCallCount)
 
-			s := New(repo)
+			s := New(repo, logger)
 			err := s.DeleteSession(context.Background(), tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("DeleteSession() error = %v, wantErr %v", err, tt.wantErr)

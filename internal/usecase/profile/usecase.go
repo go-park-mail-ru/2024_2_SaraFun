@@ -7,6 +7,7 @@ import (
 	"sparkit/internal/models"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
 	UpdateProfile(ctx context.Context, id int64, profile models.Profile) error
@@ -24,12 +25,12 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 }
 
 func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (int64, error) {
-	res, err := u.repo.CreateProfile(ctx, profile)
+	id, err := u.repo.CreateProfile(ctx, profile)
 	if err != nil {
 		u.logger.Error("create profile err", zap.Error(err))
 		return 0, fmt.Errorf("create profile err: %w", err)
 	}
-	return res, nil
+	return id, nil
 }
 
 func (u *UseCase) UpdateProfile(ctx context.Context, id int64, profile models.Profile) error {

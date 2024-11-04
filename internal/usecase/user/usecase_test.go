@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
 	"sparkit/internal/usecase/user/mocks"
@@ -11,23 +12,27 @@ import (
 )
 
 func TestRegisterUser(t *testing.T) {
-
+	logger := zap.NewNop()
+	defer logger.Sync()
 	user1 := models.User{ID: 1}
 	user2 := models.User{ID: 2}
 	tests := []struct {
-		name string
-		user models.User
-		want error
+		name   string
+		user   models.User
+		logger *zap.Logger
+		want   error
 	}{
 		{
-			name: "successfull test",
-			user: user1,
-			want: nil,
+			name:   "successfull test",
+			user:   user1,
+			logger: logger,
+			want:   nil,
 		},
 		{
-			name: "bad test",
-			user: user2,
-			want: sparkiterrors.ErrRegistrationUser,
+			name:   "bad test",
+			user:   user2,
+			logger: logger,
+			want:   sparkiterrors.ErrRegistrationUser,
 		},
 	}
 
@@ -38,7 +43,7 @@ func TestRegisterUser(t *testing.T) {
 			defer mockCtrl.Finish()
 			repo := mocks.NewMockRepository(mockCtrl)
 			repo.EXPECT().AddUser(gomock.Any(), tt.user).Return(tt.want).Times(1)
-			u := New(repo)
+			u := New(repo, tt.logger)
 			res := u.RegisterUser(ctx, tt.user)
 			if res != tt.want {
 				t.Errorf("RegisterUser() = %v, want %v", res, tt.want)
@@ -48,7 +53,8 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestCheckPassword(t *testing.T) {
-	// func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (models.User, error)
+	logger := zap.NewNop()
+	defer logger.Sync()
 	password1, _ := hashing.HashPassword("123456")
 	password2, _ := hashing.HashPassword("222222")
 	user1 := models.User{ID: 1, Username: "Kirill", Password: password1}
@@ -61,6 +67,7 @@ func TestCheckPassword(t *testing.T) {
 		getUserError     error
 		getUserWant      models.User
 		getUserCallCount int
+		logger           *zap.Logger
 		wantUser         models.User
 		wantErr          error
 	}{
@@ -71,6 +78,7 @@ func TestCheckPassword(t *testing.T) {
 			getUserError:     nil,
 			getUserWant:      user1,
 			getUserCallCount: 1,
+			logger:           logger,
 			wantUser:         user1,
 			wantErr:          nil,
 		},
@@ -81,6 +89,7 @@ func TestCheckPassword(t *testing.T) {
 			getUserError:     nil,
 			getUserWant:      user2,
 			getUserCallCount: 1,
+			logger:           logger,
 			wantUser:         models.User{},
 			wantErr:          sparkiterrors.ErrWrongCredentials,
 		},
@@ -91,6 +100,7 @@ func TestCheckPassword(t *testing.T) {
 			getUserError:     sparkiterrors.ErrBadUsername,
 			getUserWant:      models.User{},
 			getUserCallCount: 1,
+			logger:           logger,
 			wantUser:         models.User{},
 			wantErr:          sparkiterrors.ErrWrongCredentials,
 		},
@@ -103,7 +113,7 @@ func TestCheckPassword(t *testing.T) {
 			defer mockCtrl.Finish()
 			repo := mocks.NewMockRepository(mockCtrl)
 			repo.EXPECT().GetUserByUsername(gomock.Any(), tt.user.Username).Return(tt.getUserWant, tt.getUserError).Times(tt.getUserCallCount)
-			u := New(repo)
+			u := New(repo, tt.logger)
 			res, err := u.CheckPassword(ctx, tt.user.Username, tt.password)
 			if err != tt.wantErr {
 				t.Errorf("CheckPassword() error = %v, wantErr %v", err, tt.wantErr)
@@ -114,27 +124,3 @@ func TestCheckPassword(t *testing.T) {
 		})
 	}
 }
-
-//func TestGetUserList(t *testing.T) {
-//	// func (repo *Storage) GetUserList(ctx context.Context) ([]models.User, error)
-//	user1 := models.User{ID: 1, Username: "Kirill", Password: "123456"}
-//	user2 := models.User{ID: 2, Username: "Andrey", Password: "123456"}
-//	user3 := models.User{ID: 3, Username: "Kirill", Password: "123456"}
-//	userList := []models.User{user1, user2, user3}
-//	tests := []struct{
-//		name string
-//		wantList []models.User
-//		wantErr error
-//	}{
-//		{
-//			name: "successfull test",
-//			wantList: userList,
-//			wantErr: nil,
-//		},
-//		{
-//			name: "bad test",
-//			wantList: []models.User{},
-//			wantErr: sparkiterrors.ErrWrongCredentials,
-//		},
-//	}
-//}
