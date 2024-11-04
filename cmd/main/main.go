@@ -175,6 +175,7 @@ func main() {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
+	//loggedMux := accessLogMiddleware(sugar, mux)
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
 	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
@@ -185,6 +186,7 @@ func main() {
 		Addr:    ":8080",
 		Handler: router,
 	}
+
 	// Запускаем сервер в отдельной горутине
 	go func() {
 		fmt.Println("starting a server")
@@ -212,3 +214,32 @@ func main() {
 
 	fmt.Println("Сервер завершил работу.")
 }
+
+//func accessLogMiddleware(logger *zap.SugaredLogger, next http.Handler) http.Handler {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		start := time.Now()
+//		// Оборачиваем ResponseWriter, чтобы захватить статус код
+//		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+//		next.ServeHTTP(lrw, r)
+//		duration := time.Since(start)
+//
+//		logger.Infow("HTTP Request",
+//			"method", r.Method,
+//			"url", r.URL.Path,
+//			"remote_addr", r.RemoteAddr,
+//			"status", lrw.statusCode,
+//			"duration", duration,
+//		)
+//	})
+//}
+//
+//// Обертка для ResponseWriter, чтобы захватить статус код
+//type loggingResponseWriter struct {
+//	http.ResponseWriter
+//	statusCode int
+//}
+//
+//func (lrw *loggingResponseWriter) WriteHeader(code int) {
+//	lrw.statusCode = code
+//	lrw.ResponseWriter.WriteHeader(code)
+//}

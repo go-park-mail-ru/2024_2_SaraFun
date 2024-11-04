@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=./mocks/mock_UserService.go -package=signin_mocks . UserService
+//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=signin_mocks . SessionService
+
 type UserService interface {
 	CheckPassword(ctx context.Context, username string, password string) (models.User, error)
 }
