@@ -13,6 +13,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
+	"time"
+
 	"sparkit/internal/handlers/checkauth"
 	"sparkit/internal/handlers/deleteimage"
 	"sparkit/internal/handlers/getcurrentprofile"
@@ -33,8 +36,6 @@ import (
 	profileusecase "sparkit/internal/usecase/profile"
 	sessionusecase "sparkit/internal/usecase/session"
 	userusecase "sparkit/internal/usecase/user"
-	"syscall"
-	"time"
 )
 
 func main() {
@@ -66,8 +67,7 @@ func main() {
 	}
 	defer db.Close()
 
-	err = db.Ping()
-	if err != nil {
+	if err = db.Ping(); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
@@ -187,29 +187,22 @@ func main() {
 		Handler: router,
 	}
 
-	// Запускаем сервер в отдельной горутине
 	go func() {
-		fmt.Println("starting a server")
+		fmt.Println("Starting the server")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("Ошибка при запуске сервера: %v\n", err)
+			fmt.Printf("Error starting server: %v\n", err)
 		}
 	}()
 
-	// Создаем канал для получения сигналов
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-
-	// Ожидаем сигнала завершения
 	<-stop
-	fmt.Println("Получен сигнал завершения. Завершение работы...")
+	fmt.Println("Termination signal received. Shutting down...")
 
-	// Устанавливаем контекст с таймаутом для завершения
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-
-	// Корректно завершаем работу сервера
 	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Ошибка при завершении работы сервера: %v\n", err)
+		fmt.Printf("Error shutting down server: %v\n", err)
 	}
 
 	fmt.Println("Сервер завершил работу.")
