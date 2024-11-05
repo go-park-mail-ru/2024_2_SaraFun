@@ -37,7 +37,7 @@ func (repo *InMemoryStorage) GetUserIDBySessionID(ctx context.Context, sessionID
 	}
 	userId, err := strconv.Atoi(val)
 	if err != nil {
-		return 0, fmt.Errorf("convert session id %s to int: %w", val, err)
+		return -1, fmt.Errorf("convert session id %s to int: %w", val, err)
 	}
 	repo.logger.Info("got session id", zap.String("sessionID", sessionID))
 	return userId, nil

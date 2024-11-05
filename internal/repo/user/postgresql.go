@@ -19,13 +19,15 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 	return &Storage{DB: db, logger: logger}
 }
 
-func (repo *Storage) AddUser(ctx context.Context, user models.User) error {
-	_, err := repo.DB.Exec("INSERT INTO users (username, password, profile) VALUES ($1, $2, $3)", user.Username, user.Password, user.Profile)
+func (repo *Storage) AddUser(ctx context.Context, user models.User) (int64, error) {
+	var id int64
+	err := repo.DB.QueryRow("INSERT INTO users (username, password, profile) VALUES ($1, $2, $3) RETURNING id",
+		user.Username, user.Password, user.Profile).Scan(&id)
 	if err != nil {
 		repo.logger.Error("failed to insert user", zap.Error(err))
-		return fmt.Errorf("AddUser err : %v: ", err)
+		return -1, fmt.Errorf("AddUser err : %v: ", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (repo *Storage) DeleteUser(ctx context.Context, username string) error {

@@ -2,6 +2,7 @@ package logout
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestLogoutHandler(t *testing.T) {
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -24,6 +26,7 @@ func TestLogoutHandler(t *testing.T) {
 		expectedStatus     int
 		expectedResponse   string
 		expectCookie       bool
+		logger             *zap.Logger
 	}{
 		{
 			name:             "wrong method",
@@ -31,6 +34,7 @@ func TestLogoutHandler(t *testing.T) {
 			expectedStatus:   http.StatusMethodNotAllowed,
 			expectedResponse: "method is not allowed\n",
 			expectCookie:     false,
+			logger:           logger,
 		},
 		{
 			name:             "session cookie not found",
@@ -38,6 +42,7 @@ func TestLogoutHandler(t *testing.T) {
 			expectedStatus:   http.StatusUnauthorized,
 			expectedResponse: "session not found\n",
 			expectCookie:     false,
+			logger:           logger,
 		},
 		{
 			name:               "failed to delete session",
@@ -47,13 +52,14 @@ func TestLogoutHandler(t *testing.T) {
 			expectedResponse:   "failed to logout\n",
 			deleteSessionError: errors.New("database error"),
 			expectCookie:       false,
+			logger:             logger,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service := logout_mocks.NewMockSessionService(mockCtrl)
-			handler := NewHandler(service)
+			handler := NewHandler(service, tt.logger)
 
 			var req *http.Request
 			if tt.cookieValue != "" {

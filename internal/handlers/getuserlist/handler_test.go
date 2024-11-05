@@ -2,6 +2,7 @@ package getuserlist
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"sparkit/internal/models"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestGetUserListHandler(t *testing.T) {
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -24,6 +26,7 @@ func TestGetUserListHandler(t *testing.T) {
 		expectedStatus      int
 		expectedResponse    string
 		getUserListCalled   bool
+		logger              *zap.Logger
 	}{
 		{
 			name:   "successful user list retrieval",
@@ -34,8 +37,9 @@ func TestGetUserListHandler(t *testing.T) {
 				{ID: 0, Username: "user2"},
 			},
 			expectedStatus:    http.StatusOK,
-			expectedResponse:  `[{"id":0,"username":"user1"},{"id":0,"username":"user2"}]`,
+			expectedResponse:  `[{"id":0,"username":"user1","email":"","profile":0},{"id":0,"username":"user2","email":"","profile":0}]`,
 			getUserListCalled: true,
+			logger:            logger,
 		},
 		{
 			name:              "wrong method",
@@ -44,6 +48,7 @@ func TestGetUserListHandler(t *testing.T) {
 			expectedStatus:    http.StatusMethodNotAllowed,
 			expectedResponse:  "Method not allowed\n",
 			getUserListCalled: false,
+			logger:            logger,
 		},
 		{
 			name:              "error fetching user list",
@@ -53,13 +58,14 @@ func TestGetUserListHandler(t *testing.T) {
 			expectedStatus:    http.StatusInternalServerError,
 			expectedResponse:  "ошибка в получении списка пользователей\n",
 			getUserListCalled: true,
+			logger:            logger,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			usecase := getuserlist_mocks.NewMockUserUsecase(mockCtrl)
-			handler := NewHandler(usecase)
+			handler := NewHandler(usecase, tt.logger)
 
 			if tt.getUserListCalled {
 				usecase.EXPECT().GetUserList(gomock.Any()).Return(tt.getUserListResponse, tt.getUserListError).Times(1)

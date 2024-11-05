@@ -14,7 +14,7 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
-	RegisterUser(ctx context.Context, user models.User) error
+	RegisterUser(ctx context.Context, user models.User) (int64, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
@@ -22,6 +22,7 @@ type SessionService interface {
 	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 type ProfileService interface {
 	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
 }
@@ -75,11 +76,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.User.Password = hashedPass
-	if err := h.userService.RegisterUser(ctx, request.User); err != nil {
+	id, err := h.userService.RegisterUser(ctx, request.User)
+	if err != nil {
 		h.logger.Error("failed to register User", zap.Error(err))
 		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
+	request.User.ID = id
 
 	if session, err := h.sessionService.CreateSession(ctx, request.User); err != nil {
 		h.logger.Error("failed to create session", zap.Error(err))

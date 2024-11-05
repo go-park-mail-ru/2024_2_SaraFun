@@ -10,14 +10,17 @@ import (
 	"strconv"
 )
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 type ProfileService interface {
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
 	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
 }

@@ -9,18 +9,22 @@ import (
 	"sparkit/internal/utils/consts"
 )
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 type ProfileService interface {
 	GetProfile(ctx context.Context, id int64) (models.Profile, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
 	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 }
@@ -53,12 +57,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userId, err := h.sessionService.GetUserIDBySessionID(ctx, cookie.Value)
+	h.logger.Info("GetUserByCookie", zap.Int("userid", userId))
 	if err != nil {
 		h.logger.Error("error getting user id", zap.Error(err))
 		http.Error(w, "user not found", http.StatusUnauthorized)
 		return
 	}
 	profileId, err := h.userService.GetProfileIdByUserId(ctx, userId)
+	h.logger.Info("GetProfileByUser", zap.Int("profileid", userId))
 	if err != nil {
 		h.logger.Error("getprofileidbyuserid error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

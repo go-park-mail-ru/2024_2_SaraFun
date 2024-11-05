@@ -40,7 +40,7 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 		Scan(&id)
 	if dbErr != nil {
 		log.Printf("error inserting image: %v", dbErr)
-		return -1, fmt.Errorf("saveImage err: %w", err)
+		return -1, fmt.Errorf("saveImage err: %w", dbErr)
 	}
 	log.Print("after db insert")
 	return id, nil

@@ -21,7 +21,7 @@ import (
 //}
 
 type User struct {
-	ID       int    `json:"id" validate:"required"`
+	ID       int64  `json:"id" validate:"required"`
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
@@ -72,7 +72,7 @@ type Message struct {
 
 type Session struct {
 	SessionID string    `json:"session_id"`
-	UserID    int       `json:"user_id"`
+	UserID    int64     `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 }

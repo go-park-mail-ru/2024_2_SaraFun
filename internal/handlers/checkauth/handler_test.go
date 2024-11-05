@@ -2,6 +2,7 @@ package checkauth
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestCheckAuthHandler(t *testing.T) {
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -22,6 +24,7 @@ func TestCheckAuthHandler(t *testing.T) {
 		checkSessionError error
 		expectedStatus    int
 		expectedResponse  string
+		logger            *zap.Logger
 	}{
 		{
 			name:              "successful session check",
@@ -30,18 +33,21 @@ func TestCheckAuthHandler(t *testing.T) {
 			expectedStatus:    http.StatusOK,
 			expectedResponse:  "ok",
 			checkSessionError: nil,
+			logger:            logger,
 		},
 		{
 			name:             "wrong method",
 			method:           http.MethodPost,
 			expectedStatus:   http.StatusMethodNotAllowed,
 			expectedResponse: "method is not allowed\n",
+			logger:           logger,
 		},
 		{
 			name:             "session cookie not found",
 			method:           http.MethodGet,
 			expectedStatus:   http.StatusUnauthorized,
 			expectedResponse: "session not found\n",
+			logger:           logger,
 		},
 		{
 			name:              "invalid session",
@@ -50,13 +56,14 @@ func TestCheckAuthHandler(t *testing.T) {
 			expectedStatus:    http.StatusUnauthorized,
 			expectedResponse:  "session is not valid\n",
 			checkSessionError: errors.New("invalid session"),
+			logger:            logger,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service := checkauth_mocks.NewMockSessionService(mockCtrl)
-			handler := NewHandler(service)
+			handler := NewHandler(service, tt.logger)
 
 			if tt.method == http.MethodGet && tt.cookieValue != "" {
 				req := httptest.NewRequest(tt.method, "/checkauth", nil)

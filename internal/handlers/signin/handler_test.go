@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	sparkiterrors "sparkit/internal/errors"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestSigninHandler(t *testing.T) {
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -28,6 +30,7 @@ func TestSigninHandler(t *testing.T) {
 		expectedMessage     string
 		checkPasswordCalled bool
 		createSessionCalled bool
+		logger              *zap.Logger
 	}{
 		{
 			name:                "successful login",
@@ -40,6 +43,7 @@ func TestSigninHandler(t *testing.T) {
 			expectedMessage:     "ok",
 			checkPasswordCalled: true,
 			createSessionCalled: true,
+			logger:              logger,
 		},
 		{
 			name:                "wrong credentials",
@@ -51,6 +55,7 @@ func TestSigninHandler(t *testing.T) {
 			expectedMessage:     "wrong credentials\n",
 			checkPasswordCalled: true,
 			createSessionCalled: false,
+			logger:              logger,
 		},
 		{
 			name:                "failed session creation",
@@ -63,6 +68,7 @@ func TestSigninHandler(t *testing.T) {
 			expectedMessage:     "Не удалось создать сессию\n",
 			checkPasswordCalled: true,
 			createSessionCalled: true,
+			logger:              logger,
 		},
 		{
 			name:                "wrong method",
@@ -73,6 +79,7 @@ func TestSigninHandler(t *testing.T) {
 			expectedMessage:     "Method not allowed\n",
 			checkPasswordCalled: false,
 			createSessionCalled: false,
+			logger:              logger,
 		},
 		{
 			name:                "invalid request format",
@@ -83,6 +90,7 @@ func TestSigninHandler(t *testing.T) {
 			expectedMessage:     "Неверный формат данных\n",
 			checkPasswordCalled: false,
 			createSessionCalled: false,
+			logger:              logger,
 		},
 	}
 
@@ -90,7 +98,7 @@ func TestSigninHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			userService := signin_mocks.NewMockUserService(mockCtrl)
 			sessionService := signin_mocks.NewMockSessionService(mockCtrl)
-			handler := NewHandler(userService, sessionService)
+			handler := NewHandler(userService, sessionService, tt.logger)
 
 			// Настройка вызовов `CheckPassword`
 			if tt.checkPasswordCalled {

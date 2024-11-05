@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	sign_up_mocks "sparkit/internal/handlers/signup/mocks"
@@ -15,8 +16,13 @@ import (
 	"time"
 )
 
-func TestHandler(t *testing.T) {
+type TestRequest struct {
+	User    models.User    `json:"user"`
+	Profile models.Profile `json:"profile"`
+}
 
+func TestHandler(t *testing.T) {
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	tests := []struct {
@@ -28,20 +34,37 @@ func TestHandler(t *testing.T) {
 		addUserCallsCount       int
 		createSessionError      error
 		createSessionCallsCount int
+		createProfileId         int64
+		createProfileError      error
+		createProfileCallsCount int
 		expectedStatus          int
 		expectedMessage         string
+		logger                  *zap.Logger
 	}{
 		{
-			name:                    "success",
-			method:                  "POST",
-			path:                    "http://localhost:8080/signup",
-			body:                    []byte(`{"username":"Username1", "password":"Password1"}`),
+			name:   "success",
+			method: "POST",
+			path:   "http://localhost:8080/signup",
+			body: []byte(`{
+				"user": {
+        			"username": "User1",
+        			"password": "user234"
+   			 	},
+    			"profile": {
+        			"gender": "user",
+        			"age": 40
+    			}
+			}`),
 			addUserError:            nil,
 			addUserCallsCount:       1,
 			createSessionError:      nil,
 			createSessionCallsCount: 1,
+			createProfileId:         1,
+			createProfileError:      nil,
+			createProfileCallsCount: 1,
 			expectedStatus:          http.StatusOK,
 			expectedMessage:         "ok",
+			logger:                  logger,
 		},
 		{
 			name:                    "wrong method",
@@ -53,6 +76,7 @@ func TestHandler(t *testing.T) {
 			createSessionCallsCount: 0,
 			expectedStatus:          http.StatusMethodNotAllowed,
 			expectedMessage:         "Method not allowed\n",
+			logger:                  logger,
 		},
 	}
 
@@ -60,20 +84,22 @@ func TestHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			userService := sign_up_mocks.NewMockUserService(mockCtrl)
 			sessionService := sign_up_mocks.NewMockSessionService(mockCtrl)
-			handler := NewHandler(userService, sessionService)
+			profileService := sign_up_mocks.NewMockProfileService(mockCtrl)
+			handler := NewHandler(userService, sessionService, profileService, tt.logger)
 
-			var user models.User
+			var reqB TestRequest
 			if tt.body != nil {
-				if err := json.Unmarshal(tt.body, &user); err != nil {
+				if err := json.Unmarshal(tt.body, &reqB); err != nil {
 					t.Error(err)
 				}
 			}
-			user.Password, _ = hashing.HashPassword(user.Password)
+			reqB.User.Password, _ = hashing.HashPassword(reqB.User.Password)
+			profileService.EXPECT().CreateProfile(gomock.Any(), reqB.Profile).Return(tt.createProfileId, tt.createProfileError).Times(tt.createProfileCallsCount)
 			userService.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.addUserError).Times(tt.addUserCallsCount)
 			sessionService.EXPECT().CreateSession(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, user models.User) (*models.Session, error) {
 				session := &models.Session{
 					SessionID: uuid.New().String(),
-					UserID:    user.ID,
+					UserID:    reqB.User.ID,
 					CreatedAt: time.Now(),
 				}
 				return session, tt.createSessionError

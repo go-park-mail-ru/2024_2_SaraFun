@@ -9,18 +9,19 @@ import (
 	"sparkit/internal/models"
 )
 
-type imageRepository interface {
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
+type Repository interface {
 	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 	DeleteImage(ctx context.Context, id int) error
 }
 
 type UseCase struct {
-	imageRepo imageRepository
+	imageRepo Repository
 	logger    *zap.Logger
 }
 
-func New(imageRepo imageRepository, logger *zap.Logger) *UseCase {
+func New(imageRepo Repository, logger *zap.Logger) *UseCase {
 	return &UseCase{
 		imageRepo: imageRepo,
 		logger:    logger,

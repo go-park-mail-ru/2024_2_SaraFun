@@ -12,7 +12,7 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
-	AddUser(ctx context.Context, user models.User) error
+	AddUser(ctx context.Context, user models.User) (int64, error)
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	GetUserList(ctx context.Context) ([]models.User, error)
 	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
@@ -28,13 +28,13 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 	return &UseCase{repo: repo, logger: logger}
 }
 
-func (u *UseCase) RegisterUser(ctx context.Context, user models.User) error {
-	err := u.repo.AddUser(ctx, user)
+func (u *UseCase) RegisterUser(ctx context.Context, user models.User) (int64, error) {
+	id, err := u.repo.AddUser(ctx, user)
 	if err != nil {
 		u.logger.Error("bad adduser", zap.Error(err))
-		return sparkiterrors.ErrRegistrationUser
+		return -1, sparkiterrors.ErrRegistrationUser
 	}
-	return nil
+	return id, nil
 }
 
 func (u *UseCase) CheckPassword(ctx context.Context, username string, password string) (models.User, error) {
