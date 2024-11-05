@@ -40,7 +40,8 @@ func NewHandler(reactionService ReactionService, sessionService SessionService, 
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("AddReaction Handler: bad getting cookie ", zap.Error(err))

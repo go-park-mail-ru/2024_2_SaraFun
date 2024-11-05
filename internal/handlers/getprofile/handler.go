@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"strconv"
 )
 
@@ -43,6 +44,8 @@ func NewHandler(imageService ImageService, profileService ProfileService, userSe
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	vars := mux.Vars(r)
 	userId, _ := strconv.Atoi(vars["userId"])
 

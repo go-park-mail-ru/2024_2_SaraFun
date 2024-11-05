@@ -34,7 +34,8 @@ func NewHandler(imageService ImageService, sessionService SessionService, logger
 }
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		h.logger.Error("parse multipart form", zap.Error(err))
 		http.Error(w, "bad ParseMultipartForm", http.StatusInternalServerError)

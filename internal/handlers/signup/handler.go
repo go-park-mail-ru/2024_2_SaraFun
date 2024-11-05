@@ -50,7 +50,8 @@ func NewHandler(userService UserService, sessionsService SessionService, profile
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	if r.Method != http.MethodPost {
 		h.logger.Error("bad method", zap.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

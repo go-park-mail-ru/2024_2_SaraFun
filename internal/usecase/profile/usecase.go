@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 )
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
@@ -25,6 +26,8 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 }
 
 func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	id, err := u.repo.CreateProfile(ctx, profile)
 	if err != nil {
 		u.logger.Error("create profile err", zap.Error(err))
@@ -34,6 +37,8 @@ func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (in
 }
 
 func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	if err := u.repo.UpdateProfile(ctx, id, profile); err != nil {
 		u.logger.Error("update profile err", zap.Error(err))
 		return fmt.Errorf("update profile err: %w", err)
@@ -42,6 +47,8 @@ func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Prof
 }
 
 func (u *UseCase) GetProfile(ctx context.Context, id int) (models.Profile, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	res, err := u.repo.GetProfile(ctx, id)
 	if err != nil {
 		u.logger.Error("get profile err", zap.Error(err))
@@ -51,6 +58,8 @@ func (u *UseCase) GetProfile(ctx context.Context, id int) (models.Profile, error
 }
 
 func (u *UseCase) DeleteProfile(ctx context.Context, id int) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	if err := u.repo.DeleteProfile(ctx, id); err != nil {
 		u.logger.Error("delete profile err", zap.Error(err))
 		return fmt.Errorf("delete profile err: %w", err)

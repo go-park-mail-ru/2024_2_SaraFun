@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"go.uber.org/zap"
+	"sparkit/internal/utils/consts"
 
 	//sparkiterrors "sparkit/internal/errors"
 	"fmt"
@@ -20,6 +21,8 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) AddUser(ctx context.Context, user models.User) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var id int
 	err := repo.DB.QueryRow("INSERT INTO users (username, password, profile) VALUES ($1, $2, $3) RETURNING id",
 		user.Username, user.Password, user.Profile).Scan(&id)
@@ -31,6 +34,8 @@ func (repo *Storage) AddUser(ctx context.Context, user models.User) (int, error)
 }
 
 func (repo *Storage) DeleteUser(ctx context.Context, username string) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	_, err := repo.DB.Exec("DELETE FROM users WHERE username=$1", username)
 	if err != nil {
 		return fmt.Errorf("DeleteUser err: %v", err)
@@ -39,6 +44,8 @@ func (repo *Storage) DeleteUser(ctx context.Context, username string) error {
 }
 
 func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var user models.User
 	err := repo.DB.QueryRow("SELECT id, username, password FROM users WHERE username=$1", username).Scan(&user.ID, &user.Username, &user.Password)
 	if err != nil {
@@ -48,6 +55,8 @@ func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (mo
 }
 
 func (repo *Storage) GetUserList(ctx context.Context, userId int) ([]models.User, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var users []models.User
 	rows, err := repo.DB.Query("SELECT id, username FROM users WHERE id != $1", userId)
 	if err != nil {
@@ -66,6 +75,8 @@ func (repo *Storage) GetUserList(ctx context.Context, userId int) ([]models.User
 }
 
 func (repo *Storage) GetProfileIdByUserId(ctx context.Context, userId int) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var profileId int
 	err := repo.DB.QueryRow("SELECT profile FROM users WHERE id=$1", userId).Scan(&profileId)
 	if err != nil {
@@ -75,6 +86,8 @@ func (repo *Storage) GetProfileIdByUserId(ctx context.Context, userId int) (int,
 }
 
 func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (string, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var username string
 	err := repo.DB.QueryRow("SELECT username FROM users WHERE id=$1", userId).Scan(&username)
 	if err != nil {

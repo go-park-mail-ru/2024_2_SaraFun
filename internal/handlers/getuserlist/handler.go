@@ -44,7 +44,8 @@ func NewHandler(sessionService SessionService, profileService ProfileService, us
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	if r.Method != http.MethodGet {
 		h.logger.Error("bad method", zap.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -83,7 +84,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var links []models.Image
-		links, err = h.imageService.GetImageLinksByUserId(ctx, userId)
+		links, err = h.imageService.GetImageLinksByUserId(ctx, user.ID)
 		if err != nil {
 			h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)

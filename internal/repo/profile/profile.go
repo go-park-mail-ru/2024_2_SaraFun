@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 )
 
 type Storage struct {
@@ -21,6 +22,8 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var res int
 	err := repo.DB.QueryRow("INSERT INTO profile (firstname, lastname, age, gender, target, about) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
 		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About).Scan(&res)
@@ -32,6 +35,8 @@ func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) 
 	return id, nil
 }
 func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	_, err := repo.DB.Exec(`UPDATE profile SET firstname= $1,
                    lastname= $2,
                    age = $3,
@@ -48,6 +53,8 @@ func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.P
 }
 
 func (repo *Storage) GetProfile(ctx context.Context, id int) (models.Profile, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var profile models.Profile
 	err := repo.DB.QueryRow("SELECT id, firstname, lastname, age, gender, target, about FROM profile WHERE (id) = $1", id).Scan(&profile.ID,
 		&profile.FirstName, &profile.LastName, &profile.Age, &profile.Gender, &profile.Target, &profile.About)
@@ -59,6 +66,8 @@ func (repo *Storage) GetProfile(ctx context.Context, id int) (models.Profile, er
 }
 
 func (repo *Storage) DeleteProfile(ctx context.Context, id int) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	_, err := repo.DB.Exec("DELETE FROM profile WHERE (id) = $1", id)
 	if err != nil {
 		repo.logger.Error("error deleting profile", zap.Error(err))

@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"sparkit/internal/handlers/addreaction"
 	"sparkit/internal/handlers/getmatches"
+	"sparkit/internal/handlers/middleware"
 	"sparkit/internal/repo/reaction"
 	"syscall"
 	"time"
@@ -59,6 +60,7 @@ func main() {
 	}
 	logger, err := cfg.Build()
 	defer logger.Sync()
+	sugar := logger.Sugar()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -198,11 +200,11 @@ func main() {
 	addReaction := addreaction.NewHandler(reactionUsecase, sessionUsecase, logger)
 	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
 	authMiddleware := authcheck.New(sessionUsecase, logger)
-	//accessLogMiddleware := middleware.NewAccessLogMiddleware(logger)
+	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 
 	router := mux.NewRouter()
 	router.Use(cors.Middleware)
-	//router.Use(accessLogMiddleware.Handler)
+	router.Use(accessLogMiddleware.Handler)
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)

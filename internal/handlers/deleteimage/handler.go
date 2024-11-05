@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
+	"sparkit/internal/utils/consts"
 	"strconv"
 )
 
@@ -23,6 +24,8 @@ func NewHandler(service ImageService, logger *zap.Logger) *Handler {
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	imageId, err := strconv.Atoi(mux.Vars(r)["imageId"])
 	if err != nil {
 		h.logger.Error("error getting image id", zap.Error(err))

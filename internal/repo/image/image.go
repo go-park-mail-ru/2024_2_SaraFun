@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"os"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 )
 
 type Storage struct {
@@ -23,6 +24,8 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	fileName := "/home/reufee/imagedata/" + uuid.New().String() + fileExt
 	out, err := os.Create(os.ExpandEnv(fileName))
 	if err != nil {
@@ -47,6 +50,8 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 }
 
 func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var links []models.Image
 	rows, err := repo.DB.Query("SELECT id, link FROM photo WHERE user_id = $1", id)
 	if err != nil {
@@ -73,6 +78,8 @@ func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]model
 }
 
 func (repo *Storage) DeleteImage(ctx context.Context, id int) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	_, dbErr := repo.DB.Exec("DELETE FROM photo WHERE id = $1", id)
 	if dbErr != nil {
 		return fmt.Errorf("deleteImage err: %w", dbErr)

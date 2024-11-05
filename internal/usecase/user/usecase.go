@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"sparkit/internal/utils/hashing"
 )
 
@@ -29,6 +30,8 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 }
 
 func (u *UseCase) RegisterUser(ctx context.Context, user models.User) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	id, err := u.repo.AddUser(ctx, user)
 	if err != nil {
 		u.logger.Error("bad adduser", zap.Error(err))
@@ -38,6 +41,8 @@ func (u *UseCase) RegisterUser(ctx context.Context, user models.User) (int, erro
 }
 
 func (u *UseCase) CheckPassword(ctx context.Context, username string, password string) (models.User, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	user, err := u.repo.GetUserByUsername(ctx, username)
 	if err != nil {
 		u.logger.Error("bad getuserbyusername", zap.Error(err))
@@ -53,6 +58,8 @@ func (u *UseCase) CheckPassword(ctx context.Context, username string, password s
 }
 
 func (u *UseCase) GetUserList(ctx context.Context, userId int) ([]models.User, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	users, err := u.repo.GetUserList(ctx, userId)
 	if err != nil {
 		u.logger.Error("bad getuserlist", zap.Error(err))
@@ -62,6 +69,8 @@ func (u *UseCase) GetUserList(ctx context.Context, userId int) ([]models.User, e
 }
 
 func (u *UseCase) GetProfileIdByUserId(ctx context.Context, userId int) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	profileId, err := u.repo.GetProfileIdByUserId(ctx, userId)
 	if err != nil {
 		u.logger.Error("failed to get profile id", zap.Int("user_id", userId), zap.Error(err))
@@ -71,6 +80,8 @@ func (u *UseCase) GetProfileIdByUserId(ctx context.Context, userId int) (int, er
 }
 
 func (u *UseCase) GetUsernameByUserId(ctx context.Context, userId int) (string, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	username, err := u.repo.GetUsernameByUserId(ctx, userId)
 	if err != nil {
 		u.logger.Error("failed to get username", zap.Int("user_id", userId), zap.Error(err))

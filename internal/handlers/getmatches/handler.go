@@ -53,7 +53,8 @@ func NewHandler(reactionService ReactionService, sessionService SessionService, 
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting cookie ", zap.Error(err))
@@ -86,7 +87,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var links []models.Image
-		links, err = h.imageService.GetImageLinksByUserId(ctx, userId)
+		links, err = h.imageService.GetImageLinksByUserId(ctx, author)
 		if err != nil {
 			h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)

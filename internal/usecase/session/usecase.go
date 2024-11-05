@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"time"
 )
 
@@ -28,6 +29,8 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 }
 
 func (s *UseCase) CreateSession(ctx context.Context, user models.User) (models.Session, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	s.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	session := models.Session{
 		SessionID: uuid.New().String(),
 		UserID:    user.ID,
@@ -42,6 +45,8 @@ func (s *UseCase) CreateSession(ctx context.Context, user models.User) (models.S
 }
 
 func (s *UseCase) GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	s.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	userID, err := s.repo.GetUserIDBySessionID(ctx, sessionID)
 	if err != nil {
 		s.logger.Error("failed to get user id by session id", zap.Error(err))
@@ -50,6 +55,8 @@ func (s *UseCase) GetUserIDBySessionID(ctx context.Context, sessionID string) (i
 	return userID, nil
 }
 func (s *UseCase) CheckSession(ctx context.Context, sessionID string) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	s.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	err := s.repo.CheckSession(ctx, sessionID)
 	if err != nil {
 		s.logger.Error("failed to check session", zap.Error(err))
@@ -59,6 +66,8 @@ func (s *UseCase) CheckSession(ctx context.Context, sessionID string) error {
 }
 
 func (s *UseCase) DeleteSession(ctx context.Context, sessionID string) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	s.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	err := s.repo.DeleteSession(ctx, sessionID)
 	if err != nil {
 		s.logger.Error("failed to delete session", zap.Error(err))

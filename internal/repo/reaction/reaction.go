@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 )
 
 type Storage struct {
@@ -18,6 +19,8 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) AddReaction(ctx context.Context, reaction models.Reaction) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	_, err := repo.DB.Exec("INSERT INTO reaction (author, receiver, type) VALUES ($1, $2, $3)", reaction.Author, reaction.Receiver, reaction.Type)
 	if err != nil {
 		repo.logger.Error("Repo AddReaction: failed to insert reaction", zap.Error(err))
@@ -28,6 +31,8 @@ func (repo *Storage) AddReaction(ctx context.Context, reaction models.Reaction) 
 }
 
 func (repo *Storage) GetMatchList(ctx context.Context, userId int) ([]int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	rows, err := repo.DB.Query("SELECT author FROM reaction WHERE receiver = $1 AND author IN (SELECT receiver FROM reaction WHERE author = $2)", userId, userId)
 	if err != nil {
 		repo.logger.Error("Repo GetMatchList: failed to select", zap.Error(err))
