@@ -11,7 +11,7 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
-	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
+	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error)
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 	DeleteImage(ctx context.Context, id int) error
 }
@@ -28,7 +28,7 @@ func New(imageRepo Repository, logger *zap.Logger) *UseCase {
 	}
 }
 
-func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error) {
+func (u *UseCase) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error) {
 	log.Print("before repo save image")
 	id, err := u.imageRepo.SaveImage(ctx, file, fileExt, userId)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
-	RegisterUser(ctx context.Context, user models.User) (int64, error)
+	RegisterUser(ctx context.Context, user models.User) (int, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
@@ -24,7 +24,7 @@ type SessionService interface {
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 type ProfileService interface {
-	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
+	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
 }
 
 type Handler struct {

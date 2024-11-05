@@ -12,7 +12,7 @@ import (
 )
 
 type ImageService interface {
-	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
+	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error)
 }
 
 type SessionService interface {
@@ -20,7 +20,7 @@ type SessionService interface {
 }
 
 type Response struct {
-	ImageId int64
+	ImageId int
 }
 
 type Handler struct {

@@ -20,8 +20,8 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 	}
 }
 
-func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) (int64, error) {
-	var res int64
+func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) (int, error) {
+	var res int
 	err := repo.DB.QueryRow("INSERT INTO profile (firstname, lastname, age, gender, target, about) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
 		profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.Target, profile.About).Scan(&res)
 	if err != nil {
@@ -31,7 +31,7 @@ func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) 
 	id := res
 	return id, nil
 }
-func (repo *Storage) UpdateProfile(ctx context.Context, id int64, profile models.Profile) error {
+func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
 	_, err := repo.DB.Exec(`UPDATE profile SET firstname= $1,
                    lastname= $2,
                    age = $3,
@@ -47,7 +47,7 @@ func (repo *Storage) UpdateProfile(ctx context.Context, id int64, profile models
 	return nil
 }
 
-func (repo *Storage) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
+func (repo *Storage) GetProfile(ctx context.Context, id int) (models.Profile, error) {
 	var profile models.Profile
 	err := repo.DB.QueryRow("SELECT id, firstname, lastname, age, gender, target, about FROM profile WHERE (id) = $1", id).Scan(&profile.ID,
 		&profile.FirstName, &profile.LastName, &profile.Age, &profile.Gender, &profile.Target, &profile.About)

@@ -22,7 +22,7 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 	return &Storage{DB: db, logger: logger}
 }
 
-func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error) {
+func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error) {
 	fileName := "/home/reufee/imagedata/" + uuid.New().String() + fileExt
 	out, err := os.Create(os.ExpandEnv(fileName))
 	if err != nil {
@@ -35,7 +35,7 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 		return -1, fmt.Errorf("saveImage err: %w", err)
 	}
 	repo.logger.Info("insert data", zap.Int("user_id", userId), zap.String("file_name", fileName))
-	var id int64
+	var id int
 	dbErr := repo.DB.QueryRow("INSERT INTO photo (user_id, link) VALUES($1, $2) RETURNING id", userId, fileName).
 		Scan(&id)
 	if dbErr != nil {

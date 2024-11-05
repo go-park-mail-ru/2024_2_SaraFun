@@ -31,6 +31,7 @@ func TestHandler(t *testing.T) {
 		path                    string
 		body                    []byte
 		addUserError            error
+		addUserId               int64
 		addUserCallsCount       int
 		createSessionError      error
 		createSessionCallsCount int
@@ -56,6 +57,7 @@ func TestHandler(t *testing.T) {
     			}
 			}`),
 			addUserError:            nil,
+			addUserId:               1,
 			addUserCallsCount:       1,
 			createSessionError:      nil,
 			createSessionCallsCount: 1,
@@ -72,6 +74,7 @@ func TestHandler(t *testing.T) {
 			path:                    "http://localhost:8080/signup",
 			body:                    nil,
 			addUserError:            nil,
+			addUserId:               1,
 			addUserCallsCount:       0,
 			createSessionCallsCount: 0,
 			expectedStatus:          http.StatusMethodNotAllowed,
@@ -95,7 +98,7 @@ func TestHandler(t *testing.T) {
 			}
 			reqB.User.Password, _ = hashing.HashPassword(reqB.User.Password)
 			profileService.EXPECT().CreateProfile(gomock.Any(), reqB.Profile).Return(tt.createProfileId, tt.createProfileError).Times(tt.createProfileCallsCount)
-			userService.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.addUserError).Times(tt.addUserCallsCount)
+			userService.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.addUserId, tt.addUserError).Times(tt.addUserCallsCount)
 			sessionService.EXPECT().CreateSession(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, user models.User) (*models.Session, error) {
 				session := &models.Session{
 					SessionID: uuid.New().String(),

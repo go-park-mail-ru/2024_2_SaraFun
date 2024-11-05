@@ -17,12 +17,12 @@ type ImageService interface {
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 type ProfileService interface {
-	GetProfile(ctx context.Context, id int64) (models.Profile, error)
+	GetProfile(ctx context.Context, id int) (models.Profile, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
-	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
+	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 }
 
 type Response struct {

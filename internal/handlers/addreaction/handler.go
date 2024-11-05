@@ -21,7 +21,7 @@ type SessionService interface {
 }
 
 //type ProfileService interface {
-//	GetProfile(ctx context.Context, id int64) (models.Profile, error)
+//	GetProfile(ctx context.Context, id int) (models.Profile, error)
 //}
 
 //type UserService interface {

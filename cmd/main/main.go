@@ -187,7 +187,7 @@ func main() {
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase, logger)
-	getUsers := getuserlist.NewHandler(userUsecase, logger)
+	getUsers := getuserlist.NewHandler(sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
 	checkAuth := checkauth.NewHandler(sessionUsecase, logger)
 	logOut := logout.NewHandler(sessionUsecase, logger)
 	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)
@@ -196,7 +196,7 @@ func main() {
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, sessionUsecase, logger)
 	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase, logger)
 	addReaction := addreaction.NewHandler(reactionUsecase, sessionUsecase, logger)
-	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, logger)
+	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
 	authMiddleware := authcheck.New(sessionUsecase, logger)
 	//accessLogMiddleware := middleware.NewAccessLogMiddleware(logger)
 

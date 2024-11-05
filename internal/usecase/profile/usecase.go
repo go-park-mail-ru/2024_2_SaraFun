@@ -9,9 +9,9 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
-	CreateProfile(ctx context.Context, profile models.Profile) (int64, error)
-	UpdateProfile(ctx context.Context, id int64, profile models.Profile) error
-	GetProfile(ctx context.Context, id int64) (models.Profile, error)
+	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
+	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
+	GetProfile(ctx context.Context, id int) (models.Profile, error)
 	DeleteProfile(ctx context.Context, id int) error
 }
 
@@ -24,7 +24,7 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 	return &UseCase{repo: repo, logger: logger}
 }
 
-func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (int64, error) {
+func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (int, error) {
 	id, err := u.repo.CreateProfile(ctx, profile)
 	if err != nil {
 		u.logger.Error("create profile err", zap.Error(err))
@@ -33,7 +33,7 @@ func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (in
 	return id, nil
 }
 
-func (u *UseCase) UpdateProfile(ctx context.Context, id int64, profile models.Profile) error {
+func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
 	if err := u.repo.UpdateProfile(ctx, id, profile); err != nil {
 		u.logger.Error("update profile err", zap.Error(err))
 		return fmt.Errorf("update profile err: %w", err)
@@ -41,7 +41,7 @@ func (u *UseCase) UpdateProfile(ctx context.Context, id int64, profile models.Pr
 	return nil
 }
 
-func (u *UseCase) GetProfile(ctx context.Context, id int64) (models.Profile, error) {
+func (u *UseCase) GetProfile(ctx context.Context, id int) (models.Profile, error) {
 	res, err := u.repo.GetProfile(ctx, id)
 	if err != nil {
 		u.logger.Error("get profile err", zap.Error(err))

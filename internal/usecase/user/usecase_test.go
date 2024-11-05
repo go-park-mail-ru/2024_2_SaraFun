@@ -42,9 +42,9 @@ func TestRegisterUser(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().AddUser(gomock.Any(), tt.user).Return(tt.want).Times(1)
+			repo.EXPECT().AddUser(gomock.Any(), tt.user).Return(tt.user.ID, tt.want).Times(1)
 			u := New(repo, tt.logger)
-			res := u.RegisterUser(ctx, tt.user)
+			_, res := u.RegisterUser(ctx, tt.user)
 			if res != tt.want {
 				t.Errorf("RegisterUser() = %v, want %v", res, tt.want)
 			}

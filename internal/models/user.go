@@ -21,15 +21,15 @@ import (
 //}
 
 type User struct {
-	ID       int64  `json:"id" validate:"required"`
+	ID       int    `json:"id" validate:"required"`
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
-	Profile  int64  `json:"profile" validate:"required"`
+	Profile  int    `json:"profile" validate:"required"`
 }
 
 type Profile struct {
-	ID        int64  `json:"id" validate:"required"`
+	ID        int    `json:"id" validate:"required"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
 	Age       int    `json:"age,omitempty"`
@@ -39,7 +39,7 @@ type Profile struct {
 }
 
 type Image struct {
-	Id   int64  `json:"id"`
+	Id   int    `json:"id"`
 	Link string `json:"link"`
 }
 
@@ -50,10 +50,11 @@ type Reaction struct {
 	Type     bool `json:"type"`
 }
 
-type MatchedUser struct {
+type PersonCard struct {
 	UserId   int     `json:"user"`
 	Username string  `json:"username"`
 	Profile  Profile `json:"profile"`
+	Images   []Image `json:"images"`
 }
 
 type Match struct {
@@ -72,7 +73,7 @@ type Message struct {
 
 type Session struct {
 	SessionID string    `json:"session_id"`
-	UserID    int64     `json:"user_id"`
+	UserID    int       `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 }

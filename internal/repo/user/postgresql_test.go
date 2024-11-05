@@ -129,7 +129,7 @@ func TestAddUser(t *testing.T) {
 				WithArgs(tt.user.Username, tt.user.Password, tt.user.Profile).
 				WillReturnError(tt.queryErr)
 			//WillReturnResult(sqlmock.NewResult(1, 1))
-			err := storage.AddUser(context.Background(), tt.user)
+			_, err := storage.AddUser(context.Background(), tt.user)
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 
 				t.Errorf("AddUser() error = %v, wantErr %v", err, tt.wantErr)

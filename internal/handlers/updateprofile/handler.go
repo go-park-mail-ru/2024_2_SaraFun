@@ -11,7 +11,7 @@ import (
 )
 
 type ProfileService interface {
-	UpdateProfile(ctx context.Context, id int64, profile models.Profile) error
+	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
 }
 
 type SessionService interface {
@@ -19,7 +19,7 @@ type SessionService interface {
 }
 
 type UserService interface {
-	GetProfileIdByUserId(ctx context.Context, userId int) (int64, error)
+	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 }
 
 type Handler struct {
