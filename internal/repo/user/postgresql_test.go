@@ -77,7 +77,7 @@ func TestGetUserList(t *testing.T) {
 				mock.ExpectQuery("SELECT id, username FROM users").WillReturnError(tt.resultQueryError)
 			}
 
-			list, err := storage.GetUserList(context.Background())
+			list, err := storage.GetUserList(context.Background(), 1)
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 				//t.Errorf("GetUserList() error = %v, wantErr %v,", err, tt.wantErr)
 				t.Errorf("GetUserList() error = %v, wantErr %v", err, tt.wantErr)

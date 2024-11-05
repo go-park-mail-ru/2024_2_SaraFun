@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -31,11 +32,11 @@ func TestHandler(t *testing.T) {
 		path                    string
 		body                    []byte
 		addUserError            error
-		addUserId               int64
+		addUserId               int
 		addUserCallsCount       int
 		createSessionError      error
 		createSessionCallsCount int
-		createProfileId         int64
+		createProfileId         int
 		createProfileError      error
 		createProfileCallsCount int
 		expectedStatus          int
@@ -79,6 +80,29 @@ func TestHandler(t *testing.T) {
 			createSessionCallsCount: 0,
 			expectedStatus:          http.StatusMethodNotAllowed,
 			expectedMessage:         "Method not allowed\n",
+			logger:                  logger,
+		},
+		{
+			name:   "wrong method",
+			method: "POST",
+			path:   "http://localhost:8080/signup",
+			body: []byte(`{
+						"user": {
+        					"username": "User1",
+        					"password": "user234"
+   			 			},
+    					"profile": {
+        					"gender": "user",
+        					"age": 40
+    					}
+					}`),
+			addUserError:            errors.New("error"),
+			addUserId:               1,
+			addUserCallsCount:       1,
+			createSessionCallsCount: 0,
+			createProfileCallsCount: 1,
+			expectedStatus:          http.StatusInternalServerError,
+			expectedMessage:         "Внутренняя ошибка сервера\n",
 			logger:                  logger,
 		},
 	}

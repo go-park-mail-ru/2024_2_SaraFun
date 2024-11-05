@@ -36,10 +36,10 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateProfile mocks base method.
-func (m *MockRepository) CreateProfile(arg0 context.Context, arg1 models.Profile) (int64, error) {
+func (m *MockRepository) CreateProfile(arg0 context.Context, arg1 models.Profile) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProfile", arg0, arg1)
-	ret0, _ := ret[0].(int64)
+	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -65,7 +65,7 @@ func (mr *MockRepositoryMockRecorder) DeleteProfile(arg0, arg1 interface{}) *gom
 }
 
 // GetProfile mocks base method.
-func (m *MockRepository) GetProfile(arg0 context.Context, arg1 int64) (models.Profile, error) {
+func (m *MockRepository) GetProfile(arg0 context.Context, arg1 int) (models.Profile, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProfile", arg0, arg1)
 	ret0, _ := ret[0].(models.Profile)
@@ -80,7 +80,7 @@ func (mr *MockRepositoryMockRecorder) GetProfile(arg0, arg1 interface{}) *gomock
 }
 
 // UpdateProfile mocks base method.
-func (m *MockRepository) UpdateProfile(arg0 context.Context, arg1 int64, arg2 models.Profile) error {
+func (m *MockRepository) UpdateProfile(arg0 context.Context, arg1 int, arg2 models.Profile) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProfile", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

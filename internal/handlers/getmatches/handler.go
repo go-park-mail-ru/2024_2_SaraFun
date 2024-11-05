@@ -29,6 +29,7 @@ type UserService interface {
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }

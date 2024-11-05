@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -18,62 +19,124 @@ func TestGetUserListHandler(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	tests := []struct {
-		name                string
-		method              string
-		path                string
-		getUserListResponse []models.User
-		getUserListError    error
-		expectedStatus      int
-		expectedResponse    string
-		getUserListCalled   bool
-		logger              *zap.Logger
+		name               string
+		method             string
+		path               string
+		UserBySessionId    int
+		UserBySessionErr   error
+		UserBySessionCount int
+		GetProfile         models.Profile
+		GetProfileError    error
+		GetProfileCount    int
+		UsernameByID       string
+		UsernameByIDError  error
+		UsernameByIDCount  int
+		GetUserList        []models.User
+		GetUserListError   error
+		GetUserListCount   int
+		GetImages          []models.Image
+		GetImagesError     error
+		GetImagesCount     int
+		expectedStatus     int
+		expectedMessage    string
+		cookieValue        string
+		logger             *zap.Logger
 	}{
 		{
-			name:   "successful user list retrieval",
-			method: http.MethodGet,
-			path:   "/userlist",
-			getUserListResponse: []models.User{
-				{ID: 0, Username: "user1"},
-				{ID: 0, Username: "user2"},
-			},
-			expectedStatus:    http.StatusOK,
-			expectedResponse:  `[{"id":0,"username":"user1","email":"","profile":0},{"id":0,"username":"user2","email":"","profile":0}]`,
-			getUserListCalled: true,
-			logger:            logger,
+			name:               "successfull test",
+			method:             http.MethodGet,
+			path:               "/users",
+			UserBySessionId:    1,
+			UserBySessionErr:   nil,
+			UserBySessionCount: 1,
+			GetProfile:         models.Profile{FirstName: "Kirill"},
+			GetProfileError:    nil,
+			GetProfileCount:    1,
+			UsernameByID:       "username",
+			UsernameByIDError:  nil,
+			UsernameByIDCount:  1,
+			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
+			GetUserListError:   nil,
+			GetUserListCount:   1,
+			GetImages:          []models.Image{{Id: 1, Link: "link"}},
+			GetImagesError:     nil,
+			GetImagesCount:     1,
+			expectedStatus:     http.StatusOK,
+			expectedMessage:    "[{\"user\":2,\"username\":\"username\",\"profile\":{\"id\":0,\"first_name\":\"Kirill\"},\"images\":[{\"id\":1,\"link\":\"link\"}]}]",
+			logger:             logger,
 		},
 		{
-			name:              "wrong method",
-			method:            http.MethodPost,
-			path:              "/userlist",
-			expectedStatus:    http.StatusMethodNotAllowed,
-			expectedResponse:  "Method not allowed\n",
-			getUserListCalled: false,
-			logger:            logger,
+			name:               "bad test",
+			method:             http.MethodGet,
+			path:               "/users",
+			UserBySessionId:    1,
+			UserBySessionErr:   nil,
+			UserBySessionCount: 1,
+			GetProfile:         models.Profile{FirstName: "Kirill"},
+			GetProfileError:    errors.New("error"),
+			GetProfileCount:    1,
+			UsernameByID:       "username",
+			UsernameByIDError:  nil,
+			UsernameByIDCount:  0,
+			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
+			GetUserListError:   nil,
+			GetUserListCount:   1,
+			GetImages:          []models.Image{{Id: 1, Link: "link"}},
+			GetImagesError:     nil,
+			GetImagesCount:     0,
+			expectedStatus:     http.StatusInternalServerError,
+			expectedMessage:    "bad get profile\n",
+			logger:             logger,
 		},
 		{
-			name:              "error fetching user list",
-			method:            http.MethodGet,
-			path:              "/userlist",
-			getUserListError:  errors.New("database error"),
-			expectedStatus:    http.StatusInternalServerError,
-			expectedResponse:  "ошибка в получении списка пользователей\n",
-			getUserListCalled: true,
-			logger:            logger,
+			name:               "bad test",
+			method:             http.MethodGet,
+			path:               "/users",
+			UserBySessionId:    1,
+			UserBySessionErr:   nil,
+			UserBySessionCount: 1,
+			GetProfile:         models.Profile{FirstName: "Kirill"},
+			GetProfileError:    nil,
+			GetProfileCount:    1,
+			UsernameByID:       "username",
+			UsernameByIDError:  nil,
+			UsernameByIDCount:  0,
+			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
+			GetUserListError:   nil,
+			GetUserListCount:   1,
+			GetImages:          []models.Image{{Id: 1, Link: "link"}},
+			GetImagesError:     errors.New("error"),
+			GetImagesCount:     1,
+			expectedStatus:     http.StatusInternalServerError,
+			expectedMessage:    "error\n",
+			logger:             logger,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			usecase := getuserlist_mocks.NewMockUserUsecase(mockCtrl)
-			handler := NewHandler(usecase, tt.logger)
+			sessionService := getuserlist_mocks.NewMockSessionService(mockCtrl)
+			profileService := getuserlist_mocks.NewMockProfileService(mockCtrl)
+			userService := getuserlist_mocks.NewMockUserService(mockCtrl)
+			imageService := getuserlist_mocks.NewMockImageService(mockCtrl)
 
-			if tt.getUserListCalled {
-				usecase.EXPECT().GetUserList(gomock.Any()).Return(tt.getUserListResponse, tt.getUserListError).Times(1)
-			} else {
-				usecase.EXPECT().GetUserList(gomock.Any()).Times(0)
+			sessionService.EXPECT().GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+				Return(tt.UserBySessionId, tt.UserBySessionErr).Times(tt.UserBySessionCount)
+			imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), gomock.Any()).
+				Return(tt.GetImages, tt.GetImagesError).Times(tt.GetImagesCount)
+			userService.EXPECT().GetUserList(gomock.Any(), gomock.Any()).
+				Return(tt.GetUserList, tt.GetUserListError).Times(tt.GetUserListCount)
+			for _, user := range tt.GetUserList {
+				profileService.EXPECT().GetProfile(gomock.Any(), user.ID).
+					Return(tt.GetProfile, tt.GetProfileError).Times(tt.GetProfileCount)
+				userService.EXPECT().GetUsernameByUserId(gomock.Any(), user.ID).
+					Return(tt.UsernameByID, tt.UsernameByIDError).Times(tt.UsernameByIDCount)
 			}
 
+			handler := NewHandler(sessionService, profileService, userService, imageService, tt.logger)
+
 			req := httptest.NewRequest(tt.method, tt.path, nil)
+			req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
 			w := httptest.NewRecorder()
 			handler.Handle(w, req)
 
@@ -81,8 +144,8 @@ func TestGetUserListHandler(t *testing.T) {
 				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
 			}
 
-			if w.Body.String() != tt.expectedResponse {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedResponse)
+			if w.Body.String() != tt.expectedMessage {
+				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedMessage)
 			}
 		})
 	}

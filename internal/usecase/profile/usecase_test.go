@@ -18,11 +18,11 @@ func TestCreateProfile(t *testing.T) {
 	tests := []struct {
 		name                    string
 		profile                 models.Profile
-		repoCreateProfileResult int64
+		repoCreateProfileResult int
 		repoCreateProfileError  error
 		repoCreateProfileCount  int
 		logger                  *zap.Logger
-		wantId                  int64
+		wantId                  int
 	}{
 		{
 			name:                    "succesful create profile",
@@ -69,7 +69,7 @@ func TestUpdateProfile(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		id                 int64
+		id                 int
 		profile            models.Profile
 		updateProfileErr   error
 		updateProfileCount int
@@ -113,7 +113,7 @@ func TestGetProfile(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		id            int64
+		id            int
 		returnProfile models.Profile
 		returnError   error
 		callCount     int
