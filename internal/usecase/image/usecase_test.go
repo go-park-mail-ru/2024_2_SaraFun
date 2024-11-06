@@ -10,10 +10,15 @@ import (
 	"os"
 	"sparkit/internal/models"
 	"sparkit/internal/usecase/image/mocks"
+	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 func TestSaveImage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	testFile, err := os.Create("test.png")
 	if err != nil {
@@ -60,12 +65,12 @@ func TestSaveImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().SaveImage(gomock.Any(), gomock.Any(), tt.fileExt, tt.userId).
+			repo.EXPECT().SaveImage(ctx, gomock.Any(), tt.fileExt, tt.userId).
 				Return(tt.expectedSaveImageId, tt.expectedSaveImageError).
 				Times(tt.expectedSaveImageCount)
 
 			u := New(repo, logger)
-			id, err := u.SaveImage(context.Background(), tt.file, tt.fileExt, tt.userId)
+			id, err := u.SaveImage(ctx, tt.file, tt.fileExt, tt.userId)
 			require.ErrorIs(t, err, tt.expectedSaveImageError)
 			if id != tt.wantId {
 				t.Errorf("SaveImage() id = %v, want %v", id, tt.wantId)
@@ -77,6 +82,9 @@ func TestSaveImage(t *testing.T) {
 }
 
 func TestGetImageLinksByUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	images := []models.Image{{Id: 1, Link: "link1"},
 		{Id: 2, Link: "link2"},
@@ -116,9 +124,9 @@ func TestGetImageLinksByUserId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().GetImageLinksByUserId(gomock.Any(), tt.userId).Return(tt.expectedImages, tt.expectedError).Times(tt.expectedCount)
+			repo.EXPECT().GetImageLinksByUserId(ctx, tt.userId).Return(tt.expectedImages, tt.expectedError).Times(tt.expectedCount)
 			u := New(repo, logger)
-			imgs, err := u.GetImageLinksByUserId(context.Background(), tt.userId)
+			imgs, err := u.GetImageLinksByUserId(ctx, tt.userId)
 			require.ErrorIs(t, err, tt.expectedError)
 			for i, img := range imgs {
 				if img != tt.wantImages[i] {
@@ -130,6 +138,9 @@ func TestGetImageLinksByUserId(t *testing.T) {
 }
 
 func TestDeleteImage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 
 	tests := []struct {
@@ -161,10 +172,10 @@ func TestDeleteImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().DeleteImage(gomock.Any(), tt.userId).Return(tt.expectedError).Times(tt.expectedCount)
+			repo.EXPECT().DeleteImage(ctx, tt.userId).Return(tt.expectedError).Times(tt.expectedCount)
 
 			u := New(repo, logger)
-			err := u.DeleteImage(context.Background(), tt.userId)
+			err := u.DeleteImage(ctx, tt.userId)
 			require.ErrorIs(t, err, tt.expectedError)
 		})
 	}

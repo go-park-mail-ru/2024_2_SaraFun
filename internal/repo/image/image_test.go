@@ -10,7 +10,9 @@ import (
 	"mime/multipart"
 	"os"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 //SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error)
@@ -21,6 +23,9 @@ import (
 
 func TestSaveImage(t *testing.T) {
 	logger := zap.NewNop()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	testFile, err := os.Create("test.png")
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +83,7 @@ func TestSaveImage(t *testing.T) {
 				mock.ExpectQuery("INSERT INTO photo").WillReturnRows(tt.queryResult)
 			}
 
-			id, err := storage.SaveImage(context.Background(), tt.file, tt.fileExt, tt.userId)
+			id, err := storage.SaveImage(ctx, tt.file, tt.fileExt, tt.userId)
 			require.ErrorIs(t, err, tt.queryErr)
 			if id != tt.wantId {
 				t.Errorf("SaveImage() id = %v, want %v", id, tt.wantId)
@@ -88,6 +93,9 @@ func TestSaveImage(t *testing.T) {
 }
 
 func TestGetImageLinksByUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -134,7 +142,7 @@ func TestGetImageLinksByUserId(t *testing.T) {
 				mock.ExpectQuery("SELECT").WillReturnRows(tt.queryResult)
 			}
 
-			images, err := storage.GetImageLinksByUserId(context.Background(), tt.userId)
+			images, err := storage.GetImageLinksByUserId(ctx, tt.userId)
 			require.ErrorIs(t, err, tt.queryErr)
 			for i, image := range images {
 				if image != tt.wantImages[i] {

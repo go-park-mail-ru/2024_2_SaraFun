@@ -30,17 +30,18 @@ type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=getuserlist_mocks . ReactionService
 type ReactionService interface {
 	GetReactionList(ctx context.Context, userId int) ([]int, error)
 }
 
 type Handler struct {
-	sessionService SessionService
-	profileService ProfileService
-	userService    UserService
-	imageService   ImageService
+	sessionService  SessionService
+	profileService  ProfileService
+	userService     UserService
+	imageService    ImageService
 	reactionService ReactionService
-	logger         *zap.Logger
+	logger          *zap.Logger
 }
 
 func NewHandler(sessionService SessionService, profileService ProfileService, userService UserService, imageService ImageService, reactionService ReactionService, logger *zap.Logger) *Handler {

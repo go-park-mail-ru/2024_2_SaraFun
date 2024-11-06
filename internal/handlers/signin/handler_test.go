@@ -2,6 +2,7 @@ package signin
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
@@ -12,6 +13,7 @@ import (
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 func TestSigninHandler(t *testing.T) {
@@ -116,6 +118,10 @@ func TestSigninHandler(t *testing.T) {
 
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(tt.body))
 			w := httptest.NewRecorder()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req = req.WithContext(ctx)
 			handler.Handle(w, req)
 
 			// Проверка статуса и тела ответа

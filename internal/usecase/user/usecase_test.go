@@ -7,11 +7,16 @@ import (
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
 	"sparkit/internal/usecase/user/mocks"
+	"sparkit/internal/utils/consts"
 	"sparkit/internal/utils/hashing"
 	"testing"
+	"time"
 )
 
 func TestRegisterUser(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 	user1 := models.User{ID: 1}
@@ -38,11 +43,10 @@ func TestRegisterUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().AddUser(gomock.Any(), tt.user).Return(tt.user.ID, tt.want).Times(1)
+			repo.EXPECT().AddUser(ctx, tt.user).Return(tt.user.ID, tt.want).Times(1)
 			u := New(repo, tt.logger)
 			_, res := u.RegisterUser(ctx, tt.user)
 			if res != tt.want {
@@ -53,6 +57,9 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestCheckPassword(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 	password1, _ := hashing.HashPassword("123456")
@@ -108,11 +115,10 @@ func TestCheckPassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().GetUserByUsername(gomock.Any(), tt.user.Username).Return(tt.getUserWant, tt.getUserError).Times(tt.getUserCallCount)
+			repo.EXPECT().GetUserByUsername(ctx, tt.user.Username).Return(tt.getUserWant, tt.getUserError).Times(tt.getUserCallCount)
 			u := New(repo, tt.logger)
 			res, err := u.CheckPassword(ctx, tt.user.Username, tt.password)
 			if err != tt.wantErr {

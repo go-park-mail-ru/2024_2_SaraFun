@@ -16,6 +16,9 @@ import (
 )
 
 func TestGetUserListHandler(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gfctx")
 	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -39,6 +42,9 @@ func TestGetUserListHandler(t *testing.T) {
 		GetImages          []models.Image
 		GetImagesError     error
 		GetImagesCount     int
+		GetReactions       []int
+		GetReactionsError  error
+		GetReactionsCount  int
 		expectedStatus     int
 		expectedMessage    string
 		cookieValue        string
@@ -63,6 +69,9 @@ func TestGetUserListHandler(t *testing.T) {
 			GetImages:          []models.Image{{Id: 1, Link: "link"}},
 			GetImagesError:     nil,
 			GetImagesCount:     1,
+			GetReactions:       []int{2},
+			GetReactionsError:  nil,
+			GetReactionsCount:  1,
 			expectedStatus:     http.StatusOK,
 			expectedMessage:    "[{\"user\":2,\"username\":\"username\",\"profile\":{\"id\":0,\"first_name\":\"Kirill\"},\"images\":[{\"id\":1,\"link\":\"link\"}]}]",
 			logger:             logger,
@@ -86,6 +95,9 @@ func TestGetUserListHandler(t *testing.T) {
 			GetImages:          []models.Image{{Id: 1, Link: "link"}},
 			GetImagesError:     nil,
 			GetImagesCount:     0,
+			GetReactions:       []int{2},
+			GetReactionsError:  nil,
+			GetReactionsCount:  1,
 			expectedStatus:     http.StatusInternalServerError,
 			expectedMessage:    "bad get profile\n",
 			logger:             logger,
@@ -109,6 +121,9 @@ func TestGetUserListHandler(t *testing.T) {
 			GetImages:          []models.Image{{Id: 1, Link: "link"}},
 			GetImagesError:     errors.New("error"),
 			GetImagesCount:     1,
+			GetReactions:       []int{2},
+			GetReactionsError:  nil,
+			GetReactionsCount:  1,
 			expectedStatus:     http.StatusInternalServerError,
 			expectedMessage:    "error\n",
 			logger:             logger,
@@ -121,25 +136,25 @@ func TestGetUserListHandler(t *testing.T) {
 			profileService := getuserlist_mocks.NewMockProfileService(mockCtrl)
 			userService := getuserlist_mocks.NewMockUserService(mockCtrl)
 			imageService := getuserlist_mocks.NewMockImageService(mockCtrl)
+			reactionService := getuserlist_mocks.NewMockReactionService(mockCtrl)
 
-			sessionService.EXPECT().GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+			sessionService.EXPECT().GetUserIDBySessionID(ctx, gomock.Any()).
 				Return(tt.UserBySessionId, tt.UserBySessionErr).Times(tt.UserBySessionCount)
-			imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), gomock.Any()).
+			imageService.EXPECT().GetImageLinksByUserId(ctx, gomock.Any()).
 				Return(tt.GetImages, tt.GetImagesError).Times(tt.GetImagesCount)
-			userService.EXPECT().GetUserList(gomock.Any(), gomock.Any()).
+			reactionService.EXPECT().GetReactionList(ctx, tt.UserBySessionId).
+				Return(tt.GetReactions, tt.GetReactionsError).Times(tt.GetReactionsCount)
+			userService.EXPECT().GetFeedList(ctx, gomock.Any(), gomock.Any()).
 				Return(tt.GetUserList, tt.GetUserListError).Times(tt.GetUserListCount)
 			for _, user := range tt.GetUserList {
-				profileService.EXPECT().GetProfile(gomock.Any(), user.ID).
+				profileService.EXPECT().GetProfile(ctx, user.ID).
 					Return(tt.GetProfile, tt.GetProfileError).Times(tt.GetProfileCount)
-				userService.EXPECT().GetUsernameByUserId(gomock.Any(), user.ID).
+				userService.EXPECT().GetUsernameByUserId(ctx, user.ID).
 					Return(tt.UsernameByID, tt.UsernameByIDError).Times(tt.UsernameByIDCount)
 			}
 
-			handler := NewHandler(sessionService, profileService, userService, imageService, tt.logger)
+			handler := NewHandler(sessionService, profileService, userService, imageService, reactionService, tt.logger)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel() // Отменяем контекст после завершения работы
-			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 			req := httptest.NewRequest(tt.method, tt.path, nil).WithContext(ctx)
 
 			req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})

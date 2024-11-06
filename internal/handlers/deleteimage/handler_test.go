@@ -1,14 +1,17 @@
 package deleteimage_test
 
 import (
+	"context"
 	"errors"
 	"go.uber.org/zap/zaptest"
 	"net/http"
 	"net/http/httptest"
 	"sparkit/internal/handlers/deleteimage"
 	"sparkit/internal/handlers/deleteimage/mocks"
+	"sparkit/internal/utils/consts"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
@@ -75,7 +78,10 @@ func TestDeleteImageHandler(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req = req.WithContext(ctx)
 			router.ServeHTTP(w, req)
 
 			if w.Code != tt.expectedStatus {

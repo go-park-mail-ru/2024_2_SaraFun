@@ -2,6 +2,7 @@ package uploadimage_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	_ "go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
@@ -9,9 +10,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sparkit/internal/handlers/uploadimage"
-	"sparkit/internal/handlers/uploadimage/mocks"
+	mocks "sparkit/internal/handlers/uploadimage/mocks"
 	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 )
@@ -112,6 +114,10 @@ func TestUploadImageHandler(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req = req.WithContext(ctx)
 			handler.Handle(w, req)
 
 			if w.Code != tt.expectedStatus {

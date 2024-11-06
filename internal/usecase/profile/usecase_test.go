@@ -8,10 +8,15 @@ import (
 	"go.uber.org/zap"
 	"sparkit/internal/models"
 	"sparkit/internal/usecase/profile/mocks"
+	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 func TestCreateProfile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 
@@ -50,10 +55,10 @@ func TestCreateProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().CreateProfile(gomock.Any(), tt.profile).Return(tt.repoCreateProfileResult, tt.repoCreateProfileError).
+			repo.EXPECT().CreateProfile(ctx, tt.profile).Return(tt.repoCreateProfileResult, tt.repoCreateProfileError).
 				Times(tt.repoCreateProfileCount)
 			s := New(repo, logger)
-			id, err := s.CreateProfile(context.Background(), tt.profile)
+			id, err := s.CreateProfile(ctx, tt.profile)
 			require.ErrorIs(t, err, tt.repoCreateProfileError)
 			if id != tt.wantId {
 				t.Errorf("CreateProfile() id = %v, want %v", id, tt.wantId)
@@ -64,6 +69,9 @@ func TestCreateProfile(t *testing.T) {
 }
 
 func TestUpdateProfile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 
@@ -98,16 +106,19 @@ func TestUpdateProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().UpdateProfile(gomock.Any(), tt.id, tt.profile).Return(tt.updateProfileErr).
+			repo.EXPECT().UpdateProfile(ctx, tt.id, tt.profile).Return(tt.updateProfileErr).
 				Times(tt.updateProfileCount)
 			s := New(repo, logger)
-			err := s.UpdateProfile(context.Background(), tt.id, tt.profile)
+			err := s.UpdateProfile(ctx, tt.id, tt.profile)
 			require.ErrorIs(t, err, tt.updateProfileErr)
 		})
 	}
 }
 
 func TestGetProfile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 
@@ -146,11 +157,11 @@ func TestGetProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().GetProfile(gomock.Any(), tt.id).Return(tt.returnProfile, tt.returnError).
+			repo.EXPECT().GetProfile(ctx, tt.id).Return(tt.returnProfile, tt.returnError).
 				Times(tt.callCount)
 			s := New(repo, logger)
 
-			profile, err := s.GetProfile(context.Background(), tt.id)
+			profile, err := s.GetProfile(ctx, tt.id)
 
 			require.ErrorIs(t, err, tt.returnError)
 			if profile != tt.wantProfile {
@@ -161,6 +172,9 @@ func TestGetProfile(t *testing.T) {
 }
 
 func TestDeleteProfile(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 
@@ -193,11 +207,11 @@ func TestDeleteProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().DeleteProfile(gomock.Any(), tt.id).Return(tt.returnError).
+			repo.EXPECT().DeleteProfile(ctx, tt.id).Return(tt.returnError).
 				Times(tt.callCount)
 
 			s := New(repo, logger)
-			err := s.DeleteProfile(context.Background(), tt.id)
+			err := s.DeleteProfile(ctx, tt.id)
 			require.ErrorIs(t, err, tt.returnError)
 		})
 	}

@@ -2,6 +2,7 @@ package getcurrentprofile
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
@@ -11,6 +12,7 @@ import (
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 type TestResponse struct {
@@ -145,6 +147,10 @@ func TestHandler(t *testing.T) {
 			}
 			req.AddCookie(cookie)
 			w := httptest.NewRecorder()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req = req.WithContext(ctx)
 			handler.Handle(w, req)
 			if w.Code != tt.expectedStatus {
 				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)

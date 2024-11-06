@@ -35,19 +35,19 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
 }
 
-// GetUserList mocks base method.
-func (m *MockUserService) GetUserList(arg0 context.Context, arg1 int) ([]models.User, error) {
+// GetFeedList mocks base method.
+func (m *MockUserService) GetFeedList(arg0 context.Context, arg1 int, arg2 []int) ([]models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserList", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetFeedList", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserList indicates an expected call of GetUserList.
-func (mr *MockUserServiceMockRecorder) GetUserList(arg0, arg1 interface{}) *gomock.Call {
+// GetFeedList indicates an expected call of GetFeedList.
+func (mr *MockUserServiceMockRecorder) GetFeedList(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserList", reflect.TypeOf((*MockUserService)(nil).GetUserList), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedList", reflect.TypeOf((*MockUserService)(nil).GetFeedList), arg0, arg1, arg2)
 }
 
 // GetUsernameByUserId mocks base method.

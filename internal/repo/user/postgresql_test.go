@@ -7,10 +7,15 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"go.uber.org/zap"
 	"sparkit/internal/models"
+	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 func TestGetUserList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	db, mock, err := sqlmock.New()
 	logger := zap.NewNop()
 	if err != nil {
@@ -77,7 +82,7 @@ func TestGetUserList(t *testing.T) {
 				mock.ExpectQuery("SELECT id, username FROM users").WillReturnError(tt.resultQueryError)
 			}
 
-			list, err := storage.GetUserList(context.Background(), 1)
+			list, err := storage.GetUserList(ctx, 1)
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 				//t.Errorf("GetUserList() error = %v, wantErr %v,", err, tt.wantErr)
 				t.Errorf("GetUserList() error = %v, wantErr %v", err, tt.wantErr)
@@ -99,6 +104,9 @@ func TestGetUserList(t *testing.T) {
 }
 
 func TestAddUser(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -129,7 +137,7 @@ func TestAddUser(t *testing.T) {
 				WithArgs(tt.user.Username, tt.user.Password, tt.user.Profile).
 				WillReturnError(tt.queryErr)
 			//WillReturnResult(sqlmock.NewResult(1, 1))
-			_, err := storage.AddUser(context.Background(), tt.user)
+			_, err := storage.AddUser(ctx, tt.user)
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 
 				t.Errorf("AddUser() error = %v, wantErr %v", err, tt.wantErr)
@@ -144,6 +152,9 @@ func TestAddUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -175,7 +186,7 @@ func TestDeleteUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := Storage{db, logger}
 			mock.ExpectExec("DELETE FROM users").WithArgs(tt.username).WillReturnError(tt.execResult)
-			err := storage.DeleteUser(context.Background(), tt.username)
+			err := storage.DeleteUser(ctx, tt.username)
 			//if err != tt.wantErr {
 			//	t.Errorf("DeleteUser() error = %v, wantErr %v", err, tt.wantErr)
 			//}
@@ -191,6 +202,9 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestGetUserByUsername(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -232,7 +246,7 @@ func TestGetUserByUsername(t *testing.T) {
 				mock.ExpectQuery("SELECT id, username, password FROM users").WillReturnError(tt.queryError)
 			}
 
-			user, err := storage.GetUserByUsername(context.Background(), tt.username)
+			user, err := storage.GetUserByUsername(ctx, tt.username)
 
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 				//t.Errorf("GetUserList() error = %v, wantErr %v,", err, tt.wantErr)

@@ -1,6 +1,7 @@
 package logout
 
 import (
+	"context"
 	"errors"
 	"go.uber.org/zap"
 	"net/http"
@@ -74,6 +75,10 @@ func TestLogoutHandler(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req = req.WithContext(ctx)
 			handler.Handle(w, req)
 
 			if w.Code != tt.expectedStatus {

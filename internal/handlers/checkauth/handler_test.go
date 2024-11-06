@@ -1,11 +1,13 @@
 package checkauth
 
 import (
+	"context"
 	"errors"
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	checkauth_mocks "sparkit/internal/handlers/checkauth/mocks"
@@ -69,11 +71,16 @@ func TestCheckAuthHandler(t *testing.T) {
 				req := httptest.NewRequest(tt.method, "/checkauth", nil)
 				req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
 				w := httptest.NewRecorder()
+
 				if tt.checkSessionError != nil {
 					service.EXPECT().CheckSession(gomock.Any(), tt.cookieValue).Return(tt.checkSessionError).Times(1)
 				} else {
 					service.EXPECT().CheckSession(gomock.Any(), tt.cookieValue).Return(nil).Times(1)
 				}
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel() // Отменяем контекст после завершения работы
+				ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+				req = req.WithContext(ctx)
 				handler.Handle(w, req)
 
 				if w.Code != tt.expectedStatus {
@@ -86,6 +93,10 @@ func TestCheckAuthHandler(t *testing.T) {
 			} else {
 				req := httptest.NewRequest(tt.method, "/checkauth", nil)
 				w := httptest.NewRecorder()
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel() // Отменяем контекст после завершения работы
+				ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+				req = req.WithContext(ctx)
 				handler.Handle(w, req)
 
 				if w.Code != tt.expectedStatus {

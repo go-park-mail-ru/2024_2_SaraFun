@@ -11,12 +11,12 @@ import (
 	"sparkit/internal/utils/consts"
 )
 
-//go:generate mockgen -source=handler.go -destination=mocks/mock_image_service.go -package=mocks ImageService
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=uploadimage_mocks . ImageService
 type ImageService interface {
 	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error)
 }
 
-//go:generate mockgen -source=handler.go -destination=mocks/mock_session_service.go -package=mocks SessionService
+//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=uploadimage_mocks . SessionService
 type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 }

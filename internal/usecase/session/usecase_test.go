@@ -6,10 +6,15 @@ import (
 	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/usecase/session/mocks"
+	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 )
 
 func TestGetUserIDBySessionID(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 	tests := []struct {
@@ -47,10 +52,10 @@ func TestGetUserIDBySessionID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().GetUserIDBySessionID(gomock.Any(), tt.sessionID).Return(1, tt.getUserError).Times(tt.getUserCallCount)
+			repo.EXPECT().GetUserIDBySessionID(ctx, tt.sessionID).Return(1, tt.getUserError).Times(tt.getUserCallCount)
 
 			s := New(repo, logger)
-			res, err := s.GetUserIDBySessionID(context.Background(), tt.sessionID)
+			res, err := s.GetUserIDBySessionID(ctx, tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("GetUserIDBySessionID() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -62,6 +67,9 @@ func TestGetUserIDBySessionID(t *testing.T) {
 }
 
 func TestCheckSession(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 	tests := []struct {
@@ -95,9 +103,9 @@ func TestCheckSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().CheckSession(gomock.Any(), tt.sessionID).Return(tt.checkSessionError).Times(tt.checkSessionCallCount)
+			repo.EXPECT().CheckSession(ctx, tt.sessionID).Return(tt.checkSessionError).Times(tt.checkSessionCallCount)
 			s := New(repo, logger)
-			err := s.CheckSession(context.Background(), tt.sessionID)
+			err := s.CheckSession(ctx, tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("CheckSession() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -107,6 +115,9 @@ func TestCheckSession(t *testing.T) {
 }
 
 func TestDeleteSession(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
 	tests := []struct {
@@ -142,10 +153,10 @@ func TestDeleteSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
 
-			repo.EXPECT().DeleteSession(gomock.Any(), tt.sessionID).Return(tt.deleteSessionError).Times(tt.deleteSessionCallCount)
+			repo.EXPECT().DeleteSession(ctx, tt.sessionID).Return(tt.deleteSessionError).Times(tt.deleteSessionCallCount)
 
 			s := New(repo, logger)
-			err := s.DeleteSession(context.Background(), tt.sessionID)
+			err := s.DeleteSession(ctx, tt.sessionID)
 			if err != tt.wantErr {
 				t.Errorf("DeleteSession() error = %v, wantErr %v", err, tt.wantErr)
 			}
