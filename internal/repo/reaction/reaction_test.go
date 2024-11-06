@@ -3,6 +3,7 @@ package reaction
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -77,6 +78,131 @@ func TestAddReaction(t *testing.T) {
 				require.True(t, errors.Is(err, tt.wantErr), "expected error to be %v but got %v", tt.wantErr, err)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetReactionList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	tests := []struct {
+		name     string
+		userId   int
+		mockRows *sqlmock.Rows
+		queryErr error
+		wantErr  error
+		wantList []int
+	}{
+		{
+			name:     "successful reaction list retrieval",
+			userId:   1,
+			mockRows: sqlmock.NewRows([]string{"receiver"}).AddRow(2).AddRow(3),
+			queryErr: nil,
+			wantErr:  nil,
+			wantList: []int{2, 3},
+		},
+
+		{
+			name:     "database error on reaction list retrieval",
+			userId:   1,
+			mockRows: nil,
+			queryErr: errors.New("some select error"),
+			wantErr:  fmt.Errorf("failed to select: %v", errors.New("some select error")),
+			wantList: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := Storage{DB: db, logger: logger}
+
+			if tt.queryErr != nil {
+				mock.ExpectQuery("SELECT receiver FROM reaction WHERE author =").WillReturnError(tt.queryErr)
+			} else {
+				mock.ExpectQuery("SELECT receiver FROM reaction WHERE author =").
+					WithArgs(tt.userId).
+					WillReturnRows(tt.mockRows)
+			}
+
+			gotList, err := storage.GetReactionList(ctx, tt.userId)
+
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tt.wantErr.Error())
+				require.Nil(t, gotList)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.wantList, gotList)
+			}
+		})
+	}
+}
+
+func TestGetMatchList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	tests := []struct {
+		name     string
+		userId   int
+		mockRows *sqlmock.Rows
+		queryErr error
+		wantErr  error
+		wantList []int
+	}{
+		{
+			name:     "successful match list retrieval",
+			userId:   1,
+			mockRows: sqlmock.NewRows([]string{"author"}).AddRow(2).AddRow(3),
+			queryErr: nil,
+			wantErr:  nil,
+			wantList: []int{2, 3},
+		},
+
+		{
+			name:     "database error on match list retrieval",
+			userId:   1,
+			mockRows: nil,
+			queryErr: errors.New("some select error"),
+			wantErr:  fmt.Errorf("failed to select: %v", errors.New("some select error")),
+			wantList: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := Storage{DB: db, logger: logger}
+
+			if tt.queryErr != nil {
+				mock.ExpectQuery("SELECT author FROM reaction WHERE receiver = \\$1 AND author IN \\(SELECT receiver FROM reaction WHERE author = \\$2\\)").
+					WillReturnError(tt.queryErr)
+			} else {
+				mock.ExpectQuery("SELECT author FROM reaction WHERE receiver = \\$1 AND author IN \\(SELECT receiver FROM reaction WHERE author = \\$2\\)").
+					WithArgs(tt.userId, tt.userId).
+					WillReturnRows(tt.mockRows)
+			}
+
+			gotList, err := storage.GetMatchList(ctx, tt.userId)
+
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tt.wantErr.Error())
+				require.Nil(t, gotList)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.wantList, gotList)
 			}
 		})
 	}
