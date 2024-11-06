@@ -9,6 +9,8 @@ import (
 	"strconv"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mock_image_service.go -package=mocks sparkit/internal/handlers/deleteimage ImageService
+
 type ImageService interface {
 	DeleteImage(ctx context.Context, id int) error
 }

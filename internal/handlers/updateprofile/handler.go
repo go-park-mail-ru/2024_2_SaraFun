@@ -10,6 +10,10 @@ import (
 	"sparkit/internal/utils/consts"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/mock_profile_service.go -package=mocks sparkit/internal/handlers/updateprofile ProfileService
+//go:generate mockgen -source=handler.go -destination=mocks/mock_session_service.go -package=mocks sparkit/internal/handlers/updateprofile SessionService
+//go:generate mockgen -source=handler.go -destination=mocks/mock_user_service.go -package=mocks sparkit/internal/handlers/updateprofile UserService
+
 type ProfileService interface {
 	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
 }
