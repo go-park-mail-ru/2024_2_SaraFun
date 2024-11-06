@@ -2,78 +2,74 @@ package session
 
 import (
 	"context"
+	"fmt"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
-	"sync"
+	"sparkit/internal/utils/consts"
+	"strconv"
+	"time"
 )
 
 type InMemoryStorage struct {
-	mu       sync.RWMutex
-	sessions map[string]int
+	redisClient *redis.Client
+	logger      *zap.Logger
 }
 
-func New() *InMemoryStorage {
-	return &InMemoryStorage{mu: sync.RWMutex{}, sessions: make(map[string]int)}
+func New(client *redis.Client, logger *zap.Logger) *InMemoryStorage {
+	return &InMemoryStorage{redisClient: client, logger: logger}
 }
 
 func (repo *InMemoryStorage) AddSession(ctx context.Context, session models.Session) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-	repo.sessions[session.SessionID] = session.UserID
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	if err := repo.redisClient.Set(ctx, session.SessionID, session.UserID, time.Hour*24).Err(); err != nil {
+		repo.logger.Error("failed to add session", zap.Error(err))
+		return fmt.Errorf("add session failed: %w", err)
+	}
+	repo.logger.Info("added session", zap.String("sessionID", session.SessionID))
 	return nil
 }
 
 func (repo *InMemoryStorage) GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error) {
-	repo.mu.RLock()
-	defer repo.mu.RUnlock()
-	if val, ok := repo.sessions[sessionID]; !ok {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	val, err := repo.redisClient.Get(ctx, sessionID).Result()
+	if err != nil {
+		repo.logger.Error("get sessionId err", zap.Error(err))
 		return 0, sparkiterrors.ErrInvalidSession
-	} else {
-		return val, nil
 	}
+	userId, err := strconv.Atoi(val)
+	if err != nil {
+		return -1, fmt.Errorf("convert session id %s to int: %w", val, err)
+	}
+	repo.logger.Info("got session id", zap.String("sessionID", sessionID))
+	return userId, nil
 }
 
 func (repo *InMemoryStorage) CheckSession(ctx context.Context, sessionID string) error {
-	if sessionID == "" {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	val, err := repo.redisClient.Get(ctx, sessionID).Result()
+	if err != nil {
 		return sparkiterrors.ErrInvalidSession
 	}
-	repo.mu.RLock()
-	defer repo.mu.RUnlock()
-	if _, ok := repo.sessions[sessionID]; !ok {
-		return sparkiterrors.ErrInvalidSession
-	} else {
-		return nil
+	if _, err := strconv.Atoi(val); err != nil {
+		repo.logger.Error("invalid session id", zap.String("session_id", sessionID))
+		return fmt.Errorf("convert session id %s to int: %w", val, err)
 	}
+	repo.logger.Info("checked session id", zap.String("sessionID", sessionID))
+	return nil
 }
 
 func (repo *InMemoryStorage) DeleteSession(ctx context.Context, sessionID string) error {
-	if sessionID == "" {
-		return sparkiterrors.ErrInvalidSession
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	if err := repo.redisClient.Del(ctx, sessionID).Err(); err != nil {
+		repo.logger.Error("delete session failed", zap.Error(err))
+		return fmt.Errorf("delete session failed: %w", err)
 	}
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-	delete(repo.sessions, sessionID)
+	repo.logger.Info("deleted session", zap.String("sessionID", sessionID))
 	return nil
-
 }
-
-//func (repo *InMemoryStorage) DeleteSessionByUserID(ctx context.Context, userID int) error {
-//	//for i, u := range repo.sessions {
-//	//	if u.UserID == userID {
-//	//		repo.sessions = append(repo.sessions[:i], repo.sessions[i+1:]...)
-//	//		return nil
-//	//	}
-//	//}
-//	//return errors.New("user not found")
-//	delete(repo.sessions, session)
-//}
-
-//func (repo *InMemoryStorage) GetSessionByUserID(ctx context.Context, userID int) (models.Session, error) {
-//	//for _, u := range repo.sessions {
-//	//	if u.UserID == userID {
-//	//		return u, nil
-//	//	}
-//	//}
-//	//return models.Session{}, errors.New("session not found")
-//
-//}

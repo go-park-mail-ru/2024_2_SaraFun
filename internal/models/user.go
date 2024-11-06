@@ -23,9 +23,38 @@ import (
 type User struct {
 	ID       int    `json:"id" validate:"required"`
 	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
-	Age      int    `json:"age,omitempty" validate:"gte=0, lte=130"`
-	Gender   string `json:"gender,omitempty"`
+	Profile  int    `json:"profile" validate:"required"`
+}
+
+type Profile struct {
+	ID        int    `json:"id" validate:"required"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Age       int    `json:"age,omitempty"`
+	Gender    string `json:"gender,omitempty"`
+	Target    string `json:"target,omitempty"`
+	About     string `json:"about,omitempty"`
+}
+
+type Image struct {
+	Id   int    `json:"id"`
+	Link string `json:"link"`
+}
+
+type Reaction struct {
+	Id       int  `json:"id"`
+	Author   int  `json:"author"`
+	Receiver int  `json:"receiver"`
+	Type     bool `json:"type"`
+}
+
+type PersonCard struct {
+	UserId   int     `json:"user"`
+	Username string  `json:"username"`
+	Profile  Profile `json:"profile"`
+	Images   []Image `json:"images"`
 }
 
 type Match struct {
