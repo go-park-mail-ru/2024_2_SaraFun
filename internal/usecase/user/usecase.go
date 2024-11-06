@@ -30,11 +30,11 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 	return &UseCase{repo: repo, logger: logger}
 }
 
-func (u* UseCase) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
+func (u *UseCase) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
 	users, err := u.repo.GetFeedList(ctx, userId, receivers)
 	if err != nil {
 		u.logger.Error("bad getuserlist", zap.Error(err))
-		return nil, errors.New("failed to get user list")
+		return nil, fmt.Errorf("failed to get user list: %w", err)
 	}
 	return users, nil
 }

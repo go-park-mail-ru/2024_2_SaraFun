@@ -2,7 +2,9 @@ package user
 
 import (
 	"context"
+	"errors"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	sparkiterrors "sparkit/internal/errors"
 	"sparkit/internal/models"
@@ -126,6 +128,68 @@ func TestCheckPassword(t *testing.T) {
 			}
 			if res != tt.wantUser {
 				t.Errorf("CheckPassword() = %v, want %v", res, tt.wantUser)
+			}
+		})
+	}
+}
+
+func TestGetFeed(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Отменяем контекст после завершения работы
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+	defer logger.Sync()
+
+	tests := []struct {
+		name        string
+		userId      int
+		receivers   []int
+		returnUsers []models.User
+		returnError error
+		returnCount int
+		wantUsers   []models.User
+		logger      *zap.Logger
+	}{
+		{
+			name:        "successfull test",
+			userId:      1,
+			receivers:   []int{2, 3},
+			returnUsers: []models.User{{ID: 1, Username: "Kirill", Password: "123456"}, {ID: 2, Username: "Andrey", Password: "222222"}},
+			returnError: nil,
+			returnCount: 1,
+			wantUsers:   []models.User{{ID: 1, Username: "Kirill", Password: "123456"}, {ID: 2, Username: "Andrey", Password: "222222"}},
+			logger:      logger,
+		},
+		{
+			name:        "bad test",
+			userId:      1,
+			receivers:   []int{2, 3},
+			returnUsers: nil,
+			returnError: errors.New("test error"),
+			returnCount: 1,
+			wantUsers:   nil,
+			logger:      logger,
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := mocks.NewMockRepository(mockCtrl)
+			repo.EXPECT().GetFeedList(ctx, tt.userId, tt.receivers).Return(tt.returnUsers, tt.returnError).Times(tt.returnCount)
+
+			s := New(repo, logger)
+
+			list, err := s.GetFeedList(ctx, tt.userId, tt.receivers)
+			t.Log(err)
+			t.Log(tt.returnError)
+			require.ErrorIs(t, err, tt.returnError)
+			for i, v := range list {
+				if v != tt.wantUsers[i] {
+					t.Errorf("GetFeedList() test error got = %v, want %v", list, tt.wantUsers[i])
+				}
 			}
 		})
 	}
