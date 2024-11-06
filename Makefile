@@ -22,3 +22,11 @@ sparkit-run:
 sparkit-down:
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml down
 
+.PHONY: sparkit-test
+sparkit-test:
+	go test -coverprofile=coverage.out -coverpkg=$(go list ./... | grep -v "/mocks" | paste -sd ',') ./...
+
+.PHONY: sparkit-test-cover
+sparkit-test-cover:
+	go tool cover -func=coverage.out
+
