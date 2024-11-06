@@ -152,3 +152,55 @@ func TestGetImageLinksByUserId(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteImage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+
+	tests := []struct {
+		name     string
+		imageId  int
+		queryErr error
+		wantErr  error
+	}{
+		{
+			name:     "successful delete test",
+			imageId:  1,
+			queryErr: nil,
+			wantErr:  nil,
+		},
+		{
+			name:     "error delete test",
+			imageId:  1,
+			queryErr: errors.New("delete error"),
+			wantErr:  errors.New("delete error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := New(db, logger)
+			if tt.queryErr != nil {
+
+				mock.ExpectExec("DELETE FROM photo WHERE id = \\$1").WithArgs(tt.imageId).WillReturnError(tt.queryErr)
+			} else {
+				mock.ExpectExec("DELETE FROM photo WHERE id = \\$1").WithArgs(tt.imageId).WillReturnResult(sqlmock.NewResult(1, 1))
+			}
+
+			err := storage.DeleteImage(ctx, tt.imageId)
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
