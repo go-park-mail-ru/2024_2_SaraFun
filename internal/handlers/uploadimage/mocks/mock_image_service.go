@@ -36,10 +36,10 @@ func (m *MockImageService) EXPECT() *MockImageServiceMockRecorder {
 }
 
 // SaveImage mocks base method.
-func (m *MockImageService) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int64, error) {
+func (m *MockImageService) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveImage", ctx, file, fileExt, userId)
-	ret0, _ := ret[0].(int64)
+	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

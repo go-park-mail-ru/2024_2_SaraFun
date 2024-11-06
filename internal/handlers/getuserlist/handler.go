@@ -22,7 +22,7 @@ type ProfileService interface {
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=getuserlist_mocks . UserService
 type UserService interface {
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
-	GetUserList(ctx context.Context, userId int) ([]models.User, error)
+	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=getuserlist_mocks . ImageService
@@ -30,16 +30,21 @@ type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
+type ReactionService interface {
+	GetReactionList(ctx context.Context, userId int) ([]int, error)
+}
+
 type Handler struct {
 	sessionService SessionService
 	profileService ProfileService
 	userService    UserService
 	imageService   ImageService
+	reactionService ReactionService
 	logger         *zap.Logger
 }
 
-func NewHandler(sessionService SessionService, profileService ProfileService, userService UserService, imageService ImageService, logger *zap.Logger) *Handler {
-	return &Handler{sessionService: sessionService, profileService: profileService, userService: userService, imageService: imageService, logger: logger}
+func NewHandler(sessionService SessionService, profileService ProfileService, userService UserService, imageService ImageService, reactionService ReactionService, logger *zap.Logger) *Handler {
+	return &Handler{sessionService: sessionService, profileService: profileService, userService: userService, imageService: imageService, reactionService: reactionService, logger: logger}
 }
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -65,11 +70,16 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	receivers, err := h.reactionService.GetReactionList(ctx, userId)
+	if err != nil {
+		http.Error(w, "reaction list failed", http.StatusUnauthorized)
+		return
+	}
 	//получить список пользователей
 	var users []models.User
-	users, err = h.userService.GetUserList(ctx, userId)
+	users, err = h.userService.GetFeedList(ctx, userId, receivers)
 	if err != nil {
-		h.logger.Error("failed to get user list", zap.Error(err))
+		h.logger.Error("failed to get feed list", zap.Error(err))
 		http.Error(w, "ошибка в получении списка пользователей", http.StatusInternalServerError)
 		return
 	}

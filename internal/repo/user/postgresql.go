@@ -95,3 +95,20 @@ func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (strin
 	}
 	return username, nil
 }
+
+func (repo *Storage) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
+	rows, err := repo.DB.Query("SELECT id, username FROM users WHERE id != $1 AND id NOT IN (SELECT receiver FROM reaction WHERE author = $2)", userId, userId)
+	if err != nil {
+		return []models.User{}, fmt.Errorf("GetFeedList err: %v", err)
+	}
+	defer rows.Close()
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+			return []models.User{}, fmt.Errorf("GetFeedList err during scanning")
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}

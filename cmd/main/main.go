@@ -189,7 +189,7 @@ func main() {
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
 	signIn := signin.NewHandler(userUsecase, sessionUsecase, logger)
-	getUsers := getuserlist.NewHandler(sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
+	getUsers := getuserlist.NewHandler(sessionUsecase, profileUseCase, userUsecase, imageUseCase, reactionUsecase, logger)
 	checkAuth := checkauth.NewHandler(sessionUsecase, logger)
 	logOut := logout.NewHandler(sessionUsecase, logger)
 	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)

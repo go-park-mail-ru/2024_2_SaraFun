@@ -10,18 +10,17 @@ import (
 	"sparkit/internal/utils/consts"
 )
 
-//go:generate mockgen -source=handler.go -destination=mocks/mock_profile_service.go -package=mocks sparkit/internal/handlers/updateprofile ProfileService
-//go:generate mockgen -source=handler.go -destination=mocks/mock_session_service.go -package=mocks sparkit/internal/handlers/updateprofile SessionService
-//go:generate mockgen -source=handler.go -destination=mocks/mock_user_service.go -package=mocks sparkit/internal/handlers/updateprofile UserService
-
+//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=updateprofile_mocks . ProfileService
 type ProfileService interface {
 	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
 }
 
+//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=updateprofile_mocks . SessionService
 type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_UserService.go -package=updateprofile_mocks . UserService
 type UserService interface {
 	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 }

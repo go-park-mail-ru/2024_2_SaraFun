@@ -12,6 +12,7 @@ import (
 type Repository interface {
 	AddReaction(ctx context.Context, reaction models.Reaction) error
 	GetMatchList(ctx context.Context, userId int) ([]int, error)
+	GetReactionList(ctx context.Context, userId int) ([]int, error)
 }
 
 type UseCase struct {
@@ -43,4 +44,12 @@ func (u *UseCase) GetMatchList(ctx context.Context, userId int) ([]int, error) {
 		return nil, fmt.Errorf("failed to GetMatchList: %w", err)
 	}
 	return authors, nil
+}
+
+func (u *UseCase) GetReactionList(ctx context.Context, userId int) ([]int, error) {
+	receivers, err := u.repo.GetReactionList(ctx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to GetReactionList: %w", err)
+	}
+	return receivers, nil
 }

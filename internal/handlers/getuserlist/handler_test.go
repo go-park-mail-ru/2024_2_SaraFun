@@ -1,6 +1,7 @@
 package getuserlist
 
 import (
+	"context"
 	"errors"
 	"go.uber.org/zap"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	getuserlist_mocks "sparkit/internal/handlers/getuserlist/mocks"
@@ -135,7 +137,11 @@ func TestGetUserListHandler(t *testing.T) {
 
 			handler := NewHandler(sessionService, profileService, userService, imageService, tt.logger)
 
-			req := httptest.NewRequest(tt.method, tt.path, nil)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel() // Отменяем контекст после завершения работы
+			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req := httptest.NewRequest(tt.method, tt.path, nil).WithContext(ctx)
+
 			req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
 			w := httptest.NewRecorder()
 			handler.Handle(w, req)

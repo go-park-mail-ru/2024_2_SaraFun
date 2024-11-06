@@ -54,3 +54,24 @@ func (repo *Storage) GetMatchList(ctx context.Context, userId int) ([]int, error
 	repo.logger.Info("Repo GetMatchList: successfully getting")
 	return authors, nil
 }
+
+func (repo *Storage) GetReactionList(ctx context.Context, userId int) ([]int, error) {
+	rows, err := repo.DB.Query("SELECT receiver FROM reaction WHERE author = $1", userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select: %w", err)
+	}
+	defer rows.Close()
+
+	var receivers []int
+
+	for rows.Next() {
+		var receiver int
+		if err := rows.Scan(&receiver); err != nil {
+			repo.logger.Error("Repo GetReactionList: failed to scan receiver", zap.Error(err))
+			return nil, fmt.Errorf("failed to scan receiver: %w", err)
+		}
+		receivers = append(receivers, receiver)
+	}
+
+	return receivers, nil
+}

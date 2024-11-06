@@ -31,7 +31,7 @@ func TestUploadImageHandler(t *testing.T) {
 		cookieValue      string
 		userId           int
 		getUserIDError   error
-		saveImageID      int64
+		saveImageID      int
 		saveImageError   error
 		expectedStatus   int
 		expectedResponse string

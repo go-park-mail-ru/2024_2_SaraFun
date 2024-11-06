@@ -18,6 +18,7 @@ type Repository interface {
 	GetUserList(ctx context.Context, userId int) ([]models.User, error)
 	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
+	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
 }
 
 type UseCase struct {
@@ -27,6 +28,15 @@ type UseCase struct {
 
 func New(repo Repository, logger *zap.Logger) *UseCase {
 	return &UseCase{repo: repo, logger: logger}
+}
+
+func (u* UseCase) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
+	users, err := u.repo.GetFeedList(ctx, userId, receivers)
+	if err != nil {
+		u.logger.Error("bad getuserlist", zap.Error(err))
+		return nil, errors.New("failed to get user list")
+	}
+	return users, nil
 }
 
 func (u *UseCase) RegisterUser(ctx context.Context, user models.User) (int, error) {
