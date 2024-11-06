@@ -249,32 +249,3 @@ func main() {
 
 	fmt.Println("Сервер завершил работу.")
 }
-
-//func accessLogMiddleware(logger *zap.SugaredLogger, next http.Handler) http.Handler {
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		start := time.Now()
-//		// Оборачиваем ResponseWriter, чтобы захватить статус код
-//		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-//		next.ServeHTTP(lrw, r)
-//		duration := time.Since(start)
-//
-//		logger.Infow("HTTP Request",
-//			"method", r.Method,
-//			"url", r.URL.Path,
-//			"remote_addr", r.RemoteAddr,
-//			"status", lrw.statusCode,
-//			"duration", duration,
-//		)
-//	})
-//}
-//
-//// Обертка для ResponseWriter, чтобы захватить статус код
-//type loggingResponseWriter struct {
-//	http.ResponseWriter
-//	statusCode int
-//}
-//
-//func (lrw *loggingResponseWriter) WriteHeader(code int) {
-//	lrw.statusCode = code
-//	lrw.ResponseWriter.WriteHeader(code)
-//}
