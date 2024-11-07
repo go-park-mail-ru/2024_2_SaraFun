@@ -7,21 +7,21 @@ services:
         condition: service_healthy
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
-      PSQL_USER: "reufee"
-      PSQL_PASSWORD: "sparkit"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8080:8080'
     volumes:
-      - ~/imagedata:/home/reufee/imagedata
+      - ~/imagedata:/home/${OS_USER}/imagedata
 
   sparkit-postgres:
     image: postgres:latest
     container_name: sparkit-postgres
     restart: always
     environment:
-      POSTGRES_USER: "reufee"
-      POSTGRES_PASSWORD: "sparkit"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "sparkitDB"
     healthcheck:
       test: [
@@ -37,6 +37,7 @@ services:
     ports:
      - "5432:5432"
     volumes:
+      - ../build/sql/create_tables.sql:/docker-entrypoint-initdb.d/initdb.sql
       - ~/postgresdata:/var/lib/postgresql/data
 
   sparkit-redis:

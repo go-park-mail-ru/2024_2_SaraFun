@@ -15,10 +15,12 @@ import (
 type Repository interface {
 	AddUser(ctx context.Context, user models.User) (int, error)
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
+	GetUserIdByUsername(ctx context.Context, username string) (int, error)
 	GetUserList(ctx context.Context, userId int) ([]models.User, error)
 	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
+	CheckUsernameExists(ctx context.Context, username string) (bool, error)
 }
 
 type UseCase struct {
@@ -98,4 +100,26 @@ func (u *UseCase) GetUsernameByUserId(ctx context.Context, userId int) (string, 
 		return "", sparkiterrors.ErrWrongCredentials
 	}
 	return username, nil
+}
+
+func (u *UseCase) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
+	id, err := u.repo.GetUserIdByUsername(ctx, username)
+	if err != nil {
+		u.logger.Error("failed to get user id by username", zap.String("username", username), zap.Error(err))
+		return -1, sparkiterrors.ErrWrongCredentials
+	}
+	return id, nil
+}
+
+func (u *UseCase) CheckUsernameExists(ctx context.Context, username string) (bool, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	u.logger.Info("usecase request-id", zap.String("request_id", req_id))
+	exists, err := u.repo.CheckUsernameExists(ctx, username)
+	if err != nil {
+		u.logger.Error("failed to check username unique", zap.String("username", username), zap.Error(err))
+		return false, sparkiterrors.ErrWrongCredentials
+	}
+	return exists, nil
 }

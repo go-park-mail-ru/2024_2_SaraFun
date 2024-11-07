@@ -20,6 +20,29 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 	return &Storage{DB: db, logger: logger}
 }
 
+func (repo *Storage) AddUser(ctx context.Context, user models.User) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	var id int
+	err := repo.DB.QueryRow("INSERT INTO users (username, password, profile) VALUES ($1, $2, $3) RETURNING id",
+		user.Username, user.Password, user.Profile).Scan(&id)
+	if err != nil {
+		repo.logger.Error("failed to insert user", zap.Error(err))
+		return -1, fmt.Errorf("AddUser err : %v: ", err)
+	}
+	return id, nil
+}
+
+func (repo *Storage) DeleteUser(ctx context.Context, username string) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	_, err := repo.DB.Exec("DELETE FROM users WHERE username=$1", username)
+	if err != nil {
+		return fmt.Errorf("DeleteUser err: %v", err)
+	}
+	return nil
+}
+
 func (repo *Storage) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
@@ -88,4 +111,27 @@ func (repo *Storage) GetFeedList(ctx context.Context, userId int, receivers []in
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func (repo *Storage) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	var userId int
+	err := repo.DB.QueryRow("SELECT id FROM users WHERE username=$1", username).Scan(&userId)
+	if err != nil {
+		return -1, fmt.Errorf("GetUserByUsername err: %v", err)
+	}
+	return userId, nil
+}
+
+func (repo *Storage) CheckUsernameExists(ctx context.Context, username string) (bool, error) {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	var exists bool
+	err := repo.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE username=$1)", username).Scan(&exists)
+	if err != nil {
+		repo.logger.Error("failed to check username unique", zap.Error(err))
+		return false, fmt.Errorf("CheckUsernameUnique err: %v", err)
+	}
+	return exists, nil
 }

@@ -3,7 +3,9 @@ package uploadimage
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"go.uber.org/zap"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -38,6 +40,23 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	h.logger.Info("Handling request", zap.String("request_id", req_id))
+	limitedReader := http.MaxBytesReader(w, r.Body, 32<<20)
+	defer r.Body.Close()
+
+	bodyContent, err := io.ReadAll(limitedReader)
+	if err != nil && !errors.Is(err, io.EOF) {
+		h.logger.Error("Error reading limited body", zap.Error(err))
+		if errors.As(err, new(*http.MaxBytesError)) {
+			http.Error(w, "request entity too large", http.StatusRequestEntityTooLarge)
+			return
+		}
+	}
+	fileFormat := http.DetectContentType(bodyContent)
+	if fileFormat != "image/png" && fileFormat != "image/jpeg" && fileFormat != "image/jpg" {
+		h.logger.Error("Invalid image format", zap.String("request_id", req_id))
+		http.Error(w, "invalid image format", http.StatusBadRequest)
+		return
+	}
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		h.logger.Error("parse multipart form", zap.Error(err))
 		http.Error(w, "bad ParseMultipartForm", http.StatusInternalServerError)

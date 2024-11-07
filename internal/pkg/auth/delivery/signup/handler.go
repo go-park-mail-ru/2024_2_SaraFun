@@ -15,6 +15,7 @@ import (
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
 	RegisterUser(ctx context.Context, user models.User) (int, error)
+	CheckUsernameExists(ctx context.Context, username string) (bool, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
@@ -61,6 +62,19 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		h.logger.Error("failed to decode request", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	request.User.Sanitize()
+	request.Profile.Sanitize()
+	exists, err := h.userService.CheckUsernameExists(ctx, request.User.Username)
+	if err != nil {
+		h.logger.Error("failed to check username exists", zap.Error(err))
+		http.Error(w, "failed to check username exists", http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		h.logger.Error("user already exists", zap.String("username", request.User.Username))
+		http.Error(w, "user already exists", http.StatusBadRequest)
 		return
 	}
 	profileId, err := h.profileService.CreateProfile(ctx, request.Profile)

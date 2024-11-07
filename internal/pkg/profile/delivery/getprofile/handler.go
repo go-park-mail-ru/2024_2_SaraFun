@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"sparkit/internal/models"
 	"sparkit/internal/utils/consts"
-	"strconv"
 )
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
@@ -24,6 +23,7 @@ type ProfileService interface {
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 type UserService interface {
 	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
+	GetUserIdByUsername(ctx context.Context, username string) (int, error)
 }
 
 type Response struct {
@@ -47,8 +47,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	h.logger.Info("Handling request", zap.String("request_id", req_id))
 	vars := mux.Vars(r)
-	userId, _ := strconv.Atoi(vars["userId"])
-
+	//userId, _ := strconv.Atoi(vars["userId"])
+	username := vars["username"]
+	userId, err := h.userService.GetUserIdByUsername(ctx, username)
+	if err != nil {
+		h.logger.Error("Error getting user id by username", zap.String("username", username), zap.Error(err))
+		http.Error(w, "don`t get user by username", http.StatusInternalServerError)
+		return
+	}
 	profileId, err := h.userService.GetProfileIdByUserId(ctx, userId)
 	if err != nil {
 		h.logger.Error("getprofileidbyuserid error", zap.Error(err))

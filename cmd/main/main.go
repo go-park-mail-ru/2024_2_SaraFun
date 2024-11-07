@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/caarlos0/env/v11"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -27,23 +28,30 @@ import (
 	"sparkit/internal/pkg/profile/delivery/getcurrentprofile"
 	"sparkit/internal/pkg/profile/delivery/getprofile"
 	"sparkit/internal/pkg/profile/delivery/updateprofile"
-	repo4 "sparkit/internal/pkg/profile/repo"
+	profilerepo "sparkit/internal/pkg/profile/repo"
 	profileusecase "sparkit/internal/pkg/profile/usecase"
 	"sparkit/internal/pkg/reaction/delivery/addreaction"
 	"sparkit/internal/pkg/reaction/delivery/getmatches"
-	repo3 "sparkit/internal/pkg/reaction/repo"
+	reactionrepo "sparkit/internal/pkg/reaction/repo"
 	reactionusecase "sparkit/internal/pkg/reaction/usecase/reaction"
-	repo2 "sparkit/internal/pkg/session/repo"
+	sessionrepo "sparkit/internal/pkg/session/repo"
 	sessionusecase "sparkit/internal/pkg/session/usecase"
 	"sparkit/internal/pkg/user/delivery/getuserlist"
-	repo5 "sparkit/internal/pkg/user/repo"
+	userrepo "sparkit/internal/pkg/user/repo"
 	userusecase "sparkit/internal/pkg/user/usecase"
 	"syscall"
 	"time"
 )
 
+type envConfig struct {
+	RedisUser     string `env: "REDIS_USER"`
+	RedisPassword string `env: "REDIS_PASSWORD"`
+}
+
 func main() {
 
+	var envCfg envConfig
+	err := env.Parse(&envCfg)
 	// Создаем логгер
 	cfg := zap.Config{
 		Encoding:         "json",
@@ -105,7 +113,7 @@ func main() {
 	//	fmt.Println("Table reaction created successfully!")
 	//}
 
-	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
+	url := "redis://" + envCfg.RedisUser + ":" + envCfg.RedisPassword + "@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
 	if err != nil {
 		log.Fatalf("Error parsing redis url: %s", err)
@@ -120,11 +128,11 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("bad ping to redis: %v", err)
 	}
-	userStorage := repo5.New(db, logger)
-	sessionStorage := repo2.New(redisClient, logger)
+	userStorage := userrepo.New(db, logger)
+	sessionStorage := sessionrepo.New(redisClient, logger)
 	imageStorage := repo.New(db, logger)
-	profileStorage := repo4.New(db, logger)
-	reactionStorage := repo3.New(db, logger)
+	profileStorage := profilerepo.New(db, logger)
+	reactionStorage := reactionrepo.New(db, logger)
 
 	userUsecase := userusecase.New(userStorage, logger)
 	sessionUsecase := sessionusecase.New(sessionStorage, logger)
@@ -163,7 +171,7 @@ func main() {
 	//loggedMux := accessLogMiddleware(sugar, mux)
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
-	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/profile/{username}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
