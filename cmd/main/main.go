@@ -13,34 +13,33 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sparkit/internal/handlers/addreaction"
-	"sparkit/internal/handlers/getmatches"
-	"sparkit/internal/handlers/middleware"
-	"sparkit/internal/repo/reaction"
+	"sparkit/internal/pkg/auth/delivery/checkauth"
+	"sparkit/internal/pkg/auth/delivery/logout"
+	"sparkit/internal/pkg/auth/delivery/signin"
+	"sparkit/internal/pkg/auth/delivery/signup"
+	"sparkit/internal/pkg/image/delivery/deleteimage"
+	"sparkit/internal/pkg/image/delivery/uploadimage"
+	"sparkit/internal/pkg/image/repo"
+	imageusecase "sparkit/internal/pkg/image/usecase"
+	"sparkit/internal/pkg/middleware"
+	"sparkit/internal/pkg/middleware/authcheck"
+	"sparkit/internal/pkg/middleware/corsMiddleware"
+	"sparkit/internal/pkg/profile/delivery/getcurrentprofile"
+	"sparkit/internal/pkg/profile/delivery/getprofile"
+	"sparkit/internal/pkg/profile/delivery/updateprofile"
+	repo4 "sparkit/internal/pkg/profile/repo"
+	profileusecase "sparkit/internal/pkg/profile/usecase"
+	"sparkit/internal/pkg/reaction/delivery/addreaction"
+	"sparkit/internal/pkg/reaction/delivery/getmatches"
+	repo3 "sparkit/internal/pkg/reaction/repo"
+	reactionusecase "sparkit/internal/pkg/reaction/usecase/reaction"
+	repo2 "sparkit/internal/pkg/session/repo"
+	sessionusecase "sparkit/internal/pkg/session/usecase"
+	"sparkit/internal/pkg/user/delivery/getuserlist"
+	repo5 "sparkit/internal/pkg/user/repo"
+	userusecase "sparkit/internal/pkg/user/usecase"
 	"syscall"
 	"time"
-
-	"sparkit/internal/handlers/checkauth"
-	"sparkit/internal/handlers/deleteimage"
-	"sparkit/internal/handlers/getcurrentprofile"
-	"sparkit/internal/handlers/getprofile"
-	"sparkit/internal/handlers/getuserlist"
-	"sparkit/internal/handlers/logout"
-	"sparkit/internal/handlers/middleware/authcheck"
-	"sparkit/internal/handlers/middleware/corsMiddleware"
-	"sparkit/internal/handlers/signin"
-	"sparkit/internal/handlers/signup"
-	"sparkit/internal/handlers/updateprofile"
-	"sparkit/internal/handlers/uploadimage"
-	"sparkit/internal/repo/image"
-	"sparkit/internal/repo/profile"
-	"sparkit/internal/repo/session"
-	"sparkit/internal/repo/user"
-	imageusecase "sparkit/internal/usecase/image"
-	profileusecase "sparkit/internal/usecase/profile"
-	reactionusecase "sparkit/internal/usecase/reaction"
-	sessionusecase "sparkit/internal/usecase/session"
-	userusecase "sparkit/internal/usecase/user"
 )
 
 func main() {
@@ -78,86 +77,33 @@ func main() {
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
 
-	createUsersTable := `CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username text,
-        password text,
-    	profile INT NOT NULL,
-    
-		CONSTRAINT fk_profile FOREIGN KEY (profile)
-		REFERENCES profile (id)
-		ON DELETE SET NULL
-		ON UPDATE CASCADE
-    );`
-	createPhotoTable := `CREATE TABLE IF NOT EXISTS photo (
-    id SERIAL PRIMARY KEY,
-    user_id bigint NOT NULL,
-    link text NOT NULL UNIQUE,
-    
-    CONSTRAINT fk_user FOREIGN KEY (user_id)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-    );`
-
-	createProfileTable := `CREATE TABLE IF NOT EXISTS profile (
-		id SERIAL PRIMARY KEY,
-   firstname text NOT NULL,
-   lastname text NOT NULL,
-   age bigint NOT NULL,
-   gender text NOT NULL,
-   target text NOT NULL,
-   about text NOT NULL,
-   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`
-	createReactionTable := `CREATE TABLE IF NOT EXISTS reaction (
-    id SERIAL PRIMARY KEY ,
-    author bigint NOT NULL ,
-    receiver bigint NOT NULL,
-    type boolean,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_author FOREIGN KEY (author)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-
-    CONSTRAINT fk_receiver FOREIGN KEY (receiver)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-
-    CONSTRAINT unique_pair UNIQUE (author, receiver)
-);`
-	_, err = db.Exec(createProfileTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table profile created successfully!")
-	}
-
-	_, err = db.Exec(createUsersTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table users created successfully!")
-	}
-
-	_, err = db.Exec(createPhotoTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table photo created successfully!")
-	}
-
-	_, err = db.Exec(createReactionTable)
-	if err != nil {
-		log.Fatalf("Error creating reaction table: %s", err)
-	} else {
-		fmt.Println("Table reaction created successfully!")
-	}
+	//_, err = db.Exec(createProfileTable)
+	//if err != nil {
+	//	log.Fatalf("Error creating table: %s", err)
+	//} else {
+	//	fmt.Println("Table profile created successfully!")
+	//}
+	//
+	//_, err = db.Exec(createUsersTable)
+	//if err != nil {
+	//	log.Fatalf("Error creating table: %s", err)
+	//} else {
+	//	fmt.Println("Table users created successfully!")
+	//}
+	//
+	//_, err = db.Exec(createPhotoTable)
+	//if err != nil {
+	//	log.Fatalf("Error creating table: %s", err)
+	//} else {
+	//	fmt.Println("Table photo created successfully!")
+	//}
+	//
+	//_, err = db.Exec(createReactionTable)
+	//if err != nil {
+	//	log.Fatalf("Error creating reaction table: %s", err)
+	//} else {
+	//	fmt.Println("Table reaction created successfully!")
+	//}
 
 	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
@@ -174,11 +120,11 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("bad ping to redis: %v", err)
 	}
-	userStorage := user.New(db, logger)
-	sessionStorage := session.New(redisClient, logger)
-	imageStorage := image.New(db, logger)
-	profileStorage := profile.New(db, logger)
-	reactionStorage := reaction.New(db, logger)
+	userStorage := repo5.New(db, logger)
+	sessionStorage := repo2.New(redisClient, logger)
+	imageStorage := repo.New(db, logger)
+	profileStorage := repo4.New(db, logger)
+	reactionStorage := repo3.New(db, logger)
 
 	userUsecase := userusecase.New(userStorage, logger)
 	sessionUsecase := sessionusecase.New(sessionStorage, logger)
