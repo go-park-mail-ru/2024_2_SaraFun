@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
 		CONSTRAINT fk_profile FOREIGN KEY (profile)
 		REFERENCES profile (id)
 		ON DELETE SET NULL
-		ON UPDATE CASCADE
+		ON UPDATE CASCADE,
 
         CONSTRAINT unique_username UNIQUE (username)
     );
