@@ -2,10 +2,10 @@ package deleteimage
 
 import (
 	"context"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
-	"sparkit/internal/utils/consts"
 	"strconv"
 )
 

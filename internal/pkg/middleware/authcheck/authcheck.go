@@ -2,9 +2,10 @@ package authcheck
 
 import (
 	"context"
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
 	"net/http"
-	"sparkit/internal/utils/consts"
 	"time"
 )
 
@@ -13,11 +14,11 @@ type sessionUsecase interface {
 }
 
 type Middleware struct {
-	usecase sessionUsecase
+	usecase generatedAuth.AuthClient
 	logger  *zap.Logger
 }
 
-func New(usecase sessionUsecase, logger *zap.Logger) *Middleware {
+func New(usecase generatedAuth.AuthClient, logger *zap.Logger) *Middleware {
 	return &Middleware{usecase: usecase, logger: logger}
 }
 
@@ -29,7 +30,8 @@ func (m *Middleware) Handler(h http.Handler) http.Handler {
 			http.Error(w, "session not found", http.StatusUnauthorized)
 			return
 		}
-		userID, err := m.usecase.GetUserIDBySessionID(r.Context(), cookie.Value)
+		getUserIdRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
+		userID, err := m.usecase.GetUserIDBySessionID(r.Context(), getUserIdRequest)
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{
 				Name:    consts.SessionCookie,
@@ -41,7 +43,7 @@ func (m *Middleware) Handler(h http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userID", userID)
+		ctx := context.WithValue(r.Context(), "userID", userID.UserId)
 		m.logger.Info("good authcheck")
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -5,40 +5,37 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/caarlos0/env/v11"
+	grcpauth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/logout"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signin"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signup"
+	grcpcommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/addreaction"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/deleteimage"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage"
+	imagerepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/repo"
+	imageusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/usecase"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
+	grcppersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/updateprofile"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"sparkit/internal/pkg/auth/delivery/checkauth"
-	"sparkit/internal/pkg/auth/delivery/logout"
-	"sparkit/internal/pkg/auth/delivery/signin"
-	"sparkit/internal/pkg/auth/delivery/signup"
-	"sparkit/internal/pkg/image/delivery/deleteimage"
-	"sparkit/internal/pkg/image/delivery/uploadimage"
-	"sparkit/internal/pkg/image/repo"
-	imageusecase "sparkit/internal/pkg/image/usecase"
-	"sparkit/internal/pkg/middleware"
-	"sparkit/internal/pkg/middleware/authcheck"
-	"sparkit/internal/pkg/middleware/corsMiddleware"
-	"sparkit/internal/pkg/profile/delivery/getcurrentprofile"
-	"sparkit/internal/pkg/profile/delivery/getprofile"
-	"sparkit/internal/pkg/profile/delivery/updateprofile"
-	profilerepo "sparkit/internal/pkg/profile/repo"
-	profileusecase "sparkit/internal/pkg/profile/usecase"
-	"sparkit/internal/pkg/reaction/delivery/addreaction"
-	"sparkit/internal/pkg/reaction/delivery/getmatches"
-	reactionrepo "sparkit/internal/pkg/reaction/repo"
-	reactionusecase "sparkit/internal/pkg/reaction/usecase/reaction"
-	sessionrepo "sparkit/internal/pkg/session/repo"
-	sessionusecase "sparkit/internal/pkg/session/usecase"
-	"sparkit/internal/pkg/user/delivery/getuserlist"
-	userrepo "sparkit/internal/pkg/user/repo"
-	userusecase "sparkit/internal/pkg/user/usecase"
 	"syscall"
 	"time"
 )
@@ -128,32 +125,52 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("bad ping to redis: %v", err)
 	}
-	userStorage := userrepo.New(db, logger)
-	sessionStorage := sessionrepo.New(redisClient, logger)
-	imageStorage := repo.New(db, logger)
-	profileStorage := profilerepo.New(db, logger)
-	reactionStorage := reactionrepo.New(db, logger)
 
-	userUsecase := userusecase.New(userStorage, logger)
-	sessionUsecase := sessionusecase.New(sessionStorage, logger)
+	authConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-auth-service", "8081"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	communicationsConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-communications-service", "8082"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	personalitiesConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-personalities-service", "8083"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//userStorage := profilerepo.New(db, logger)
+	//sessionStorage := sessionrepo.New(redisClient, logger)
+	imageStorage := imagerepo.New(db, logger)
+	////profileStorage := profilerepo.New(db, logger)
+	//reactionStorage := reactionrepo.New(db, logger)
+	//
+	////userUsecase := userusecase.New(userStorage, logger)
+	//sessionUsecase := sessionusecase.New(sessionStorage, logger)
 	imageUseCase := imageusecase.New(imageStorage, logger)
-	profileUseCase := profileusecase.New(profileStorage, logger)
-	reactionUsecase := reactionusecase.New(reactionStorage, logger)
+	////profileUseCase := profileusecase.New(profileStorage, logger)
+	//reactionUsecase := reactionusecase.New(reactionStorage, logger)
+	//
+	authClient := grcpauth.NewAuthClient(authConn)
+	personalitiesClient := grcppersonalities.NewPersonalitiesClient(personalitiesConn)
+	communicationsClient := grcpcommunications.NewCommunicationsClient(communicationsConn)
 
 	cors := corsMiddleware.New(logger)
-	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
-	signIn := signin.NewHandler(userUsecase, sessionUsecase, logger)
-	getUsers := getuserlist.NewHandler(sessionUsecase, profileUseCase, userUsecase, imageUseCase, reactionUsecase, logger)
-	checkAuth := checkauth.NewHandler(sessionUsecase, logger)
-	logOut := logout.NewHandler(sessionUsecase, logger)
-	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)
+	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
+	signIn := signin.NewHandler(personalitiesClient, authClient, logger)
+	getUsers := getuserlist.NewHandler(authClient, personalitiesClient, imageUseCase, communicationsClient, logger)
+	checkAuth := checkauth.NewHandler(authClient, logger)
+	logOut := logout.NewHandler(authClient, logger)
+	uploadImage := uploadimage.NewHandler(imageUseCase, authClient, logger)
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
-	getProfile := getprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, logger)
-	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, sessionUsecase, logger)
-	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase, logger)
-	addReaction := addreaction.NewHandler(reactionUsecase, sessionUsecase, logger)
-	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
-	authMiddleware := authcheck.New(sessionUsecase, logger)
+	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
+	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
+	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, logger)
+	addReaction := addreaction.NewHandler(communicationsClient, authClient, logger)
+	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
+	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 
 	router := mux.NewRouter()

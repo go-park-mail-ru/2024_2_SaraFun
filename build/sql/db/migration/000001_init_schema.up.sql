@@ -55,3 +55,37 @@ CREATE TABLE IF NOT EXISTS reaction (
 
     CONSTRAINT unique_pair UNIQUE (author, receiver)
     );
+
+CREATE TABLE IF NOT EXISTS report (
+    id SERIAL PRIMARY KEY,
+    author INT NOT NULL,
+    receiver INT NOT NULL,
+    body text NOT NULL,
+
+    CONSTRAINT fk_author FOREIGN KEY (author)
+    REFERENCES users (id)
+    ON DELETE CASCADE,
+    ON UPDATE CASCADE,
+
+    CONSTRAINT fk_receiver FOREIGN KEY (receiver)
+    REFERENCES users (id)
+    ON DELETE CASCADE,
+    ON UPDATE CASCADE,
+);
+
+CREATE TABLE IF NOT EXISTS message (
+    id SERIAL PRIMARY KEY,
+    author INT NOT NULL,
+    receiver INT NOT NULL,
+    body text NOT NULL,
+
+    CONSTRAINT fk_author FOREIGN KEY (author)
+    REFERENCES users (id)
+    ON DELETE CASCADE,
+    ON UPDATE CASCADE,
+
+    CONSTRAINT fk_receiver FOREIGN KEY (receiver)
+    REFERENCES users (id)
+    ON DELETE CASCADE,
+    ON UPDATE CASCADE,
+)

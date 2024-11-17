@@ -92,6 +92,22 @@ func (session *Session) Sanitize() {
 	session.SessionID = html.EscapeString(session.SessionID)
 }
 
+type Report struct {
+	Author   int    `json:"author"`
+	Receiver int    `json:"receiver"`
+	Body     string `json:"body"`
+}
+
+func (report *Report) Sanitize() {
+	report.Body = html.EscapeString(report.Body)
+}
+
+type Message struct {
+	Author   int    `json:"author"`
+	Receiver int    `json:"receiver"`
+	Body     string `json:"body"`
+}
+
 //
 //type Match struct {
 //	UserID1   string    `json:"user_id_1" validate:"required"`

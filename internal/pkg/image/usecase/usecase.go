@@ -3,11 +3,11 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
 	"log"
 	"mime/multipart"
-	"sparkit/internal/models"
-	"sparkit/internal/utils/consts"
 )
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository

@@ -3,12 +3,13 @@ package uploadimage
 import (
 	"context"
 	"encoding/json"
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"sparkit/internal/utils/consts"
 )
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=uploadimage_mocks . ImageService
@@ -27,11 +28,11 @@ type Response struct {
 
 type Handler struct {
 	imageService   ImageService
-	sessionService SessionService
+	sessionService generatedAuth.AuthClient
 	logger         *zap.Logger
 }
 
-func NewHandler(imageService ImageService, sessionService SessionService, logger *zap.Logger) *Handler {
+func NewHandler(imageService ImageService, sessionService generatedAuth.AuthClient, logger *zap.Logger) *Handler {
 	return &Handler{imageService: imageService, sessionService: sessionService, logger: logger}
 }
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -108,13 +109,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Print("good session cookie")
-	userId, err := h.sessionService.GetUserIDBySessionID(ctx, cookie.Value)
+	getUserRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
+	userId, err := h.sessionService.GetUserIDBySessionID(ctx, getUserRequest)
 	if err != nil {
 		h.logger.Error("failed to get user id", zap.Error(err))
 		http.Error(w, "user session err", http.StatusInternalServerError)
 		return
 	}
-	id, err := h.imageService.SaveImage(ctx, file, fileExt, userId)
+	id, err := h.imageService.SaveImage(ctx, file, fileExt, int(userId.UserId))
 	if err != nil {
 		h.logger.Error("failed to save image", zap.Error(err))
 		http.Error(w, "save image err", http.StatusInternalServerError)

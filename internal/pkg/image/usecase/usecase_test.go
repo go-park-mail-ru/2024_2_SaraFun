@@ -3,14 +3,14 @@ package usecase
 import (
 	"context"
 	"errors"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/usecase/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"mime/multipart"
 	"os"
-	"sparkit/internal/models"
-	"sparkit/internal/pkg/image/usecase/mocks"
-	"sparkit/internal/utils/consts"
 	"testing"
 	"time"
 )

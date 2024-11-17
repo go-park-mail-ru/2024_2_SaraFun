@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
-	"sparkit/internal/models"
-	"sparkit/internal/utils/consts"
 )
 
 type Storage struct {

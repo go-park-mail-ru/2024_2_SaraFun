@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"net/http"
-	"sparkit/internal/utils/consts"
 	"time"
 
 	"github.com/google/uuid"

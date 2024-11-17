@@ -1,0 +1,39 @@
+syntax = "proto3";
+package communications;
+option go_package = "../internal/pkg/communications/delivery/grpc/gen/;gen";
+
+service Communications {
+  rpc AddReaction(AddReactionRequest) returns (AddReactionResponse);
+  rpc GetMatchList(GetMatchListRequest) returns (GetMatchListResponse);
+  rpc GetReactionList(GetReactionListRequest) returns (GetReactionListResponse);
+}
+
+message AddReactionRequest {
+  Reaction Reaction = 1;
+}
+
+message AddReactionResponse {
+}
+
+message GetMatchListRequest {
+  int32 UserID = 1;
+}
+
+message GetMatchListResponse{
+  repeated int32 Authors = 1;
+}
+
+message GetReactionListRequest{
+  int32 UserId = 1;
+}
+
+message GetReactionListResponse{
+  repeated int32 Receivers = 1;
+}
+
+message Reaction {
+  int32 ID = 1;
+  int32 Author = 2;
+  int32 Receiver = 3;
+  bool Type = 4;
+}

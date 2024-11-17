@@ -1,4 +1,7 @@
 SERVER_BINARY=sparkit
+AUTH_BINARY=auth
+PERSONALITIES_BINARY=personalities
+COMMUNICATIONS_BINARY=communications
 DOCKER_DIR=docker
 
 build-sparkit:
@@ -16,6 +19,12 @@ builder-image:
 sparkit-run:
 	make builder-image
 	make service-sparkit-image
+	make auth-builder-image
+	make service-auth-image
+	make personalities-builder-image
+	make service-personalities-image
+	make communications-builder-image
+	make service-communications-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 
 .PHONY: sparkit-down
@@ -30,3 +39,63 @@ sparkit-test:
 sparkit-test-cover:
 	go tool cover -func=coverage.out
 
+
+
+
+
+
+# docker build for auth microservice
+build-auth-microservice:
+	go build -o ${AUTH_BINARY} ./cmd/auth
+
+.PHONY: service-auth-image
+service-auth-image:
+	docker build -t sparkit-auth-service -f ${DOCKER_DIR}/auth.Dockerfile .
+
+.PHONY: auth-builder-image
+auth-builder-image:
+	docker build -t sparkit-auth-builder -f ${DOCKER_DIR}/authBuilder.Dockerfile .
+
+.PHONY: sparkit-auth-run
+sparkit-auth-run:
+	make auth-builder-image
+	make service-auth-image
+	docker run sparkit-auth-service
+
+# docker build for personalities microservice
+
+build-personalities-microservice:
+	go build -o ${PERSONALITIES_BINARY} ./cmd/personalities
+
+.PHONY: service-personalities-image
+service-personalities-image:
+	docker build -t sparkit-personalities-service -f ${DOCKER_DIR}/personalities.Dockerfile .
+
+.PHONY: personalities-builder-image
+personalities-builder-image:
+	docker build -t sparkit-personalities-builder -f ${DOCKER_DIR}/personalitiesBuilder.Dockerfile .
+
+.PHONY: sparkit-personalities-run
+sparkit-personalities-run:
+	make personalities-builder-image
+	make service-personalities-image
+	docker run sparkit-personalities-service
+
+# docker build for communications microservice
+
+build-communications-microservice:
+	go build -o ${COMMUNICATIONS_BINARY} ./cmd/communications
+
+.PHONY: service-communications-image
+service-communications-image:
+	docker build -t sparkit-communications-service -f ${DOCKER_DIR}/communications.Dockerfile .
+
+.PHONY: communications-builder-image
+communications-builder-image:
+	docker build -t sparkit-communications-builder -f ${DOCKER_DIR}/communicationsBuilder.Dockerfile .
+
+.PHONY: sparkit-communications-run
+sparkit-communications-run:
+	make communications-builder-image
+	make service-communications-image
+	docker run sparkit-communications-service

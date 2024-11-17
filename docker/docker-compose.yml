@@ -15,6 +15,47 @@ services:
     volumes:
       - ~/imagedata:/home/${OS_USER}/imagedata
 
+  service-sparkit-auth:
+    image: sparkit-auth-service
+    container_name: sparkit-auth-service
+    depends_on:
+      sparkit-redis:
+        condition: service_healthy
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - '8081:8081'
+
+  service-sparkit-personalities:
+    image: sparkit-personalities-service
+    container_name: sparkit-personalities-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8083:8083'
+
+  service-sparkit-communications:
+    image: sparkit-communications-service
+    container_name: sparkit-communications-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8082:8082'
+
   sparkit-postgres:
     image: postgres:latest
     container_name: sparkit-postgres

@@ -8,7 +8,7 @@ import (
 	context "context"
 	multipart "mime/multipart"
 	reflect "reflect"
-	models "sparkit/internal/models"
+	models "github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 
 	gomock "github.com/golang/mock/gomock"
 )
