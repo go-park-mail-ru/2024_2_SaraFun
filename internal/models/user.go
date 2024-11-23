@@ -133,6 +133,11 @@ type SurveyStat struct {
 	Count    int     `json:"count"`
 }
 
+type AdminQuestion struct {
+	Content string `json:"content"`
+	Grade   int    `json:"grade"`
+}
+
 //
 //type Match struct {
 //	UserID1   string    `json:"user_id_1" validate:"required"`

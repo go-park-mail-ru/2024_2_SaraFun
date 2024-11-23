@@ -10,6 +10,10 @@ import (
 type Repository interface {
 	AddSurvey(ctx context.Context, survey models.Survey) (int, error)
 	GetSurveyInfo(ctx context.Context) ([]models.Survey, error)
+	AddQuestion(ctx context.Context, question models.AdminQuestion) (int, error)
+	DeleteQuestion(ctx context.Context, content string) error
+	UpdateQuestion(ct context.Context, question models.AdminQuestion, content string) (int, error)
+	GetQuestions(ctx context.Context) ([]models.AdminQuestion, error)
 }
 
 type UseCase struct {
@@ -45,7 +49,6 @@ func (u *UseCase) GetSurveyInfo(ctx context.Context) (map[string]models.SurveySt
 			_stat := models.SurveyStat{
 				Question: survey.Question,
 				Grade:    survey.Grade,
-				Count:    1,
 			}
 			u.logger.Info("test")
 			stats[survey.Question] = _stat
@@ -57,4 +60,41 @@ func (u *UseCase) GetSurveyInfo(ctx context.Context) (map[string]models.SurveySt
 		stats[survey.Question] = ss
 	}
 	return stats, nil
+}
+
+func (u *UseCase) AddQuestion(ctx context.Context, question models.AdminQuestion) (int, error) {
+	id, err := u.repo.AddQuestion(ctx, question)
+	if err != nil {
+		u.logger.Error("bad add question", zap.Error(err))
+		return -1, fmt.Errorf("add question usecase: %w", err)
+	}
+	return id, nil
+}
+
+func (u *UseCase) UpdateQuestion(ctx context.Context, question models.AdminQuestion, content string) (int, error) {
+	id, err := u.repo.UpdateQuestion(ctx, question, content)
+	if err != nil {
+		u.logger.Error("bad update question", zap.Error(err))
+		return -1, fmt.Errorf("update question usecase: %w", err)
+	}
+	return id, nil
+}
+
+func (u *UseCase) DeleteQuestion(ctx context.Context, content string) error {
+	err := u.repo.DeleteQuestion(ctx, content)
+	if err != nil {
+		u.logger.Error("bad delete question", zap.Error(err))
+		return fmt.Errorf("delete question usecase: %w", err)
+	}
+	return nil
+}
+
+func (u *UseCase) GetQuestions(ctx context.Context) ([]models.AdminQuestion, error) {
+	var questions []models.AdminQuestion
+	questions, err := u.repo.GetQuestions(ctx)
+	if err != nil {
+		u.logger.Error("bad get questions", zap.Error(err))
+		return nil, fmt.Errorf("get questions usecase: %w", err)
+	}
+	return questions, nil
 }
