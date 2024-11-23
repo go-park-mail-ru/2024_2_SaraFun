@@ -94,3 +94,19 @@ CREATE TABLE IF NOT EXISTS message (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS survey (
+    id SERIAL PRIMARY KEY,
+    author INT NOT NULL,
+    question text NOT NULL,
+    comment text NOT NULL,
+    rating INT NOT NULL,
+    grade int NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_author FOREIGN KEY (author)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+)

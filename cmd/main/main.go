@@ -32,6 +32,9 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/updateprofile"
+	grpcsurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/addsurvey"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/getsurveyinfo"
 	setconnection "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/delivery/setConnection"
 	websocketrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/repo"
 	websocketusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase"
@@ -168,6 +171,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	surveyConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-survey-service", "8085"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	wConns := make(map[int]*ws.Conn)
 	//userStorage := profilerepo.New(db, logger)
 	//sessionStorage := sessionrepo.New(redisClient, logger)
@@ -187,6 +195,7 @@ func main() {
 	personalitiesClient := grpcpersonalities.NewPersonalitiesClient(personalitiesConn)
 	communicationsClient := grpccommunications.NewCommunicationsClient(communicationsConn)
 	messageClient := grpcmessage.NewMessageClient(messageConn)
+	surveyClient := grpcsurvey.NewSurveyClient(surveyConn)
 
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
@@ -208,6 +217,8 @@ func main() {
 	changePassword := changepassword.NewHandler(authClient, personalitiesClient, logger)
 	getChat := getChatMessages.NewHandler(authClient, messageClient, logger)
 	getChatBySearch := getchatsbysearch.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
+	addSurvey := addsurvey.NewHandler(surveyClient, authClient, logger)
+	getSurveyInfo := getsurveyinfo.NewHandler(authClient, surveyClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 
@@ -237,6 +248,8 @@ func main() {
 	router.Handle("/changepassword", http.HandlerFunc(changePassword.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/getchat", http.HandlerFunc(getChat.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/chatsearch", http.HandlerFunc(getChatBySearch.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/sendsurvey", http.HandlerFunc(addSurvey.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/getstats", http.HandlerFunc(getSurveyInfo.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/ws", http.HandlerFunc(setConnection.Handle)).Methods("GET", http.MethodOptions)
 
 	// Создаем HTTP-сервер

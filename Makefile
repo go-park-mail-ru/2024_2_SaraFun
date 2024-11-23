@@ -4,6 +4,7 @@ PERSONALITIES_BINARY=personalities
 COMMUNICATIONS_BINARY=communications
 DOCKER_DIR=docker
 MESSAGE_BINARY=message
+SURVEY_BINARY=survey
 
 build-sparkit:
 	go build -o ${SERVER_BINARY} ./cmd/main
@@ -28,6 +29,8 @@ sparkit-run:
 	make service-communications-image
 	make message-builder-image
 	make service-message-image
+	make survey-builder-image
+	make service-survey-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 
 .PHONY: sparkit-down
@@ -121,3 +124,23 @@ sparkit-message-run:
 	make message-builder-image
 	make service-message-image
 	docker run sparkit-message-service
+
+
+# docker build for survey microservice
+
+build-survey-microservice:
+	go build -o ${SURVEY_BINARY} ./cmd/survey
+
+.PHONY: service-survey-image
+service-survey-image:
+	docker build -t sparkit-survey-service -f ${DOCKER_DIR}/survey.Dockerfile .
+
+.PHONY: survey-builder-image
+survey-builder-image:
+	docker build -t sparkit-survey-builder -f ${DOCKER_DIR}/surveyBuilder.Dockerfile .
+
+.PHONY: sparkit-survey-run
+sparkit-survey-run:
+	make survey-builder-image
+	make service-survey-image
+	docker run sparkit-survey-service

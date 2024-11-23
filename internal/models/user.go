@@ -116,6 +116,23 @@ func (message *Message) Sanitize() {
 	message.Body = html.EscapeString(message.Body)
 }
 
+type Survey struct {
+	ID       int    `json:"id"`
+	Author   int    `json:"author"`
+	Question string `json:"question"`
+	Comment  string `json:"comment"`
+	Rating   int    `json:"rating"`
+	Grade    int    `json:"grade"`
+}
+
+type SurveyStat struct {
+	Question string  `json:"question"`
+	Grade    int     `json:"grade"`
+	Rating   float32 `json:"rating"`
+	Sum      int     `json:"sum"`
+	Count    int     `json:"count"`
+}
+
 //
 //type Match struct {
 //	UserID1   string    `json:"user_id_1" validate:"required"`
