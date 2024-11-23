@@ -12,6 +12,9 @@ type Repository interface {
 	AddReaction(ctx context.Context, reaction models.Reaction) error
 	GetMatchList(ctx context.Context, userId int) ([]int, error)
 	GetReactionList(ctx context.Context, userId int) ([]int, error)
+	GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error)
+	GetMatchesByUsername(ctx context.Context, userID int, username string) ([]int, error)
+	GetMatchesByFirstName(ctx context.Context, userID int, firstname string) ([]int, error)
 }
 
 type UseCase struct {
@@ -51,4 +54,34 @@ func (u *UseCase) GetReactionList(ctx context.Context, userId int) ([]int, error
 		return nil, fmt.Errorf("failed to GetReactionList: %w", err)
 	}
 	return receivers, nil
+}
+
+func (u *UseCase) GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error) {
+	time, err := u.repo.GetMatchTime(ctx, firstUser, secondUser)
+	if err != nil {
+		u.logger.Error("UseCase GetMatchTime: failed to GetMatchTime", zap.Error(err))
+		return "", fmt.Errorf("failed to GetMatchTime: %w", err)
+	}
+	return time, nil
+}
+
+func (u *UseCase) GetMatchesBySearch(ctx context.Context, userID int, firstname string, username string) ([]int, error) {
+	var authors []int
+	var err error
+	if firstname == "" {
+		authors, err = u.repo.GetMatchesByUsername(ctx, userID, username)
+		if err != nil {
+			u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByUsername", zap.Error(err))
+			return nil, fmt.Errorf("failed to GetMatchesByUsername: %w", err)
+		}
+	} else {
+		authors, err = u.repo.GetMatchesByFirstName(ctx, userID, firstname)
+		if err != nil {
+			u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByFirstName", zap.Error(err))
+			return nil, fmt.Errorf("failed to GetMatchesByFirstName: %w", err)
+		}
+
+	}
+	u.logger.Info("UseCase GetMatchesBySearch", zap.Int("users", len(authors)))
+	return authors, nil
 }

@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Communications_AddReaction_FullMethodName     = "/communications.Communications/AddReaction"
-	Communications_GetMatchList_FullMethodName    = "/communications.Communications/GetMatchList"
-	Communications_GetReactionList_FullMethodName = "/communications.Communications/GetReactionList"
+	Communications_AddReaction_FullMethodName        = "/communications.Communications/AddReaction"
+	Communications_GetMatchList_FullMethodName       = "/communications.Communications/GetMatchList"
+	Communications_GetReactionList_FullMethodName    = "/communications.Communications/GetReactionList"
+	Communications_GetMatchTime_FullMethodName       = "/communications.Communications/GetMatchTime"
+	Communications_GetMatchesBySearch_FullMethodName = "/communications.Communications/GetMatchesBySearch"
 )
 
 // CommunicationsClient is the client API for Communications service.
@@ -31,6 +33,8 @@ type CommunicationsClient interface {
 	AddReaction(ctx context.Context, in *AddReactionRequest, opts ...grpc.CallOption) (*AddReactionResponse, error)
 	GetMatchList(ctx context.Context, in *GetMatchListRequest, opts ...grpc.CallOption) (*GetMatchListResponse, error)
 	GetReactionList(ctx context.Context, in *GetReactionListRequest, opts ...grpc.CallOption) (*GetReactionListResponse, error)
+	GetMatchTime(ctx context.Context, in *GetMatchTimeRequest, opts ...grpc.CallOption) (*GetMatchTimeResponse, error)
+	GetMatchesBySearch(ctx context.Context, in *GetMatchesBySearchRequest, opts ...grpc.CallOption) (*GetMatchesBySearchResponse, error)
 }
 
 type communicationsClient struct {
@@ -71,6 +75,26 @@ func (c *communicationsClient) GetReactionList(ctx context.Context, in *GetReact
 	return out, nil
 }
 
+func (c *communicationsClient) GetMatchTime(ctx context.Context, in *GetMatchTimeRequest, opts ...grpc.CallOption) (*GetMatchTimeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMatchTimeResponse)
+	err := c.cc.Invoke(ctx, Communications_GetMatchTime_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *communicationsClient) GetMatchesBySearch(ctx context.Context, in *GetMatchesBySearchRequest, opts ...grpc.CallOption) (*GetMatchesBySearchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMatchesBySearchResponse)
+	err := c.cc.Invoke(ctx, Communications_GetMatchesBySearch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommunicationsServer is the server API for Communications service.
 // All implementations must embed UnimplementedCommunicationsServer
 // for forward compatibility.
@@ -78,6 +102,8 @@ type CommunicationsServer interface {
 	AddReaction(context.Context, *AddReactionRequest) (*AddReactionResponse, error)
 	GetMatchList(context.Context, *GetMatchListRequest) (*GetMatchListResponse, error)
 	GetReactionList(context.Context, *GetReactionListRequest) (*GetReactionListResponse, error)
+	GetMatchTime(context.Context, *GetMatchTimeRequest) (*GetMatchTimeResponse, error)
+	GetMatchesBySearch(context.Context, *GetMatchesBySearchRequest) (*GetMatchesBySearchResponse, error)
 	mustEmbedUnimplementedCommunicationsServer()
 }
 
@@ -96,6 +122,12 @@ func (UnimplementedCommunicationsServer) GetMatchList(context.Context, *GetMatch
 }
 func (UnimplementedCommunicationsServer) GetReactionList(context.Context, *GetReactionListRequest) (*GetReactionListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReactionList not implemented")
+}
+func (UnimplementedCommunicationsServer) GetMatchTime(context.Context, *GetMatchTimeRequest) (*GetMatchTimeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMatchTime not implemented")
+}
+func (UnimplementedCommunicationsServer) GetMatchesBySearch(context.Context, *GetMatchesBySearchRequest) (*GetMatchesBySearchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMatchesBySearch not implemented")
 }
 func (UnimplementedCommunicationsServer) mustEmbedUnimplementedCommunicationsServer() {}
 func (UnimplementedCommunicationsServer) testEmbeddedByValue()                        {}
@@ -172,6 +204,42 @@ func _Communications_GetReactionList_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Communications_GetMatchTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMatchTimeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommunicationsServer).GetMatchTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Communications_GetMatchTime_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommunicationsServer).GetMatchTime(ctx, req.(*GetMatchTimeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Communications_GetMatchesBySearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMatchesBySearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommunicationsServer).GetMatchesBySearch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Communications_GetMatchesBySearch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommunicationsServer).GetMatchesBySearch(ctx, req.(*GetMatchesBySearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Communications_ServiceDesc is the grpc.ServiceDesc for Communications service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +258,14 @@ var Communications_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReactionList",
 			Handler:    _Communications_GetReactionList_Handler,
+		},
+		{
+			MethodName: "GetMatchTime",
+			Handler:    _Communications_GetMatchTime_Handler,
+		},
+		{
+			MethodName: "GetMatchesBySearch",
+			Handler:    _Communications_GetMatchesBySearch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

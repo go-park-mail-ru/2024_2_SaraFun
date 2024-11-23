@@ -155,3 +155,12 @@ func (repo *Storage) CheckUsernameExists(ctx context.Context, username string) (
 	}
 	return exists, nil
 }
+
+func (repo *Storage) ChangePassword(ctx context.Context, userID int, password string) error {
+	_, err := repo.DB.ExecContext(ctx, "UPDATE users SET password = $1 WHERE id = $2", password, userID)
+	if err != nil {
+		repo.logger.Error("failed to change password", zap.Error(err))
+		return fmt.Errorf("ChangePassword err: %v", err)
+	}
+	return nil
+}

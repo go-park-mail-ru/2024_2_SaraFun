@@ -20,6 +20,7 @@ type Repository interface {
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
 	CheckUsernameExists(ctx context.Context, username string) (bool, error)
+	ChangePassword(ctx context.Context, userId int, password string) error
 }
 
 type UseCase struct {
@@ -121,4 +122,18 @@ func (u *UseCase) CheckUsernameExists(ctx context.Context, username string) (boo
 		return false, sparkiterrors.ErrWrongCredentials
 	}
 	return exists, nil
+}
+
+func (u *UseCase) ChangePassword(ctx context.Context, userID int, password string) error {
+	hashedPass, err := hashing.HashPassword(password)
+	if err != nil {
+		u.logger.Error("failed to hash password", zap.Error(err))
+		return fmt.Errorf("hash password failed: %w", err)
+	}
+	err = u.repo.ChangePassword(ctx, userID, hashedPass)
+	if err != nil {
+		u.logger.Error("failed to change password", zap.Int("user_id", userID), zap.Error(err))
+		return fmt.Errorf("failed to change password: %w", err)
+	}
+	return nil
 }

@@ -14,7 +14,7 @@ service Personalities {
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
-
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 message RegisterUserRequest {
@@ -104,6 +104,14 @@ message DeleteProfileRequest{
 }
 
 message DeleteProfileResponse{
+}
+
+message ChangePasswordRequest {
+  int32 UserID = 1;
+  string Password = 2;
+}
+
+message ChangePasswordResponse {
 }
 
 message User {

@@ -30,6 +30,7 @@ const (
 	Personalities_UpdateProfile_FullMethodName        = "/personalities.Personalities/UpdateProfile"
 	Personalities_GetProfile_FullMethodName           = "/personalities.Personalities/GetProfile"
 	Personalities_DeleteProfile_FullMethodName        = "/personalities.Personalities/DeleteProfile"
+	Personalities_ChangePassword_FullMethodName       = "/personalities.Personalities/ChangePassword"
 )
 
 // PersonalitiesClient is the client API for Personalities service.
@@ -47,6 +48,7 @@ type PersonalitiesClient interface {
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error)
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	DeleteProfile(ctx context.Context, in *DeleteProfileRequest, opts ...grpc.CallOption) (*DeleteProfileResponse, error)
+	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 }
 
 type personalitiesClient struct {
@@ -167,6 +169,16 @@ func (c *personalitiesClient) DeleteProfile(ctx context.Context, in *DeleteProfi
 	return out, nil
 }
 
+func (c *personalitiesClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangePasswordResponse)
+	err := c.cc.Invoke(ctx, Personalities_ChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PersonalitiesServer is the server API for Personalities service.
 // All implementations must embed UnimplementedPersonalitiesServer
 // for forward compatibility.
@@ -182,6 +194,7 @@ type PersonalitiesServer interface {
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	DeleteProfile(context.Context, *DeleteProfileRequest) (*DeleteProfileResponse, error)
+	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	mustEmbedUnimplementedPersonalitiesServer()
 }
 
@@ -224,6 +237,9 @@ func (UnimplementedPersonalitiesServer) GetProfile(context.Context, *GetProfileR
 }
 func (UnimplementedPersonalitiesServer) DeleteProfile(context.Context, *DeleteProfileRequest) (*DeleteProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProfile not implemented")
+}
+func (UnimplementedPersonalitiesServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedPersonalitiesServer) mustEmbedUnimplementedPersonalitiesServer() {}
 func (UnimplementedPersonalitiesServer) testEmbeddedByValue()                       {}
@@ -444,6 +460,24 @@ func _Personalities_DeleteProfile_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Personalities_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PersonalitiesServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Personalities_ChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PersonalitiesServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Personalities_ServiceDesc is the grpc.ServiceDesc for Personalities service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +528,10 @@ var Personalities_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProfile",
 			Handler:    _Personalities_DeleteProfile_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _Personalities_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -141,7 +141,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		card.Images = links
 		card.UserId = int(user.ID)
-		getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: userId.UserId}
+		getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: user.ID}
 		username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
 		if err != nil {
 			h.logger.Error("GetMatches Handler: bad getting username", zap.Error(err))

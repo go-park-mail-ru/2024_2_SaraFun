@@ -5,27 +5,39 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/caarlos0/env/v11"
-	grcpauth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	grpcauth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/changepassword"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/logout"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signin"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signup"
-	grcpcommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	grpccommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/addreaction"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getallchats"
+	getchatsbysearch "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getchatsbysearch"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/deleteimage"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage"
 	imagerepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/repo"
 	imageusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/usecase"
+	grpcmessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/getChatMessages"
+	sendreport "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendReport"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendmessage"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
-	grcppersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/updateprofile"
+	setconnection "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/delivery/setConnection"
+	websocketrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/repo"
+	websocketusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/config"
 	"github.com/gorilla/mux"
+	ws "github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -40,14 +52,20 @@ import (
 	"time"
 )
 
-type envConfig struct {
-	RedisUser     string `env: "REDIS_USER"`
-	RedisPassword string `env: "REDIS_PASSWORD"`
-}
+//type envConfig struct {
+//	RedisUser     string `env: "REDIS_USER"`
+//	RedisPassword string `env: "REDIS_PASSWORD"`
+//	DbHost        string `env: "DB_HOST"`
+//	DbPort        string `env: "DB_PORT"`
+//	DbUser        string `env: "DB_USER"`
+//	DbPassword    string `env: "DB_PASSWORD"`
+//	DbName        string `env: "DB_NAME"`
+//	DbSSLMode     string `env: "DB_SSLMODE"`
+//}
 
 func main() {
 
-	var envCfg envConfig
+	var envCfg config.EnvConfig
 	err := env.Parse(&envCfg)
 	// Создаем логгер
 	cfg := zap.Config{
@@ -81,7 +99,11 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
-
+	//db, err := connectDB.ConnectDB(envCfg)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//fmt.Println("Successfully connected to PostgreSQL!")
 	//_, err = db.Exec(createProfileTable)
 	//if err != nil {
 	//	log.Fatalf("Error creating table: %s", err)
@@ -141,21 +163,30 @@ func main() {
 		log.Fatal(err)
 	}
 
+	messageConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-message-service", "8084"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	wConns := make(map[int]*ws.Conn)
 	//userStorage := profilerepo.New(db, logger)
 	//sessionStorage := sessionrepo.New(redisClient, logger)
 	imageStorage := imagerepo.New(db, logger)
+	wsStorage := websocketrepo.New(wConns, logger)
 	////profileStorage := profilerepo.New(db, logger)
 	//reactionStorage := reactionrepo.New(db, logger)
 	//
 	////userUsecase := userusecase.New(userStorage, logger)
 	//sessionUsecase := sessionusecase.New(sessionStorage, logger)
 	imageUseCase := imageusecase.New(imageStorage, logger)
+	websocketUsecase := websocketusecase.New(wsStorage, logger)
 	////profileUseCase := profileusecase.New(profileStorage, logger)
 	//reactionUsecase := reactionusecase.New(reactionStorage, logger)
 	//
-	authClient := grcpauth.NewAuthClient(authConn)
-	personalitiesClient := grcppersonalities.NewPersonalitiesClient(personalitiesConn)
-	communicationsClient := grcpcommunications.NewCommunicationsClient(communicationsConn)
+	authClient := grpcauth.NewAuthClient(authConn)
+	personalitiesClient := grpcpersonalities.NewPersonalitiesClient(personalitiesConn)
+	communicationsClient := grpccommunications.NewCommunicationsClient(communicationsConn)
+	messageClient := grpcmessage.NewMessageClient(messageConn)
 
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
@@ -167,9 +198,16 @@ func main() {
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
 	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
-	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, logger)
+	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
 	addReaction := addreaction.NewHandler(communicationsClient, authClient, logger)
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
+	sendReport := sendreport.NewHandler(authClient, messageClient, logger)
+	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, logger)
+	getAllChats := getallchats.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
+	setConnection := setconnection.NewHandler(websocketUsecase, authClient, logger)
+	changePassword := changepassword.NewHandler(authClient, personalitiesClient, logger)
+	getChat := getChatMessages.NewHandler(authClient, messageClient, logger)
+	getChatBySearch := getchatsbysearch.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 
@@ -193,6 +231,13 @@ func main() {
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/matches", http.HandlerFunc(getMatches.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/report", http.HandlerFunc(sendReport.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/message", http.HandlerFunc(sendMessage.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/chats", http.HandlerFunc(getAllChats.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/changepassword", http.HandlerFunc(changePassword.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/getchat", http.HandlerFunc(getChat.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/chatsearch", http.HandlerFunc(getChatBySearch.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/ws", http.HandlerFunc(setConnection.Handle)).Methods("GET", http.MethodOptions)
 
 	// Создаем HTTP-сервер
 	srv := &http.Server{

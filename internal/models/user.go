@@ -55,8 +55,9 @@ func (profile *Profile) Sanitize() {
 }
 
 type Image struct {
-	Id   int    `json:"id"`
-	Link string `json:"link"`
+	Id     int    `json:"id"`
+	Link   string `json:"link"`
+	Number int    `json:"number"`
 }
 
 func (image *Image) Sanitize() {
@@ -93,6 +94,7 @@ func (session *Session) Sanitize() {
 }
 
 type Report struct {
+	ID       int    `json:"id"`
 	Author   int    `json:"author"`
 	Receiver int    `json:"receiver"`
 	Body     string `json:"body"`
@@ -103,9 +105,15 @@ func (report *Report) Sanitize() {
 }
 
 type Message struct {
+	ID       int    `json:"id"`
 	Author   int    `json:"author"`
 	Receiver int    `json:"receiver"`
 	Body     string `json:"body"`
+	Time     string `json:"time"`
+}
+
+func (message *Message) Sanitize() {
+	message.Body = html.EscapeString(message.Body)
 }
 
 //

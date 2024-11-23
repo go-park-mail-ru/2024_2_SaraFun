@@ -7,6 +7,7 @@ service Auth {
   rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
   rpc CheckSession(CheckSessionRequest) returns (CheckSessionResponse);
   rpc GetUserIDBySessionID(GetUserIDBySessionIDRequest) returns (GetUserIDBYSessionIDResponse);
+
 }
 
 message CreateSessionRequest {

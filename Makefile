@@ -3,6 +3,7 @@ AUTH_BINARY=auth
 PERSONALITIES_BINARY=personalities
 COMMUNICATIONS_BINARY=communications
 DOCKER_DIR=docker
+MESSAGE_BINARY=message
 
 build-sparkit:
 	go build -o ${SERVER_BINARY} ./cmd/main
@@ -25,6 +26,8 @@ sparkit-run:
 	make service-personalities-image
 	make communications-builder-image
 	make service-communications-image
+	make message-builder-image
+	make service-message-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 
 .PHONY: sparkit-down
@@ -99,3 +102,22 @@ sparkit-communications-run:
 	make communications-builder-image
 	make service-communications-image
 	docker run sparkit-communications-service
+
+# docker build for message microservice
+
+build-message-microservice:
+	go build -o ${MESSAGE_BINARY} ./cmd/message
+
+.PHONY: service-message-image
+service-message-image:
+	docker build -t sparkit-message-service -f ${DOCKER_DIR}/message.Dockerfile .
+
+.PHONY: message-builder-image
+message-builder-image:
+	docker build -t sparkit-message-builder -f ${DOCKER_DIR}/messageBuilder.Dockerfile .
+
+.PHONY: sparkit-message-run
+sparkit-message-run:
+	make message-builder-image
+	make service-message-image
+	docker run sparkit-message-service

@@ -11,6 +11,8 @@ type ReactionUseCase interface {
 	AddReaction(ctx context.Context, reaction models.Reaction) error
 	GetMatchList(ctx context.Context, userId int) ([]int, error)
 	GetReactionList(ctx context.Context, userId int) ([]int, error)
+	GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error)
+	GetMatchesBySearch(ctx context.Context, userID int, firstname string, username string) ([]int, error)
 }
 
 type GrpcCommunicationsHandler struct {
@@ -70,4 +72,40 @@ func (h *GrpcCommunicationsHandler) GetReactionList(ctx context.Context,
 	res := &generatedCommunications.GetReactionListResponse{Receivers: resUsers}
 
 	return res, nil
+}
+
+func (h *GrpcCommunicationsHandler) GetMatchTime(ctx context.Context,
+	in *generatedCommunications.GetMatchTimeRequest) (*generatedCommunications.GetMatchTimeResponse, error) {
+	firstUser := int(in.FirstUser)
+	secondUser := int(in.SecondUser)
+	time, err := h.reactionUC.GetMatchTime(ctx, firstUser, secondUser)
+	if err != nil {
+		return nil, fmt.Errorf("grpc get match time error: %w", err)
+	}
+	response := &generatedCommunications.GetMatchTimeResponse{
+		Time: time,
+	}
+	return response, nil
+}
+
+func (h *GrpcCommunicationsHandler) GetMatchesBySearch(ctx context.Context,
+	in *generatedCommunications.GetMatchesBySearchRequest) (*generatedCommunications.GetMatchesBySearchResponse, error) {
+	userId := int(in.UserID)
+	firstname := in.Firstname
+	username := in.Username
+
+	authors, err := h.reactionUC.GetMatchesBySearch(ctx, userId, firstname, username)
+	if err != nil {
+		return nil, fmt.Errorf("grpc get matches by search error: %w", err)
+	}
+
+	var respAuthors []int32
+	for _, v := range authors {
+		respAuthors = append(respAuthors, int32(v))
+	}
+
+	response := &generatedCommunications.GetMatchesBySearchResponse{
+		Authors: respAuthors,
+	}
+	return response, nil
 }

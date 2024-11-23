@@ -56,6 +56,20 @@ services:
     ports:
       - '8082:8082'
 
+  service-sparkit-message:
+    image: sparkit-message-service
+    container_name: sparkit-message-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8084:8084'
+
   sparkit-postgres:
     image: postgres:latest
     container_name: sparkit-postgres

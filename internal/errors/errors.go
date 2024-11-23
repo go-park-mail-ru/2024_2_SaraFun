@@ -9,3 +9,4 @@ var ErrBadUsername = stderr.New("bad username")
 
 var ErrUserNotFound = stderr.New("user not found")
 var ErrCannotLikeSelf = stderr.New("cannot reaction/dislike self")
+var ErrNoResult = stderr.New("no result found")

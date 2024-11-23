@@ -23,9 +23,10 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 	return &Storage{DB: db, logger: logger}
 }
 
-func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error) {
+func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int, ordNumber int) (int, error) {
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	repo.logger.Info("userId =", zap.Int("userid", userId))
 	fileName := "/home/reufee/imagedata/" + uuid.New().String() + fileExt
 	out, err := os.Create(os.ExpandEnv(fileName))
 	if err != nil {
@@ -39,7 +40,7 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 	}
 	repo.logger.Info("insert data", zap.Int("user_id", userId), zap.String("file_name", fileName))
 	var id int
-	dbErr := repo.DB.QueryRow("INSERT INTO photo (user_id, link) VALUES($1, $2) RETURNING id", userId, fileName).
+	dbErr := repo.DB.QueryRow("INSERT INTO photo (user_id, link, number) VALUES($1, $2, $3) RETURNING id", userId, fileName, ordNumber).
 		Scan(&id)
 	if dbErr != nil {
 		log.Printf("error inserting image: %v", dbErr)
@@ -53,7 +54,7 @@ func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]model
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var links []models.Image
-	rows, err := repo.DB.Query("SELECT id, link FROM photo WHERE user_id = $1", id)
+	rows, err := repo.DB.Query("SELECT id, link, number FROM photo WHERE user_id = $1 ORDER BY number", id)
 	if err != nil {
 		log.Printf("error getting link: %v", err)
 		return nil, fmt.Errorf("GetImageLink err: %w", err)
@@ -68,7 +69,7 @@ func (repo *Storage) GetImageLinksByUserId(ctx context.Context, id int) ([]model
 	//}
 	for rows.Next() {
 		var link models.Image
-		if err := rows.Scan(&link.Id, &link.Link); err != nil {
+		if err := rows.Scan(&link.Id, &link.Link, &link.Number); err != nil {
 			log.Printf("error getting link: %v", err)
 			return nil, fmt.Errorf("GetImageLink err: %w", err)
 		}
@@ -83,6 +84,19 @@ func (repo *Storage) DeleteImage(ctx context.Context, id int) error {
 	_, dbErr := repo.DB.Exec("DELETE FROM photo WHERE id = $1", id)
 	if dbErr != nil {
 		return fmt.Errorf("deleteImage err: %w", dbErr)
+	}
+	return nil
+}
+
+func (repo *Storage) UpdateOrdNumbers(ctx context.Context, numbers []models.Image) error {
+	req_id := ctx.Value(consts.RequestIDKey).(string)
+	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	for _, number := range numbers {
+		_, dbErr := repo.DB.ExecContext(ctx, "UPDATE photo SET number = $1 WHERE id = $2", number.Number, number.Id)
+		if dbErr != nil {
+			repo.logger.Error("update order number error", zap.Int("number", number.Number))
+			return fmt.Errorf("updateOrdNumbers err: %w", dbErr)
+		}
 	}
 	return nil
 }

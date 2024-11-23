@@ -10,11 +10,12 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"strconv"
 )
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=uploadimage_mocks . ImageService
 type ImageService interface {
-	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error)
+	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int, ordNumber int) (int, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=uploadimage_mocks . SessionService
@@ -51,7 +52,20 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	//		return
 	//	}
 	//}
+
+	//err := json.NewDecoder(r.Body).Decode(&number)
+	//if err != nil {
+	//	h.logger.Error("Error parsing request body", zap.Error(err))
+	//	http.Error(w, "Bad Request", http.StatusBadRequest)
+	//	return
+	//}
 	r.Body = limitedReader
+	//err := json.NewDecoder(limitedReader).Decode(&number)
+	//if err != nil {
+	//	h.logger.Error("Error parsing request body", zap.Error(err))
+	//	http.Error(w, "Bad Request", http.StatusBadRequest)
+	//	return
+	//}
 	//h.logger.Info("body content", zap.Binary("body content", bodyContent))
 	//fileFormat := http.DetectContentType(bodyContent)
 	//h.logger.Info("File format", zap.String("file_format", fileFormat))
@@ -78,6 +92,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad image file", http.StatusBadRequest)
 		return
 	}
+	number := r.FormValue("number")
+	//if err != nil {
+	//	h.logger.Error("failed to parse multipart form", zap.Error(err))
+	//	http.Error(w, "bad image number", http.StatusBadRequest)
+	//	return
+	//}
 
 	fileHeader := make([]byte, 512)
 
@@ -116,7 +136,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user session err", http.StatusInternalServerError)
 		return
 	}
-	id, err := h.imageService.SaveImage(ctx, file, fileExt, int(userId.UserId))
+	num, err := strconv.Atoi(number)
+	if err != nil {
+		h.logger.Error("failed to convert number", zap.Error(err))
+		http.Error(w, "invalid number", http.StatusBadRequest)
+	}
+	id, err := h.imageService.SaveImage(ctx, file, fileExt, int(userId.UserId), num)
 	if err != nil {
 		h.logger.Error("failed to save image", zap.Error(err))
 		http.Error(w, "save image err", http.StatusInternalServerError)

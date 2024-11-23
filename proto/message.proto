@@ -1,0 +1,63 @@
+syntax = "proto3";
+package message;
+option go_package = "../internal/pkg/message/delivery/grpc/gen/;gen";
+
+service Message {
+  rpc AddMessage(AddMessageRequest) returns (AddMessageResponse);
+  rpc AddReport(AddReportRequest) returns (AddReportResponse);
+  rpc GetLastMessage(GetLastMessageRequest) returns (GetLastMessageResponse);
+  rpc GetChatMessages(GetChatMessagesRequest) returns (GetChatMessagesResponse);
+
+}
+
+message AddMessageRequest {
+  ChatMessage Message = 1;
+}
+
+message AddMessageResponse {
+  int32 MessageID = 1;
+}
+
+message AddReportRequest {
+  Report Report = 1;
+}
+
+message AddReportResponse {
+  int32 ReportID = 1;
+}
+
+message GetLastMessageRequest {
+  int32 AuthorID = 1;
+  int32 ReceiverID = 2;
+  bool Self = 3;
+}
+
+message GetLastMessageResponse {
+  string Message = 1;
+  bool Self = 2;
+  string Time = 3;
+}
+
+message GetChatMessagesRequest{
+  int32 FirstUserID = 1;
+  int32 SecondUserID = 2;
+}
+
+message GetChatMessagesResponse{
+  repeated ChatMessage Messages = 1;
+}
+
+message ChatMessage {
+  int32 ID = 1;
+  int32 Author = 2;
+  int32 Receiver = 3;
+  string Body = 4;
+  string Time = 5;
+}
+
+message Report {
+  int32 ID = 1;
+  int32 Author = 2;
+  int32 Receiver = 3;
+  string Body = 4;
+}

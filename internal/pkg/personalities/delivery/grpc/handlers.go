@@ -16,6 +16,7 @@ type UserUsecase interface {
 	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 	GetUserIdByUsername(ctx context.Context, username string) (int, error)
 	CheckUsernameExists(ctx context.Context, username string) (bool, error)
+	ChangePassword(ctx context.Context, userId int, password string) error
 }
 
 type ProfileUsecase interface {
@@ -109,10 +110,12 @@ func (h *GrpcPersonalitiesHandler) GetProfileIDByUserID(ctx context.Context,
 	return res, nil
 }
 
-func (h *GrpcPersonalitiesHandler) GetUsernameByUserId(ctx context.Context,
+func (h *GrpcPersonalitiesHandler) GetUsernameByUserID(ctx context.Context,
 	in *generatedPersonalities.GetUsernameByUserIDRequest) (*generatedPersonalities.GetUsernameByUserIDResponse, error) {
+	h.logger.Info("test")
 	userId := int(in.UserID)
 	username, err := h.userUC.GetUsernameByUserId(ctx, userId)
+	h.logger.Info("test2")
 	if err != nil {
 		return nil, fmt.Errorf("grpc get username by user id error: %w", err)
 	}
@@ -121,7 +124,7 @@ func (h *GrpcPersonalitiesHandler) GetUsernameByUserId(ctx context.Context,
 	return res, nil
 }
 
-func (h *GrpcPersonalitiesHandler) GetUserIdByUsername(ctx context.Context,
+func (h *GrpcPersonalitiesHandler) GetUserIDByUsername(ctx context.Context,
 	in *generatedPersonalities.GetUserIDByUsernameRequest) (*generatedPersonalities.GetUserIDByUsernameResponse, error) {
 	username := in.GetUsername()
 	userId, err := h.userUC.GetUserIdByUsername(ctx, username)
@@ -213,4 +216,12 @@ func (h *GrpcPersonalitiesHandler) DeleteProfile(ctx context.Context,
 	}
 	res := &generatedPersonalities.DeleteProfileResponse{}
 	return res, nil
+}
+
+func (h *GrpcPersonalitiesHandler) ChangePassword(ctx context.Context, in *generatedPersonalities.ChangePasswordRequest) (*generatedPersonalities.ChangePasswordResponse, error) {
+	err := h.userUC.ChangePassword(ctx, int(in.UserID), in.Password)
+	if err != nil {
+		return nil, fmt.Errorf("Grpc change password error : %w", err)
+	}
+	return &generatedPersonalities.ChangePasswordResponse{}, nil
 }

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS photo (
                                      id SERIAL PRIMARY KEY,
                                      user_id bigint NOT NULL,
                                      link text NOT NULL UNIQUE,
+                                     number bigint NOT NULL,
 
                                      CONSTRAINT fk_user FOREIGN KEY (user_id)
     REFERENCES users (id)
@@ -61,16 +62,18 @@ CREATE TABLE IF NOT EXISTS report (
     author INT NOT NULL,
     receiver INT NOT NULL,
     body text NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_author FOREIGN KEY (author)
     REFERENCES users (id)
-    ON DELETE CASCADE,
+    ON DELETE CASCADE
     ON UPDATE CASCADE,
 
     CONSTRAINT fk_receiver FOREIGN KEY (receiver)
     REFERENCES users (id)
-    ON DELETE CASCADE,
-    ON UPDATE CASCADE,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS message (
@@ -78,14 +81,16 @@ CREATE TABLE IF NOT EXISTS message (
     author INT NOT NULL,
     receiver INT NOT NULL,
     body text NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_author FOREIGN KEY (author)
     REFERENCES users (id)
-    ON DELETE CASCADE,
+    ON DELETE CASCADE
     ON UPDATE CASCADE,
 
     CONSTRAINT fk_receiver FOREIGN KEY (receiver)
     REFERENCES users (id)
-    ON DELETE CASCADE,
-    ON UPDATE CASCADE,
-)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
