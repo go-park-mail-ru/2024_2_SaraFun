@@ -27,7 +27,7 @@ func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	repo.logger.Info("userId =", zap.Int("userid", userId))
-	fileName := "/home/reufee/imagedata/" + uuid.New().String() + fileExt
+	fileName := "/home/ubuntu/imagedata/" + uuid.New().String() + fileExt
 	out, err := os.Create(os.ExpandEnv(fileName))
 	if err != nil {
 		log.Printf("error creating file: %v", err)
