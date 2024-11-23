@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a4ee16d0-3cb0-4bdd-b6a0-f19ad68c09c6" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go Application" />
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file://$USER_HOME$/sdk/go1.23.1" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2nQHOl8vo1nSLEQYvfntIlNa2Xt" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "Go Test.TestCheckAuthHandler in sparkit/internal/handlers/checkauth (1).executor": "Run",
+    "Go Test.TestCheckAuthHandler in sparkit/internal/handlers/checkauth.executor": "Run",
+    "Go Test.TestDeleteImage in sparkit/internal/repo/image.executor": "Run",
+    "Go Test.TestGetMatchList in sparkit/internal/repo/reaction.executor": "Run",
+    "Go Test.TestGetReactionList in sparkit/internal/repo/reaction.executor": "Run",
+    "Go Test.TestGetUserListHandler in sparkit/internal/handlers/getuserlist (1).executor": "Run",
+    "Go Test.TestGetUserListHandler in sparkit/internal/handlers/getuserlist (2).executor": "Run",
+    "Go Test.TestGetUserListHandler in sparkit/internal/handlers/getuserlist.executor": "Run",
+    "Go Test.TestGetUserListHandler/successful_user_list_retrieval in sparkit/internal/handlers/getuserlist (1).executor": "Run",
+    "Go Test.TestGetUserListHandler/successful_user_list_retrieval in sparkit/internal/handlers/getuserlist.executor": "Run",
+    "Go Test.TestHandler in sparkit/internal/handlers/signup.executor": "Run",
+    "Go Test.TestHandler/success in sparkit/internal/handlers/signup.executor": "Run",
+    "Go Test.TestHandler_Handle in sparkit/internal/handlers/uploadimage.executor": "Run",
+    "Go Test.TestLogoutHandler in sparkit/internal/handlers/logout (1).executor": "Run",
+    "Go Test.TestLogoutHandler in sparkit/internal/handlers/logout.executor": "Run",
+    "Go Test.TestLogoutHandler/successful_logout in sparkit/internal/handlers/logout.executor": "Run",
+    "Go Test.TestSigninHandler in sparkit/internal/handlers/signin (1).executor": "Run",
+    "Go Test.TestSigninHandler in sparkit/internal/handlers/signin.executor": "Run",
+    "Go Test.go test sparkit/internal/handlers/signup.executor": "Run",
+    "Go Test.go test sparkit/internal/repo/profile.executor": "Run",
+    "Go Test.go test sparkit/internal/repo/reaction.executor": "Run",
+    "Go Test.go test sparkit/internal/repo/session.executor": "Run",
+    "Go Test.go test sparkit/internal/usecase/reaction.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "newbranch",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "C:/Users/79263",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm"
+  }
+}]]></component>
+  <component name="RunManager" selected="Go Test.TestDeleteImage in sparkit/internal/repo/image">
+    <configuration name="TestDeleteImage in sparkit/internal/repo/image" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/repo/image" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="sparkit/internal/repo/image" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestDeleteImage\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetMatchList in sparkit/internal/repo/reaction" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/repo/reaction" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="sparkit/internal/repo/reaction" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetMatchList\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetReactionList in sparkit/internal/repo/reaction" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/repo/reaction" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="sparkit/internal/repo/reaction" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetReactionList\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test sparkit/internal/repo/reaction" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/repo/reaction" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="sparkit/internal/repo/reaction" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test sparkit/internal/repo/session" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/repo/session" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="sparkit/internal/repo/session" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.TestDeleteImage in sparkit/internal/repo/image" />
+        <item itemvalue="Go Test.go test sparkit/internal/repo/session" />
+        <item itemvalue="Go Test.go test sparkit/internal/repo/reaction" />
+        <item itemvalue="Go Test.TestGetMatchList in sparkit/internal/repo/reaction" />
+        <item itemvalue="Go Test.TestGetReactionList in sparkit/internal/repo/reaction" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-5df93f7ad4aa-df9ad98b711f-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-242.22855.85" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-GO-242.22855.85" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package admin;
+
+option go_package = "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/admin/delivery/grpc/gen";
+
+service AdminService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc CreateAdmin(CreateAdminRequest) returns (CreateAdminResponse);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+message CreateAdminRequest {
+  string username = 1;
+  string password = 2;
+  string role = 3;
+}
+
+message CreateAdminResponse {
+  bool success = 1;
+}
