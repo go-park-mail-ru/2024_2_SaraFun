@@ -1,6 +1,7 @@
 package getChatMessages
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
@@ -18,24 +19,32 @@ type ResponseMessage struct {
 	Time string `json:"time"`
 }
 
+type ImageService interface {
+	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
+}
+
 type Response struct {
 	Username string            `json:"username"`
 	Profile  models.Profile    `json:"profile"`
 	Messages []ResponseMessage `json:"messages"`
+	Images   []models.Image    `json:"images"`
 }
 
 type Handler struct {
 	authClient          generatedAuth.AuthClient
 	messageClient       generatedMessage.MessageClient
 	personalitiesClient generatedPersonalities.PersonalitiesClient
+	imageService        ImageService
 	logger              *zap.Logger
 }
 
-func NewHandler(authClient generatedAuth.AuthClient, messageClient generatedMessage.MessageClient, personalitiesClient generatedPersonalities.PersonalitiesClient, logger *zap.Logger) *Handler {
+func NewHandler(authClient generatedAuth.AuthClient, messageClient generatedMessage.MessageClient,
+	personalitiesClient generatedPersonalities.PersonalitiesClient, imageService ImageService, logger *zap.Logger) *Handler {
 	return &Handler{
 		authClient:          authClient,
 		messageClient:       messageClient,
 		personalitiesClient: personalitiesClient,
+		imageService:        imageService,
 		logger:              logger,
 	}
 }
@@ -131,6 +140,16 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.Messages = responseMessages
+
+	var links []models.Image
+	links, err = h.imageService.GetImageLinksByUserId(ctx, secondUserID)
+	if err != nil {
+		h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp.Images = links
 
 	w.Header().Set("Content-Type", "application/json")
 	jsonData, err := json.Marshal(resp)
