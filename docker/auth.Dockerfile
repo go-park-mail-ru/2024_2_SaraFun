@@ -8,6 +8,6 @@ RUN apk update && apk upgrade && \
 
 WORKDIR /app
 
-COPY --from=sparkit-auth-builder:latest --chmod=755 /application/${EXECUTABLE} /app
+COPY --from=sparkit-builder:latest --chmod=755 /application/${EXECUTABLE} /app
 
 CMD /app/${EXECUTABLE}

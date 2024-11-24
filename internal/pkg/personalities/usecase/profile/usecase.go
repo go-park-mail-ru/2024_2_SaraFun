@@ -38,6 +38,7 @@ func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (in
 func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//u.logger.Info("usecase request-id", zap.String("request_id", req_id))
+	u.logger.Info("update profile", zap.Any("profile", profile))
 	if err := u.repo.UpdateProfile(ctx, id, profile); err != nil {
 		u.logger.Error("update profile err", zap.Error(err))
 		return fmt.Errorf("update profile err: %w", err)

@@ -36,6 +36,8 @@ func (repo *Storage) CreateProfile(ctx context.Context, profile models.Profile) 
 func (repo *Storage) UpdateProfile(ctx context.Context, id int, profile models.Profile) error {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//repo.logger.Info("repo request-id", zap.String("request_id", req_id))
+	repo.logger.Info("id is", zap.Int("id", id))
+	repo.logger.Info("profile is", zap.Any("profile", profile))
 	_, err := repo.DB.Exec(`UPDATE profile SET firstname= $1,
                    lastname= $2,
                    age = $3,

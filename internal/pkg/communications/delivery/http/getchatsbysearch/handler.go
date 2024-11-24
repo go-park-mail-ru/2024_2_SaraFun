@@ -70,8 +70,7 @@ type Handler struct {
 }
 
 type Request struct {
-	Firstname string `json:"first_name"`
-	Username  string `json:"username"`
+	Search string `json:"search"`
 }
 
 type Response struct {
@@ -122,13 +121,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	getMatchListRequest := &generatedCommunications.GetMatchesBySearchRequest{UserID: userId.UserId, Firstname: req.Firstname, Username: req.Username}
+	getMatchListRequest := &generatedCommunications.GetMatchesBySearchRequest{UserID: userId.UserId, Search: req.Search}
 	authors, err := h.communicationsClient.GetMatchesBySearch(ctx, getMatchListRequest)
 	if err != nil {
 		h.logger.Error("GetMatchesBySearch Handler: bad getting authors ", zap.Error(err))
 		http.Error(w, "bad get matches", http.StatusInternalServerError)
 		return
 	}
+	h.logger.Info("GetMatchesBySearch Handler", zap.Any("authors", authors))
 	var chats []Response
 	h.logger.Info("GetMatchesBySearch Handler", zap.Any("authors", authors))
 	for _, author := range authors.Authors {

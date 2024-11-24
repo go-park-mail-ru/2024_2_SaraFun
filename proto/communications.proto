@@ -44,8 +44,9 @@ message GetMatchTimeResponse{
 
 message GetMatchesBySearchRequest {
   int32 UserID = 1;
-  string Firstname = 2;
+  string Search = 2;
   string Username = 3;
+
 }
 
 message GetMatchesBySearchResponse {

@@ -21,15 +21,15 @@ builder-image:
 sparkit-run:
 	make builder-image
 	make service-sparkit-image
-	make auth-builder-image
+	#make auth-builder-image
 	make service-auth-image
-	make personalities-builder-image
+	#make personalities-builder-image
 	make service-personalities-image
-	make communications-builder-image
+	#make communications-builder-image
 	make service-communications-image
-	make message-builder-image
+	#make message-builder-image
 	make service-message-image
-	make survey-builder-image
+	#make survey-builder-image
 	make service-survey-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 

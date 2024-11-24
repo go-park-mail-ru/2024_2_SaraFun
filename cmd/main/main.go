@@ -219,7 +219,7 @@ func main() {
 	getAllChats := getallchats.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
 	setConnection := setconnection.NewHandler(websocketUsecase, authClient, logger)
 	changePassword := changepassword.NewHandler(authClient, personalitiesClient, logger)
-	getChat := getChatMessages.NewHandler(authClient, messageClient, logger)
+	getChat := getChatMessages.NewHandler(authClient, messageClient, personalitiesClient, logger)
 	getChatBySearch := getchatsbysearch.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
 	addSurvey := addsurvey.NewHandler(surveyClient, authClient, logger)
 	getSurveyInfo := getsurveyinfo.NewHandler(authClient, surveyClient, logger)

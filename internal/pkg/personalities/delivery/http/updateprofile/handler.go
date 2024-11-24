@@ -47,9 +47,15 @@ type imgNumbers struct {
 	Number int `json:"number"`
 }
 
-type Response struct {
-	Profile    models.Profile `json:"profile"`
-	ImgNumbers []imgNumbers   `json:"imgNumbers"`
+type Request struct {
+	ID         int          `json:"id"`
+	FirstName  string       `json:"first_name"`
+	LastName   string       `json:"last_name"`
+	Gender     string       `json:"gender"`
+	Age        int          `json:"age"`
+	Target     string       `json:"target"`
+	About      string       `json:"about"`
+	ImgNumbers []imgNumbers `json:"imgNumbers"`
 }
 
 type Handler struct {
@@ -87,24 +93,26 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "profile not found", http.StatusUnauthorized)
 		return
 	}
-	var response Response
-	if err := json.NewDecoder(r.Body).Decode(&response); err != nil {
+	var request Request
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		h.logger.Error("error decoding profile", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	response.Profile.ID = int(profileId.ProfileID)
+	h.logger.Info("request", zap.Any("request", request))
+	request.ID = int(profileId.ProfileID)
 	genProfile := &generatedPersonalities.Profile{
-		ID:        int32(response.Profile.ID),
-		FirstName: response.Profile.FirstName,
-		LastName:  response.Profile.LastName,
-		Age:       int32(response.Profile.Age),
-		Gender:    response.Profile.Gender,
-		Target:    response.Profile.Target,
-		About:     response.Profile.About,
+		ID:        int32(request.ID),
+		FirstName: request.FirstName,
+		LastName:  request.LastName,
+		Age:       int32(request.Age),
+		Gender:    request.Gender,
+		Target:    request.Target,
+		About:     request.About,
 	}
+	h.logger.Info("Updating profile", zap.Any("profile", genProfile))
 	updateProfileRequest := &generatedPersonalities.UpdateProfileRequest{
-		Id:      profileId.ProfileID,
+		Id:      genProfile.ID,
 		Profile: genProfile,
 	}
 	_, err = h.personalitiesClient.UpdateProfile(ctx, updateProfileRequest)
@@ -116,7 +124,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	var ordNumbers []models.Image
 	h.logger.Info("test")
-	imgs := response.ImgNumbers
+	imgs := request.ImgNumbers
 	for _, val := range imgs {
 		img := models.Image{
 			Id:     val.ID,

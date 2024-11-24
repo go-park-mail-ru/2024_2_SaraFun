@@ -179,6 +179,8 @@ func (h *GrpcPersonalitiesHandler) UpdateProfile(ctx context.Context,
 		Target:    in.Profile.Target,
 		About:     in.Profile.About,
 	}
+	h.logger.Info("in", zap.Any("profile", profile))
+	h.logger.Info("profile", zap.Any("profile", profile))
 
 	err := h.profileUC.UpdateProfile(ctx, id, profile)
 	if err != nil {

@@ -12,7 +12,7 @@ type ReactionUseCase interface {
 	GetMatchList(ctx context.Context, userId int) ([]int, error)
 	GetReactionList(ctx context.Context, userId int) ([]int, error)
 	GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error)
-	GetMatchesBySearch(ctx context.Context, userID int, firstname string, username string) ([]int, error)
+	GetMatchesBySearch(ctx context.Context, userID int, search string) ([]int, error)
 }
 
 type GrpcCommunicationsHandler struct {
@@ -91,10 +91,9 @@ func (h *GrpcCommunicationsHandler) GetMatchTime(ctx context.Context,
 func (h *GrpcCommunicationsHandler) GetMatchesBySearch(ctx context.Context,
 	in *generatedCommunications.GetMatchesBySearchRequest) (*generatedCommunications.GetMatchesBySearchResponse, error) {
 	userId := int(in.UserID)
-	firstname := in.Firstname
-	username := in.Username
+	search := in.Search
 
-	authors, err := h.reactionUC.GetMatchesBySearch(ctx, userId, firstname, username)
+	authors, err := h.reactionUC.GetMatchesBySearch(ctx, userId, search)
 	if err != nil {
 		return nil, fmt.Errorf("grpc get matches by search error: %w", err)
 	}
