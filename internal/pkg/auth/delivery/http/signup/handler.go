@@ -103,12 +103,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	exists, err := h.personalitiesClient.CheckUsernameExists(ctx, checkUsernameRequest)
 	if err != nil {
 		h.logger.Error("failed to check username exists", zap.Error(err))
-		http.Error(w, "failed to check username exists", http.StatusInternalServerError)
+		http.Error(w, "Неудачная проверка на никнейм", http.StatusInternalServerError)
 		return
 	}
 	if exists.Exists {
 		h.logger.Error("user already exists", zap.String("username", request.User.Username))
-		http.Error(w, "user already exists", http.StatusBadRequest)
+		http.Error(w, "Пользователь с таким никнеймом уже существует", http.StatusBadRequest)
 		return
 	}
 

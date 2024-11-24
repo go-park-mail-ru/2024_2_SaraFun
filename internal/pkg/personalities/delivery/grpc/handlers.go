@@ -160,6 +160,7 @@ func (h *GrpcPersonalitiesHandler) CreateProfile(ctx context.Context,
 		About:     in.Profile.About,
 	}
 	profileId, err := h.profileUC.CreateProfile(ctx, profile)
+	h.logger.Info("create profile error", zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf("grpc create profile error: %w", err)
 	}
@@ -183,6 +184,7 @@ func (h *GrpcPersonalitiesHandler) UpdateProfile(ctx context.Context,
 	h.logger.Info("profile", zap.Any("profile", profile))
 
 	err := h.profileUC.UpdateProfile(ctx, id, profile)
+	h.logger.Info("update profile error", zap.Error(err))
 	if err != nil {
 		return nil, fmt.Errorf("grpc update profile error: %w", err)
 	}

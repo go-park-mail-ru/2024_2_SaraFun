@@ -52,7 +52,9 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Info("setConnection get user id error", zap.Error(err))
 		http.Error(w, "get user id error", http.StatusUnauthorized)
+		return
 	}
+	h.logger.Info("before upgrade")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logger.Info("setConnection websocket upgrade error", zap.Error(err))
