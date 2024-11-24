@@ -92,7 +92,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 				Expires:  time.Now().Add(time.Hour * 24),
 				Secure:   false,
 				HttpOnly: true,
-				SameSite: http.SameSiteNoneMode,
+				SameSite: http.SameSiteStrictMode,
 				Path:     "/",
 			})
 		}
