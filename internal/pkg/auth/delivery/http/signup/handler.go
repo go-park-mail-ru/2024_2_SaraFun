@@ -180,5 +180,5 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	h.logger.Info("good signup", zap.String("username", request.User.Username))
-	fmt.Fprintf(w, "ok")
+	fmt.Fprintf(w, "Вы успешно зарегистрировались")
 }

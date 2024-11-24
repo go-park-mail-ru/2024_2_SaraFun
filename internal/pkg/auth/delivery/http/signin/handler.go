@@ -98,5 +98,5 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.logger.Info("user created success", zap.String("username", userData.Username))
-	fmt.Fprintf(w, "ok")
+	fmt.Fprintf(w, "Вы успешно вошли!")
 }

@@ -50,5 +50,5 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad change password", http.StatusBadRequest)
 		return
 	}
-	fmt.Fprintf(w, "ok")
+	fmt.Fprintf(w, "Вы успешно поменяли пароль!")
 }

@@ -262,7 +262,7 @@ func main() {
 	router.Handle("/question", http.HandlerFunc(addQuestion.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/question", http.HandlerFunc(updateQuestion.Handle)).Methods("PUT", http.MethodOptions)
 	router.Handle("/getquestions", http.HandlerFunc(getQuestions.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/ws", http.HandlerFunc(setConnection.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/ws", http.HandlerFunc(setConnection.Handle))
 
 	// Создаем HTTP-сервер
 	srv := &http.Server{
