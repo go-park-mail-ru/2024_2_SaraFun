@@ -48,7 +48,7 @@ func (repo *Storage) GetLastMessage(ctx context.Context, authorID int, receiverI
 
 func (repo *Storage) GetChatMessages(ctx context.Context, firstUserID int, secondUserID int) ([]models.Message, error) {
 	rows, err := repo.DB.QueryContext(ctx,
-		"SELECT body, author, receiver, created_at FROM message WHERE (author = $1 AND receiver = $2) OR (author = $2 AND receiver = $1) ORDER BY created_at DESC",
+		"SELECT body, author, receiver, created_at FROM message WHERE (author = $1 AND receiver = $2) OR (author = $2 AND receiver = $1) ORDER BY created_at ASC",
 		firstUserID, secondUserID)
 	if err != nil {
 		repo.logger.Error("GetChatMessages error", zap.Error(err))
