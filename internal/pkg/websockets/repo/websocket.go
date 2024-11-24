@@ -14,6 +14,11 @@ type Storage struct {
 	logger *zap.Logger
 }
 
+type JsonMessage struct {
+	UserID  int    `json:"user_id"`
+	Message string `json:"message"`
+}
+
 func New(conns map[int]*ws.Conn, logger *zap.Logger) *Storage {
 	return &Storage{
 		wConns: conns,
@@ -46,8 +51,8 @@ func (s *Storage) WriteMessage(ctx context.Context, userId int, message string) 
 	if !ok {
 		return fmt.Errorf("user ws conn not found", userId)
 	}
-	s.logger.Info("бесконечный прикол с веб сокетом")
-	err := conn.WriteMessage(ws.TextMessage, []byte(message))
+	msg := JsonMessage{userId, message}
+	err := conn.WriteJSON(&msg)
 	if err != nil {
 		return fmt.Errorf("cannot write message: %w", err)
 	}
