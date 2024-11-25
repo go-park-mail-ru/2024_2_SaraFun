@@ -15,7 +15,8 @@ type Storage struct {
 }
 
 type JsonMessage struct {
-	UserID  int    `json:"user_id"`
+	AuthorID int `json:"author_id"`
+	//ReceiverID int    `json:"receiver_id"`
 	Message string `json:"message"`
 }
 
@@ -43,15 +44,15 @@ func (s *Storage) DeleteConnection(ctx context.Context, userId int) error {
 	return nil
 }
 
-func (s *Storage) WriteMessage(ctx context.Context, userId int, message string) error {
-	s.logger.Info("Repo websocket writeMessage", zap.Int("userId", userId))
+func (s *Storage) WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error {
+	s.logger.Info("Repo websocket writeMessage", zap.Int("receiverID", receiverID))
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	conn, ok := s.wConns[userId]
+	conn, ok := s.wConns[receiverID]
 	if !ok {
-		return fmt.Errorf("user ws conn not found", userId)
+		return fmt.Errorf("user ws conn not found", receiverID)
 	}
-	msg := JsonMessage{userId, message}
+	msg := JsonMessage{authorID, message}
 	err := conn.WriteJSON(&msg)
 	if err != nil {
 		return fmt.Errorf("cannot write message: %w", err)

@@ -21,7 +21,7 @@ import (
 //}
 
 type WebSocketService interface {
-	WriteMessage(ctx context.Context, userId int, message string) error
+	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
 }
 
 type Handler struct {
@@ -79,7 +79,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	err = h.ws.WriteMessage(ctx, msg.Receiver, msg.Body)
+	err = h.ws.WriteMessage(ctx, msg.Author, msg.Receiver, msg.Body)
 	if err != nil {
 		h.logger.Info("Error writing message", zap.Error(err))
 		//http.Error(w, "internal server error", http.StatusInternalServerError)
