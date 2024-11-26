@@ -41,6 +41,7 @@ func (h *GRPCMessageHandler) AddReport(ctx context.Context, in *generatedMessage
 		ID:       int(in.Report.ID),
 		Author:   int(in.Report.Author),
 		Receiver: int(in.Report.Receiver),
+		Reason:   in.Report.Reason,
 		Body:     in.Report.Body,
 	}
 	id, err := h.reportUsecase.AddReport(ctx, report)

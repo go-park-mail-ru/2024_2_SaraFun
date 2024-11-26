@@ -97,11 +97,13 @@ type Report struct {
 	ID       int    `json:"id"`
 	Author   int    `json:"author"`
 	Receiver int    `json:"receiver"`
+	Reason   string `json:"reason"`
 	Body     string `json:"body"`
 }
 
 func (report *Report) Sanitize() {
 	report.Body = html.EscapeString(report.Body)
+	report.Reason = html.EscapeString(report.Reason)
 }
 
 type Message struct {

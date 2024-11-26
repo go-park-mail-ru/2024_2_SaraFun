@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS report (
     id SERIAL PRIMARY KEY,
     author INT NOT NULL,
     receiver INT NOT NULL,
+    reason text NOT NULL CHECK (reason in ('about', 'photo', 'fake', 'abuse', 'another')),
     body text NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -53,11 +53,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad get user id", http.StatusBadRequest)
 	}
 	report.Author = int(userId.UserId)
-
+	h.logger.Info("report", zap.Any("report", report))
 	requestReport := &generatedMessage.Report{
 		ID:       int32(report.ID),
 		Author:   int32(report.Author),
 		Receiver: int32(report.Receiver),
+		Reason:   report.Reason,
 		Body:     report.Body,
 	}
 	addReportRequest := &generatedMessage.AddReportRequest{Report: requestReport}
