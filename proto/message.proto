@@ -7,7 +7,9 @@ service Message {
   rpc AddReport(AddReportRequest) returns (AddReportResponse);
   rpc GetLastMessage(GetLastMessageRequest) returns (GetLastMessageResponse);
   rpc GetChatMessages(GetChatMessagesRequest) returns (GetChatMessagesResponse);
-
+  rpc GetMessagesBySearch(GetMessagesBySearchRequest) returns (GetMessagesBySearchResponse);
+  rpc GetReportIfExists(GetReportIfExistsRequest) returns (GetReportIfExistsResponse);
+  rpc CheckUsersBlockNotExists(CheckUsersBlockNotExistsRequest) returns (CheckUsersBlockNotExistsResponse);
 }
 
 message AddMessageRequest {
@@ -45,6 +47,33 @@ message GetChatMessagesRequest{
 
 message GetChatMessagesResponse{
   repeated ChatMessage Messages = 1;
+}
+
+message GetMessagesBySearchRequest {
+  int32 userID = 1;
+  int32 Page = 2;
+  string Search = 3;
+}
+
+message GetMessagesBySearchResponse {
+  repeated ChatMessage Messages = 1;
+}
+
+message GetReportIfExistsRequest {
+  Report Report = 1;
+}
+
+message GetReportIfExistsResponse {
+  Report Report = 1;
+}
+
+message CheckUsersBlockNotExistsRequest {
+  int32 FirstUserID = 1;
+  int32 SecondUserID = 2;
+}
+
+message CheckUsersBlockNotExistsResponse {
+  string Status = 1;
 }
 
 message ChatMessage {

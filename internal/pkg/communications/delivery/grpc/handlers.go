@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	"go.uber.org/zap"
 )
 
 type ReactionUseCase interface {
@@ -13,15 +14,17 @@ type ReactionUseCase interface {
 	GetReactionList(ctx context.Context, userId int) ([]int, error)
 	GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error)
 	GetMatchesBySearch(ctx context.Context, userID int, search string) ([]int, error)
+	UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error
 }
 
 type GrpcCommunicationsHandler struct {
 	generatedCommunications.CommunicationsServer
 	reactionUC ReactionUseCase
+	logger     *zap.Logger
 }
 
-func NewGrpcCommunicationHandler(uc ReactionUseCase) *GrpcCommunicationsHandler {
-	return &GrpcCommunicationsHandler{reactionUC: uc}
+func NewGrpcCommunicationHandler(uc ReactionUseCase, logger *zap.Logger) *GrpcCommunicationsHandler {
+	return &GrpcCommunicationsHandler{reactionUC: uc, logger: logger}
 }
 
 func (h *GrpcCommunicationsHandler) AddReaction(ctx context.Context,
@@ -107,4 +110,19 @@ func (h *GrpcCommunicationsHandler) GetMatchesBySearch(ctx context.Context,
 		Authors: respAuthors,
 	}
 	return response, nil
+}
+
+func (h *GrpcCommunicationsHandler) UpdateOrCreateReaction(ctx context.Context,
+	in *generatedCommunications.UpdateOrCreateReactionRequest) (*generatedCommunications.UpdateOrCreateReactionResponse, error) {
+	reaction := models.Reaction{
+		Author:   int(in.Reaction.Author),
+		Receiver: int(in.Reaction.Receiver),
+		Type:     in.Reaction.Type,
+	}
+	h.logger.Info("reaction", zap.Any("reaction", reaction))
+	err := h.reactionUC.UpdateOrCreateReaction(ctx, reaction)
+	if err != nil {
+		return nil, fmt.Errorf("grpc update reaction error: %w", err)
+	}
+	return &generatedCommunications.UpdateOrCreateReactionResponse{}, nil
 }

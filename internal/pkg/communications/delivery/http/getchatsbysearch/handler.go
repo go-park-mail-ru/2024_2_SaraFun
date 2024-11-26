@@ -71,17 +71,19 @@ type Handler struct {
 
 type Request struct {
 	Search string `json:"search"`
+	Page   int    `json:"page"`
 }
 
 type Response struct {
-	ID          int            `json:"id"`
-	Username    string         `json:"username"`
-	FirstName   string         `json:"first_name"`
-	LastName    string         `json:"last_name"`
-	Images      []models.Image `json:"images"`
-	LastMessage string         `json:"last_message"`
-	Self        bool           `json:"self"`
-	Time        string         `json:"time"`
+	ID        int            `json:"id"`
+	Username  string         `json:"username"`
+	FirstName string         `json:"first_name"`
+	LastName  string         `json:"last_name"`
+	Images    []models.Image `json:"images"`
+	Message   string         `json:"message"`
+	Self      bool           `json:"self"`
+	Time      string         `json:"time"`
+	ByMessage bool           `json:"by_message"`
 }
 
 func NewHandler(communicationsClient generatedCommunications.CommunicationsClient, sessionClient generatedAuth.AuthClient,
@@ -100,12 +102,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	h.logger.Info("Handling request", zap.String("request_id", req_id))
+
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting cookie ", zap.Error(err))
 		http.Error(w, "session not found", http.StatusUnauthorized)
 		return
 	}
+
 	getUserIdRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
 	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getUserIdRequest)
 	if err != nil {
@@ -121,6 +125,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+
 	getMatchListRequest := &generatedCommunications.GetMatchesBySearchRequest{UserID: userId.UserId, Search: req.Search}
 	authors, err := h.communicationsClient.GetMatchesBySearch(ctx, getMatchListRequest)
 	if err != nil {
@@ -128,6 +133,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad get matches", http.StatusInternalServerError)
 		return
 	}
+
 	h.logger.Info("GetMatchesBySearch Handler", zap.Any("authors", authors))
 	var chats []Response
 	h.logger.Info("GetMatchesBySearch Handler", zap.Any("authors", authors))
@@ -149,6 +155,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "bad get profile", http.StatusInternalServerError)
 			return
 		}
+
 		chatter.FirstName = profile.Profile.FirstName
 		chatter.LastName = profile.Profile.LastName
 		getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: author}
@@ -158,7 +165,9 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "bad get username", http.StatusInternalServerError)
 			return
 		}
+
 		chatter.Username = username.Username
+		chatter.ByMessage = false
 		var links []models.Image
 		links, err = h.imageService.GetImageLinksByUserId(ctx, int(author))
 		if err != nil {
@@ -166,6 +175,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		chatter.Images = links
 		chatter.ID = int(author)
 		//matchedUser.Images = links
@@ -197,13 +207,75 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			}
 			chatter.Time = time.Time
 		} else {
-			chatter.LastMessage = msg.Message
+			chatter.Message = msg.Message
 			chatter.Self = msg.Self
 			chatter.Time = msg.Time
 		}
 		chats = append(chats, chatter)
 	}
 
+	getMessagesRequest := &generatedMessage.GetMessagesBySearchRequest{
+		UserID: userId.UserId,
+		Page:   int32(req.Page),
+		Search: req.Search,
+	}
+	msgUsers, err := h.messageClient.GetMessagesBySearch(ctx, getMessagesRequest)
+	if err != nil {
+		h.logger.Error("getmessagesbysearch error", zap.Error(err))
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
+	}
+	h.logger.Info("msgUsers", zap.Any("msgUsers", msgUsers))
+	for _, msg := range msgUsers.Messages {
+		var chatter Response
+		var otherUserID int32
+		if userId.UserId != msg.Author {
+			otherUserID = msg.Author
+			chatter.Self = false
+		} else if userId.UserId != msg.Receiver {
+			otherUserID = msg.Receiver
+			chatter.Self = true
+		} else {
+			h.logger.Error("bad id in author and receiver of message")
+			http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+			return
+		}
+		getProfileRequest := &generatedPersonalities.GetProfileRequest{Id: otherUserID}
+		profile, err := h.personalitiesClient.GetProfile(ctx, getProfileRequest)
+		if err != nil {
+			h.logger.Error("GetMatches Handler: bad getting profile ", zap.Error(err))
+			http.Error(w, "bad get profile", http.StatusInternalServerError)
+			return
+		}
+
+		chatter.FirstName = profile.Profile.FirstName
+		chatter.LastName = profile.Profile.LastName
+		getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: otherUserID}
+		username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
+		if err != nil {
+			h.logger.Error("GetMatches Handler: bad getting username ", zap.Error(err))
+			http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+			return
+		}
+
+		chatter.Username = username.Username
+		chatter.ByMessage = true
+		var links []models.Image
+		links, err = h.imageService.GetImageLinksByUserId(ctx, int(otherUserID))
+		if err != nil {
+			h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		chatter.Images = links
+		chatter.ID = int(otherUserID)
+		chatter.Message = msg.Body
+		chatter.Time = msg.Time
+		chatter.ByMessage = true
+
+		chats = append(chats, chatter)
+	}
 	sort.Slice(chats, func(i, j int) bool {
 		a, err := time.Parse("RFC3339", chats[i].Time)
 		if err != nil {

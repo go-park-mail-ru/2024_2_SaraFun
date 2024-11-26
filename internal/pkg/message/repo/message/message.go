@@ -69,3 +69,30 @@ func (repo *Storage) GetChatMessages(ctx context.Context, firstUserID int, secon
 	}
 	return messages, nil
 }
+
+func (repo *Storage) GetMessagesBySearch(ctx context.Context, userID int, page int, search string) ([]models.Message, error) {
+	limit := page * 25
+	offset := (page - 1) * 25
+	rows, err := repo.DB.QueryContext(ctx,
+		`SELECT body, author, receiver, created_at FROM message 
+                WHERE (author = $1 OR receiver = $1) AND body LIKE '%' || $2 || '%'
+                ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
+		userID, search, limit, offset)
+	if err != nil {
+		repo.logger.Error("GetMessagesBySearch error", zap.Error(err))
+		return nil, fmt.Errorf("GetMessagesBySearch error: %w", err)
+	}
+	defer rows.Close()
+	var messages []models.Message
+	for rows.Next() {
+		var msg models.Message
+		err := rows.Scan(&msg.Body, &msg.Author, &msg.Receiver, &msg.Time)
+		if err != nil {
+			repo.logger.Error("GetMessagesBySearch error", zap.Error(err))
+			return nil, fmt.Errorf("GetMessagesBySearch error: %w", err)
+		}
+		messages = append(messages, msg)
+	}
+	repo.logger.Info("msgs", zap.Any("messages", messages))
+	return messages, nil
+}

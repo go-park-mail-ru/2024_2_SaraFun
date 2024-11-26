@@ -2,6 +2,7 @@ package report
 
 import (
 	"context"
+	stderr "errors"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	"go.uber.org/zap"
@@ -9,6 +10,7 @@ import (
 
 type Repository interface {
 	AddReport(ctx context.Context, report models.Report) (int, error)
+	GetReportIfExists(ctx context.Context, firstUserID int, secondUserID int) (models.Report, error)
 }
 
 type Usecase struct {
@@ -33,4 +35,34 @@ func (s *Usecase) AddReport(ctx context.Context, report models.Report) (int, err
 		return -1, fmt.Errorf("AddReport error: %w", err)
 	}
 	return reportId, nil
+}
+
+func (s *Usecase) GetReportIfExists(ctx context.Context, firstUserID int, secondUserID int) (models.Report, error) {
+	rep, err := s.repo.GetReportIfExists(ctx, firstUserID, secondUserID)
+	if err != nil {
+		if err.Error() == "this report dont exists" {
+			return models.Report{}, err
+		}
+		s.logger.Error("Usecase GetReport error", zap.Error(err))
+		return models.Report{}, fmt.Errorf("GetReport error: %w", err)
+	}
+	return rep, nil
+}
+
+func (s *Usecase) CheckUsersBlockNotExists(ctx context.Context, firstUserID int, secondUserID int) (string, error) {
+	rep, err := s.GetReportIfExists(ctx, firstUserID, secondUserID)
+	if err != nil {
+		if err.Error() == "this report dont exists" {
+			return "", nil
+		} else {
+			s.logger.Error("Usecase GetReport error", zap.Error(err))
+			return "", fmt.Errorf("GetReport error: %w", err)
+		}
+	}
+	if rep.Author == firstUserID {
+		return "Вы заблокировали данного пользователя", stderr.New("block exists")
+	} else if rep.Author == secondUserID {
+		return "Вас заблокировал данный пользователь", stderr.New("block exists")
+	}
+	return "", nil
 }

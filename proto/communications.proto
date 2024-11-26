@@ -8,6 +8,7 @@ service Communications {
   rpc GetReactionList(GetReactionListRequest) returns (GetReactionListResponse);
   rpc GetMatchTime(GetMatchTimeRequest) returns (GetMatchTimeResponse);
   rpc GetMatchesBySearch(GetMatchesBySearchRequest) returns (GetMatchesBySearchResponse);
+  rpc UpdateOrCreateReaction(UpdateOrCreateReactionRequest) returns (UpdateOrCreateReactionResponse);
 }
 
 message AddReactionRequest {
@@ -51,6 +52,14 @@ message GetMatchesBySearchRequest {
 
 message GetMatchesBySearchResponse {
   repeated int32 Authors = 1;
+}
+
+message UpdateOrCreateReactionRequest {
+  Reaction Reaction = 1;
+}
+
+message UpdateOrCreateReactionResponse {
+
 }
 
 message Reaction {

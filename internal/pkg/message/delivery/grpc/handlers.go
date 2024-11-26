@@ -10,12 +10,15 @@ import (
 
 type ReportUsecase interface {
 	AddReport(ctx context.Context, report models.Report) (int, error)
+	GetReportIfExists(ctx context.Context, firstUserID int, secondUserID int) (models.Report, error)
+	CheckUsersBlockNotExists(ctx context.Context, firstUserID int, secondUserID int) (string, error)
 }
 
 type MessageUsecase interface {
 	AddMessage(ctx context.Context, message *models.Message) (int, error)
 	GetLastMessage(ctx context.Context, authorID int, receiverID int) (models.Message, bool, error)
 	GetChatMessages(ctx context.Context, firstUserID int, secondUserID int) ([]models.Message, error)
+	GetMessagesBySearch(ctx context.Context, userID int, page int, search string) ([]models.Message, error)
 }
 
 type GRPCMessageHandler struct {
@@ -101,5 +104,80 @@ func (h *GRPCMessageHandler) GetChatMessages(ctx context.Context,
 	response := &generatedMessage.GetChatMessagesResponse{
 		Messages: Messages,
 	}
+	return response, nil
+}
+
+func (h *GRPCMessageHandler) GetMessagesBySearch(ctx context.Context,
+	in *generatedMessage.GetMessagesBySearchRequest) (*generatedMessage.GetMessagesBySearchResponse, error) {
+	userID := int(in.UserID)
+	page := int(in.Page)
+	search := in.Search
+	msgs, err := h.messageUsecase.GetMessagesBySearch(ctx, userID, page, search)
+	if err != nil {
+		h.logger.Error("grpc GetMessagesBySearch error", zap.Error(err))
+		return nil, fmt.Errorf("grpc GetMessagesBySearch error: %w", err)
+	}
+	h.logger.Info("msgs", zap.Any("msgs", msgs))
+	var Messages []*generatedMessage.ChatMessage
+	for _, msg := range msgs {
+		Message := &generatedMessage.ChatMessage{
+			Author:   int32(msg.Author),
+			Receiver: int32(msg.Receiver),
+			Body:     msg.Body,
+			Time:     msg.Time,
+		}
+		Messages = append(Messages, Message)
+	}
+	response := &generatedMessage.GetMessagesBySearchResponse{
+		Messages: Messages,
+	}
+	return response, nil
+}
+
+func (h *GRPCMessageHandler) GetReportIfExists(ctx context.Context,
+	in *generatedMessage.GetReportIfExistsRequest) (*generatedMessage.GetReportIfExistsResponse, error) {
+	report := models.Report{
+		ID:       int(in.Report.ID),
+		Author:   int(in.Report.Author),
+		Receiver: int(in.Report.Receiver),
+		Body:     in.Report.Body,
+	}
+	response, err := h.reportUsecase.GetReportIfExists(ctx, report.Author, report.Receiver)
+	if err != nil {
+		if err.Error() == "this report dont exists" {
+			return &generatedMessage.GetReportIfExistsResponse{}, err
+		}
+		h.logger.Error("grpc GetReportIfExists error", zap.Error(err))
+		return &generatedMessage.GetReportIfExistsResponse{}, fmt.Errorf("grpc GetReportIfExists error: %w", err)
+	}
+	resp := &generatedMessage.GetReportIfExistsResponse{
+		Report: &generatedMessage.Report{
+			Author:   int32(response.Author),
+			Receiver: int32(response.Receiver),
+			Body:     response.Body,
+		},
+	}
+	return resp, nil
+}
+
+func (h *GRPCMessageHandler) CheckUsersBlockNotExists(ctx context.Context,
+	in *generatedMessage.CheckUsersBlockNotExistsRequest) (*generatedMessage.CheckUsersBlockNotExistsResponse, error) {
+	firstUserID := int(in.FirstUserID)
+	secondUserID := int(in.SecondUserID)
+
+	status, err := h.reportUsecase.CheckUsersBlockNotExists(ctx, firstUserID, secondUserID)
+	if err != nil {
+		if err.Error() == "block exists" {
+			resp := &generatedMessage.CheckUsersBlockNotExistsResponse{Status: status}
+			h.logger.Info("resp", zap.Any("resp", resp))
+			return resp, nil
+		} else {
+			h.logger.Error("grpc CheckUsersBlockNotExists error", zap.Error(err))
+			return &generatedMessage.CheckUsersBlockNotExistsResponse{Status: ""}, fmt.Errorf("grpc CheckUsersBlockNotExists error: %w", err)
+		}
+	}
+	response := &generatedMessage.CheckUsersBlockNotExistsResponse{Status: ""}
+	h.logger.Info("grpc check block success")
+	h.logger.Info("response", zap.Any("response", status))
 	return response, nil
 }

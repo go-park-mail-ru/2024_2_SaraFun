@@ -54,7 +54,7 @@ func main() {
 
 	reactionRepo := reactionRepo.New(db, logger)
 	reactionUsecase := reactionUsecase.New(reactionRepo, logger)
-	communicationsDelivery := delivery.NewGrpcCommunicationHandler(reactionUsecase)
+	communicationsDelivery := delivery.NewGrpcCommunicationHandler(reactionUsecase, logger)
 	gRPCServer := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
 		MaxConnectionIdle: 5 * time.Minute,
 	}))

@@ -16,6 +16,7 @@ type Repository interface {
 	GetMatchesByUsername(ctx context.Context, userID int, username string) ([]int, error)
 	GetMatchesByFirstName(ctx context.Context, userID int, firstname string) ([]int, error)
 	GetMatchesByString(ctx context.Context, userID int, search string) ([]int, error)
+	UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error
 }
 
 type UseCase struct {
@@ -90,4 +91,14 @@ func (u *UseCase) GetMatchesBySearch(ctx context.Context, userID int, search str
 	}
 	u.logger.Info("UseCase GetMatchesBySearch", zap.Int("users", len(authors)))
 	return authors, nil
+}
+
+func (u *UseCase) UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error {
+	u.logger.Info("reaction", zap.Any("reaction", reaction))
+	err := u.repo.UpdateOrCreateReaction(ctx, reaction)
+	if err != nil {
+		u.logger.Error("UseCase UpdateOrCreateReaction: failed to UpdateOrCreateReaction", zap.Error(err))
+		return fmt.Errorf("failed to UpdateOrCreateReaction: %w", err)
+	}
+	return nil
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserUsecase interface {
@@ -84,7 +86,7 @@ func (h *GrpcPersonalitiesHandler) CheckPassword(ctx context.Context,
 
 	user, err := h.userUC.CheckPassword(ctx, username, password)
 	if err != nil {
-		return nil, fmt.Errorf("grpc check password error: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid password")
 	}
 	res := &generatedPersonalities.User{
 		ID:       int32(user.ID),

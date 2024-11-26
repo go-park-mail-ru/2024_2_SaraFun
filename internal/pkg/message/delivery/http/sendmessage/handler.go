@@ -24,6 +24,10 @@ type WebSocketService interface {
 	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
 }
 
+type ErrResponse struct {
+	Info string `json:"info"`
+}
+
 type Handler struct {
 	messageClient        generatedMessage.MessageClient
 	sessionClient        generatedAuth.AuthClient
@@ -65,6 +69,32 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusUnauthorized)
 		return
 	}
+
+	getReportRequest := &generatedMessage.CheckUsersBlockNotExistsRequest{
+		FirstUserID:  userId.UserId,
+		SecondUserID: int32(msg.Receiver),
+	}
+	status, err := h.messageClient.CheckUsersBlockNotExists(ctx, getReportRequest)
+	h.logger.Info("status", zap.Any("status", status))
+	if err != nil {
+		h.logger.Info("Error checking users block exists", zap.Error(err))
+		http.Error(w, "bad request", http.StatusInternalServerError)
+		return
+	}
+	if status.Status != "" {
+		errResponse := &ErrResponse{
+			Info: status.Status,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		err := json.NewEncoder(w).Encode(errResponse)
+		if err != nil {
+			h.logger.Info("Error encoding message", zap.Error(err))
+			http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	msg.Author = int(userId.UserId)
 	reqMessage := &generatedMessage.ChatMessage{
 		ID:       int32(msg.ID),

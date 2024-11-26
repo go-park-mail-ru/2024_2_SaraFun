@@ -19,11 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Message_AddMessage_FullMethodName         = "/message.Message/AddMessage"
-	Message_AddReport_FullMethodName          = "/message.Message/AddReport"
-	Message_GetLastMessage_FullMethodName     = "/message.Message/GetLastMessage"
-	Message_GetChatMessages_FullMethodName    = "/message.Message/GetChatMessages"
-	Message_GetMatchesBySearch_FullMethodName = "/message.Message/GetMatchesBySearch"
+	Message_AddMessage_FullMethodName               = "/message.Message/AddMessage"
+	Message_AddReport_FullMethodName                = "/message.Message/AddReport"
+	Message_GetLastMessage_FullMethodName           = "/message.Message/GetLastMessage"
+	Message_GetChatMessages_FullMethodName          = "/message.Message/GetChatMessages"
+	Message_GetMessagesBySearch_FullMethodName      = "/message.Message/GetMessagesBySearch"
+	Message_GetReportIfExists_FullMethodName        = "/message.Message/GetReportIfExists"
+	Message_CheckUsersBlockNotExists_FullMethodName = "/message.Message/CheckUsersBlockNotExists"
 )
 
 // MessageClient is the client API for Message service.
@@ -34,7 +36,9 @@ type MessageClient interface {
 	AddReport(ctx context.Context, in *AddReportRequest, opts ...grpc.CallOption) (*AddReportResponse, error)
 	GetLastMessage(ctx context.Context, in *GetLastMessageRequest, opts ...grpc.CallOption) (*GetLastMessageResponse, error)
 	GetChatMessages(ctx context.Context, in *GetChatMessagesRequest, opts ...grpc.CallOption) (*GetChatMessagesResponse, error)
-	GetMatchesBySearch(ctx context.Context, in *GetMatchesBySearchRequest, opts ...grpc.CallOption) (*GetMatchesBySearchResponse, error)
+	GetMessagesBySearch(ctx context.Context, in *GetMessagesBySearchRequest, opts ...grpc.CallOption) (*GetMessagesBySearchResponse, error)
+	GetReportIfExists(ctx context.Context, in *GetReportIfExistsRequest, opts ...grpc.CallOption) (*GetReportIfExistsResponse, error)
+	CheckUsersBlockNotExists(ctx context.Context, in *CheckUsersBlockNotExistsRequest, opts ...grpc.CallOption) (*CheckUsersBlockNotExistsResponse, error)
 }
 
 type messageClient struct {
@@ -85,10 +89,30 @@ func (c *messageClient) GetChatMessages(ctx context.Context, in *GetChatMessages
 	return out, nil
 }
 
-func (c *messageClient) GetMatchesBySearch(ctx context.Context, in *GetMatchesBySearchRequest, opts ...grpc.CallOption) (*GetMatchesBySearchResponse, error) {
+func (c *messageClient) GetMessagesBySearch(ctx context.Context, in *GetMessagesBySearchRequest, opts ...grpc.CallOption) (*GetMessagesBySearchResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetMatchesBySearchResponse)
-	err := c.cc.Invoke(ctx, Message_GetMatchesBySearch_FullMethodName, in, out, cOpts...)
+	out := new(GetMessagesBySearchResponse)
+	err := c.cc.Invoke(ctx, Message_GetMessagesBySearch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageClient) GetReportIfExists(ctx context.Context, in *GetReportIfExistsRequest, opts ...grpc.CallOption) (*GetReportIfExistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReportIfExistsResponse)
+	err := c.cc.Invoke(ctx, Message_GetReportIfExists_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *messageClient) CheckUsersBlockNotExists(ctx context.Context, in *CheckUsersBlockNotExistsRequest, opts ...grpc.CallOption) (*CheckUsersBlockNotExistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckUsersBlockNotExistsResponse)
+	err := c.cc.Invoke(ctx, Message_CheckUsersBlockNotExists_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +127,9 @@ type MessageServer interface {
 	AddReport(context.Context, *AddReportRequest) (*AddReportResponse, error)
 	GetLastMessage(context.Context, *GetLastMessageRequest) (*GetLastMessageResponse, error)
 	GetChatMessages(context.Context, *GetChatMessagesRequest) (*GetChatMessagesResponse, error)
-	GetMatchesBySearch(context.Context, *GetMatchesBySearchRequest) (*GetMatchesBySearchResponse, error)
+	GetMessagesBySearch(context.Context, *GetMessagesBySearchRequest) (*GetMessagesBySearchResponse, error)
+	GetReportIfExists(context.Context, *GetReportIfExistsRequest) (*GetReportIfExistsResponse, error)
+	CheckUsersBlockNotExists(context.Context, *CheckUsersBlockNotExistsRequest) (*CheckUsersBlockNotExistsResponse, error)
 	mustEmbedUnimplementedMessageServer()
 }
 
@@ -126,8 +152,14 @@ func (UnimplementedMessageServer) GetLastMessage(context.Context, *GetLastMessag
 func (UnimplementedMessageServer) GetChatMessages(context.Context, *GetChatMessagesRequest) (*GetChatMessagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChatMessages not implemented")
 }
-func (UnimplementedMessageServer) GetMatchesBySearch(context.Context, *GetMatchesBySearchRequest) (*GetMatchesBySearchResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMatchesBySearch not implemented")
+func (UnimplementedMessageServer) GetMessagesBySearch(context.Context, *GetMessagesBySearchRequest) (*GetMessagesBySearchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMessagesBySearch not implemented")
+}
+func (UnimplementedMessageServer) GetReportIfExists(context.Context, *GetReportIfExistsRequest) (*GetReportIfExistsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReportIfExists not implemented")
+}
+func (UnimplementedMessageServer) CheckUsersBlockNotExists(context.Context, *CheckUsersBlockNotExistsRequest) (*CheckUsersBlockNotExistsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckUsersBlockNotExists not implemented")
 }
 func (UnimplementedMessageServer) mustEmbedUnimplementedMessageServer() {}
 func (UnimplementedMessageServer) testEmbeddedByValue()                 {}
@@ -222,20 +254,56 @@ func _Message_GetChatMessages_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Message_GetMatchesBySearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMatchesBySearchRequest)
+func _Message_GetMessagesBySearch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessagesBySearchRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MessageServer).GetMatchesBySearch(ctx, in)
+		return srv.(MessageServer).GetMessagesBySearch(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Message_GetMatchesBySearch_FullMethodName,
+		FullMethod: Message_GetMessagesBySearch_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessageServer).GetMatchesBySearch(ctx, req.(*GetMatchesBySearchRequest))
+		return srv.(MessageServer).GetMessagesBySearch(ctx, req.(*GetMessagesBySearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Message_GetReportIfExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReportIfExistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServer).GetReportIfExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Message_GetReportIfExists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServer).GetReportIfExists(ctx, req.(*GetReportIfExistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Message_CheckUsersBlockNotExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckUsersBlockNotExistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MessageServer).CheckUsersBlockNotExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Message_CheckUsersBlockNotExists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MessageServer).CheckUsersBlockNotExists(ctx, req.(*CheckUsersBlockNotExistsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -264,8 +332,16 @@ var Message_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Message_GetChatMessages_Handler,
 		},
 		{
-			MethodName: "GetMatchesBySearch",
-			Handler:    _Message_GetMatchesBySearch_Handler,
+			MethodName: "GetMessagesBySearch",
+			Handler:    _Message_GetMessagesBySearch_Handler,
+		},
+		{
+			MethodName: "GetReportIfExists",
+			Handler:    _Message_GetReportIfExists_Handler,
+		},
+		{
+			MethodName: "CheckUsersBlockNotExists",
+			Handler:    _Message_CheckUsersBlockNotExists_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
