@@ -1,21 +1,27 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	grpcmetrics "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/metrics"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/grpcMetricsMiddleware"
 	delivery "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc"
 	generatedpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	profilerepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile"
 	userrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/user"
 	profileusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile"
 	userusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -54,6 +60,11 @@ func main() {
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
 
+	metrics, err := grpcmetrics.NewGrpcMetrics("personalities")
+	if err != nil {
+		log.Fatalf("Error initializing grpc metrics: %v", err)
+	}
+	metricsMiddleware := grpcMetricsMiddleware.NewMiddleware(metrics, logger)
 	userRepo := userrepo.New(db, logger)
 	profileRepo := profilerepo.New(db, logger)
 	userUsecase := userusecase.New(userRepo, logger)
@@ -62,9 +73,24 @@ func main() {
 
 	gRPCServer := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
 		MaxConnectionIdle: 5 * time.Minute,
-	}))
+	}), grpc.ChainUnaryInterceptor(metricsMiddleware.ServerMetricsInterceptor))
 
 	generatedpersonalities.RegisterPersonalitiesServer(gRPCServer, personalitiesDelivery)
+
+	router := mux.NewRouter()
+	router.Handle("/api/metrics", promhttp.Handler())
+
+	srv := &http.Server{
+		Addr:    ":8033",
+		Handler: router,
+	}
+
+	go func() {
+		fmt.Println("Starting the server")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Error starting server: %v\n", err)
+		}
+	}()
 
 	go func() {
 		listener, err := net.Listen("tcp", ":8083")
@@ -82,4 +108,9 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 	gRPCServer.GracefulStop()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Error shutting down server: %v\n", err)
+	}
 }

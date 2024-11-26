@@ -15,20 +15,20 @@ type GrpcMetrics struct {
 func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 	var metr GrpcMetrics
 	metr.HitsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "hits_total",
+		Name: "grpc_hits_total",
 		Help: "Number of total hits",
 	},
-		[]string{"path", "service", "status"},
+		[]string{"path", "service"},
 	)
 	if err := prometheus.Register(metr.HitsTotal); err != nil {
 		return nil, fmt.Errorf("grpc metrics: unable to register hits total metric: %w", err)
 	}
 
 	metr.Errors = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "errors_total",
+		Name: "grpc_errors_total",
 		Help: "number of total errors",
 	},
-		[]string{"path", "service", "status"},
+		[]string{"path", "service"},
 	)
 
 	if err := prometheus.Register(metr.Errors); err != nil {
@@ -38,7 +38,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 	metr.name = name
 
 	metr.Times = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "total_times",
+		Name: "grpc_total_times",
 	},
 		[]string{"path"},
 	)

@@ -19,24 +19,24 @@ scrape_configs:
   - job_name: "auth"
     metrics_path: /api/metrics
     static_configs:
-      - targets: [ 'sparkit-auth-service:8081' ]
+      - targets: [ 'sparkit-auth-service:8031' ]
 
   - job_name: "communications"
     metrics_path: /api/metrics
     static_configs:
-      - targets: [ 'sparkit-communications-service:8082' ]
+      - targets: [ 'sparkit-communications-service:8032' ]
 
   - job_name: "personalities"
     metrics_path: /api/metrics
     static_configs:
-      - targets: [ 'sparkit-personalities-service:8083' ]
+      - targets: [ 'sparkit-personalities-service:8033' ]
 
   - job_name: "message"
     metrics_path: /api/metrics
     static_configs:
-      - targets: [ 'sparkit-message-service:8084' ]
+      - targets: [ 'sparkit-message-service:8034' ]
 
   - job_name: "survey"
     metrics_path: /api/metrics
     static_configs:
-      - targets: [ 'sparkit-survey-service:8085' ]
+      - targets: [ 'sparkit-survey-service:8035' ]

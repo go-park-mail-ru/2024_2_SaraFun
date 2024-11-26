@@ -24,9 +24,11 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/getChatMessages"
 	sendreport "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendReport"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendmessage"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/metrics"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
+	metricsmiddleware "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/httpMetricsMiddleware"
 	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
@@ -46,6 +48,7 @@ import (
 	"github.com/gorilla/mux"
 	ws "github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -180,6 +183,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	_metrics, err := metrics.NewHttpMetrics("main")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	wConns := make(map[int]*ws.Conn)
 	//userStorage := profilerepo.New(db, logger)
 	//sessionStorage := sessionrepo.New(redisClient, logger)
@@ -229,10 +237,15 @@ func main() {
 	getQuestions := getquestions.NewHandler(authClient, surveyClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
+	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
 
 	router := mux.NewRouter()
-	router.Use(cors.Middleware)
-	router.Use(accessLogMiddleware.Handler)
+	router.Handle("/api/metrics", promhttp.Handler())
+	router.Use(
+		accessLogMiddleware.Handler,
+		metricsMiddleware.Middleware,
+		cors.Middleware)
+
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)

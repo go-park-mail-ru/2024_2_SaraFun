@@ -29,6 +29,7 @@ services:
       - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
     ports:
       - '8081:8081'
+      - '8031:8031'
     networks:
       - SparkIt-network
 
@@ -45,6 +46,7 @@ services:
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8083:8083'
+      - '8033:8033'
     networks:
       - SparkIt-network
 
@@ -61,6 +63,7 @@ services:
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8082:8082'
+      - '8032:8032'
     networks:
       - SparkIt-network
 
@@ -77,6 +80,7 @@ services:
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8084:8084'
+      - '8034:8034'
     networks:
       - SparkIt-network
   service-sparkit-survey:
@@ -165,7 +169,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     ports:
-      - "8090:8090"
+      - "8090:9090"
     networks:
       - SparkIt-network
 
@@ -177,7 +181,7 @@ services:
     networks:
       - SparkIt-network
     ports:
-      - "8070:8070"
+      - "8070:3000"
 
   node_exporter:
     depends_on:
@@ -199,7 +203,7 @@ services:
       - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
     hostname: node_exporter
     ports:
-      - "8100:8100"
+      - "8100:9100"
     networks:
       - SparkIt-network
 

@@ -43,3 +43,8 @@ func (m *Middleware) Middleware(next http.Handler) http.Handler {
 		m.metrics.ObserveResponseTime(statusCode, route, time.Since(start).Seconds())
 	})
 }
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
