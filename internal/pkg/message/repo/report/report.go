@@ -41,6 +41,9 @@ func (repo *Storage) GetReportIfExists(ctx context.Context, firstUserID int, sec
                 WHERE (author = $1 AND receiver = $2) OR (author = $2 AND receiver = $1) GROUP BY (author, receiver, body) LIMIT 1`, firstUserID, secondUserID).Scan(&count,
 		&rep.Author, &rep.Receiver, &rep.Body)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.Report{}, stderr.New("this report dont exists")
+		}
 		repo.logger.Error("CheckReportExists select report", zap.Error(err))
 		return models.Report{}, fmt.Errorf("CheckReportExists select report: %w", err)
 	}
