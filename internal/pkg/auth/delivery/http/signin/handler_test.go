@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,7 +50,7 @@ func TestHandler_Handle(t *testing.T) {
 							Username: "testuser",
 							Email:    "test@example.com",
 							Password: "hashedpassword",
-							Profile:  1, // Изменено
+							Profile:  1,
 						},
 					}, nil)
 			},
@@ -61,7 +62,7 @@ func TestHandler_Handle(t *testing.T) {
 							Username: "testuser",
 							Email:    "test@example.com",
 							Password: "hashedpassword",
-							Profile:  1, // Изменено
+							Profile:  1,
 						},
 					}).
 					Return(&generatedAuth.CreateSessionResponse{
@@ -77,82 +78,143 @@ func TestHandler_Handle(t *testing.T) {
 				Value: "session-id",
 			},
 		},
-		// Остальные тестовые случаи...
+		{
+			name:              "Invalid Method",
+			method:            http.MethodGet,
+			requestBody:       nil,
+			mockUserClient:    func(mock *signin_mocks.MockPersonalitiesClient) {},
+			mockSessionClient: func(mock *signin_mocks.MockAuthClient) {},
+			expectedStatus:    http.StatusMethodNotAllowed,
+			expectedResponse:  "Method not allowed\n",
+			expectedCookie:    nil,
+		},
+		{
+			name:              "Malformed JSON Body",
+			method:            http.MethodPost,
+			requestBody:       `{"username": "testuser", "password"}`, // Invalid JSON
+			mockUserClient:    func(mock *signin_mocks.MockPersonalitiesClient) {},
+			mockSessionClient: func(mock *signin_mocks.MockAuthClient) {},
+			expectedStatus:    http.StatusBadRequest,
+			expectedResponse:  "Неверный формат данных\n",
+			expectedCookie:    nil,
+		},
+		{
+			name:   "Incorrect Credentials",
+			method: http.MethodPost,
+			requestBody: map[string]string{
+				"username": "wronguser",
+				"password": "wrongpass",
+			},
+			mockUserClient: func(mock *signin_mocks.MockPersonalitiesClient) {
+				mock.EXPECT().
+					CheckPassword(gomock.Any(), &generatedPersonalities.CheckPasswordRequest{
+						Username: "wronguser",
+						Password: "wrongpass",
+					}).
+					Return(nil, fmt.Errorf("invalid credentials"))
+			},
+			mockSessionClient: func(mock *signin_mocks.MockAuthClient) {},
+			expectedStatus:    http.StatusPreconditionFailed,
+			expectedResponse:  "wrong credentials\n",
+			expectedCookie:    nil,
+		},
+		{
+			name:   "Session Creation Failure",
+			method: http.MethodPost,
+			requestBody: map[string]string{
+				"username": "testuser",
+				"password": "testpass",
+			},
+			mockUserClient: func(mock *signin_mocks.MockPersonalitiesClient) {
+				mock.EXPECT().
+					CheckPassword(gomock.Any(), &generatedPersonalities.CheckPasswordRequest{
+						Username: "testuser",
+						Password: "testpass",
+					}).
+					Return(&generatedPersonalities.CheckPasswordResponse{
+						User: &generatedPersonalities.User{
+							ID:       1,
+							Username: "testuser",
+							Email:    "test@example.com",
+							Password: "hashedpassword",
+							Profile:  1,
+						},
+					}, nil)
+			},
+			mockSessionClient: func(mock *signin_mocks.MockAuthClient) {
+				mock.EXPECT().
+					CreateSession(gomock.Any(), &generatedAuth.CreateSessionRequest{
+						User: &generatedAuth.User{
+							ID:       1,
+							Username: "testuser",
+							Email:    "test@example.com",
+							Password: "hashedpassword",
+							Profile:  1,
+						},
+					}).
+					Return(nil, fmt.Errorf("session creation error"))
+			},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "Не удалось создать сессию\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:              "Missing Request Body",
+			method:            http.MethodPost,
+			requestBody:       nil,
+			mockUserClient:    func(mock *signin_mocks.MockPersonalitiesClient) {},
+			mockSessionClient: func(mock *signin_mocks.MockAuthClient) {},
+			expectedStatus:    http.StatusBadRequest,
+			expectedResponse:  "Неверный формат данных\n",
+			expectedCookie:    nil,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Создаем контроллер gomock
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			// Создаем моки клиентов
 			mockUserClient := signin_mocks.NewMockPersonalitiesClient(ctrl)
 			mockSessionClient := signin_mocks.NewMockAuthClient(ctrl)
 
-			// Настраиваем поведение моков
 			tt.mockUserClient(mockUserClient)
 			tt.mockSessionClient(mockSessionClient)
 
-			// Создаем логгер
 			logger := zap.NewNop()
-
-			// Создаем обработчик
 			handler := NewHandler(mockUserClient, mockSessionClient, logger)
 
-			// Создаем HTTP-запрос
 			var req *http.Request
 			if tt.requestBody != nil {
-				var bodyBytes []byte
-				switch v := tt.requestBody.(type) {
-				case string:
-					bodyBytes = []byte(v)
-				default:
-					bodyBytes, _ = json.Marshal(v)
-				}
-				req = httptest.NewRequest(tt.method, "/", bytes.NewReader(bodyBytes))
+				body, _ := json.Marshal(tt.requestBody)
+				req = httptest.NewRequest(tt.method, "/", bytes.NewReader(body))
 			} else {
 				req = httptest.NewRequest(tt.method, "/", nil)
 			}
-			ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
-			req = req.WithContext(ctx)
+			req = req.WithContext(context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id"))
 
-			// Создаем ResponseRecorder
 			rr := httptest.NewRecorder()
-
-			// Вызываем обработчик
 			handler.Handle(rr, req)
 
-			// Проверяем статус код
 			if status := rr.Code; status != tt.expectedStatus {
-				t.Errorf("expected status code %d, got %d", tt.expectedStatus, status)
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, status)
 			}
 
-			// Проверяем тело ответа
 			if rr.Body.String() != tt.expectedResponse {
-				t.Errorf("expected response body %q, got %q", tt.expectedResponse, rr.Body.String())
+				t.Errorf("expected response %q, got %q", tt.expectedResponse, rr.Body.String())
 			}
 
-			// Проверяем cookie
 			if tt.expectedCookie != nil {
 				cookies := rr.Result().Cookies()
-				if len(cookies) == 0 {
-					t.Errorf("expected cookie to be set, but none were found")
-				} else {
-					found := false
-					for _, cookie := range cookies {
-						if cookie.Name == tt.expectedCookie.Name && cookie.Value == tt.expectedCookie.Value {
-							found = true
-							break
-						}
-					}
-					if !found {
-						t.Errorf("expected cookie %v, but it was not found", tt.expectedCookie)
+				found := false
+				for _, cookie := range cookies {
+					if cookie.Name == tt.expectedCookie.Name && cookie.Value == tt.expectedCookie.Value {
+						found = true
+						break
 					}
 				}
-			} else {
-				if len(rr.Result().Cookies()) > 0 {
-					t.Errorf("expected no cookies to be set, but found %v", rr.Result().Cookies())
+				if !found {
+					t.Errorf("expected cookie %v, but it was not found", tt.expectedCookie)
 				}
 			}
 		})
