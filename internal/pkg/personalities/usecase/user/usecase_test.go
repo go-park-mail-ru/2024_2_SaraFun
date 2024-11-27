@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user/mocks"
@@ -191,6 +192,158 @@ func TestGetFeed(t *testing.T) {
 					t.Errorf("GetFeedList() test error got = %v, want %v", list, tt.wantUsers[i])
 				}
 			}
+		})
+	}
+}
+
+func TestGetUserIdByUsername(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	logger := zap.NewNop()
+
+	tests := []struct {
+		name        string
+		username    string
+		returnId    int
+		returnError error
+		wantId      int
+		wantErr     error
+	}{
+		{
+			name:        "Successful test",
+			username:    "testuser",
+			returnId:    1,
+			returnError: nil,
+			wantId:      1,
+			wantErr:     nil,
+		},
+		{
+			name:        "Error case",
+			username:    "nonexistent",
+			returnId:    -1,
+			returnError: errors.New("not found"),
+			wantId:      -1,
+			wantErr:     sparkiterrors.ErrWrongCredentials,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			repo := mocks.NewMockRepository(mockCtrl)
+			repo.EXPECT().GetUserIdByUsername(ctx, tt.username).Return(tt.returnId, tt.returnError).Times(1)
+
+			u := New(repo, logger)
+			userId, err := u.GetUserIdByUsername(ctx, tt.username)
+			require.Equal(t, tt.wantId, userId)
+			require.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestCheckUsernameExists(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	logger := zap.NewNop()
+
+	tests := []struct {
+		name        string
+		username    string
+		returnExist bool
+		returnError error
+		wantExist   bool
+		wantErr     error
+	}{
+		{
+			name:        "Successful test - Exists",
+			username:    "testuser",
+			returnExist: true,
+			returnError: nil,
+			wantExist:   true,
+			wantErr:     nil,
+		},
+		{
+			name:        "Successful test - Does Not Exist",
+			username:    "newuser",
+			returnExist: false,
+			returnError: nil,
+			wantExist:   false,
+			wantErr:     nil,
+		},
+		{
+			name:        "Error case",
+			username:    "erroruser",
+			returnExist: false,
+			returnError: errors.New("database error"),
+			wantExist:   false,
+			wantErr:     sparkiterrors.ErrWrongCredentials,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			repo := mocks.NewMockRepository(mockCtrl)
+			repo.EXPECT().CheckUsernameExists(ctx, tt.username).Return(tt.returnExist, tt.returnError).Times(1)
+
+			u := New(repo, logger)
+			exists, err := u.CheckUsernameExists(ctx, tt.username)
+			require.Equal(t, tt.wantExist, exists)
+			require.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestGetProfileIdByUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	logger := zap.NewNop()
+
+	tests := []struct {
+		name          string
+		userID        int
+		returnProfile int
+		returnError   error
+		wantProfile   int
+		wantError     bool
+	}{
+		{
+			name:          "Successful test",
+			userID:        1,
+			returnProfile: 123,
+			returnError:   nil,
+			wantProfile:   123,
+			wantError:     false,
+		},
+		{
+			name:          "Error case",
+			userID:        2,
+			returnProfile: -1,
+			returnError:   fmt.Errorf("database error"),
+			wantProfile:   -1,
+			wantError:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			repo := mocks.NewMockRepository(mockCtrl)
+			repo.EXPECT().GetProfileIdByUserId(ctx, tt.userID).Return(tt.returnProfile, tt.returnError).Times(1)
+
+			u := New(repo, logger)
+
+			profileID, err := u.GetProfileIdByUserId(ctx, tt.userID)
+			if tt.wantError {
+				require.Error(t, err, "Expected error, but got none")
+			} else {
+				require.NoError(t, err, "Did not expect an error, but got one")
+			}
+			require.Equal(t, tt.wantProfile, profileID, "Profile ID mismatch")
 		})
 	}
 }

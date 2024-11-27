@@ -24,9 +24,13 @@
     &quot;Go Test.TestAddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/reaction.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestAddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/reaction.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestAddReport in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/report.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1).executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (2).executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCheckPassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCheckSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCheckSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/usecase.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestCheckUsernameExists in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestCreateSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor&quot;: &quot;Run&quot;,
@@ -49,10 +53,14 @@
     &quot;Go Test.TestGetMatchList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/reaction.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/reaction.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetReactionList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/reaction.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetUserIDBySessionID in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGetUserIDBySessionID in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/usecase.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGetUserIdByUsername in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGetUsernameByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1).executor&quot;: &quot;Run&quot;,
+    &quot;Go Test.TestGetUsernameByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGrpcCommunicationsHandler_AddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc (1).executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGrpcCommunicationsHandler_AddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc.executor&quot;: &quot;Run&quot;,
     &quot;Go Test.TestGrpcCommunicationsHandler_GetMatchList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc.executor&quot;: &quot;Run&quot;,
@@ -115,74 +123,74 @@
       <recent name="C:\Users\79263\GolandProjects\2024_2_SaraFun\internal\pkg\personalities\delivery\http\getcurrentprofile\mocks" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestStorage_GetMessagesBySearch in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message">
-    <configuration name="TestStorage_AddMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Test.TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)">
+    <configuration name="TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="2024_2_SaraFun" />
-      <working_directory value="$PROJECT_DIR$/internal/pkg/message/repo/message" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestStorage_AddMessage\E$" />
+      <pattern value="^\QTestChangePassword\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestStorage_AddReport in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/report" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (2)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="2024_2_SaraFun" />
-      <working_directory value="$PROJECT_DIR$/internal/pkg/message/repo/report" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/report" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestStorage_AddReport\E$" />
+      <pattern value="^\QTestChangePassword\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestStorage_GetChatMessages in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="2024_2_SaraFun" />
-      <working_directory value="$PROJECT_DIR$/internal/pkg/message/repo/message" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestStorage_GetChatMessages\E$" />
+      <pattern value="^\QTestGetProfileIdByUserId\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestStorage_GetLastMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="2024_2_SaraFun" />
-      <working_directory value="$PROJECT_DIR$/internal/pkg/message/repo/message" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestStorage_GetLastMessage\E$" />
+      <pattern value="^\QTestGetProfileIdByUserId\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestStorage_GetMessagesBySearch in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestGetUsernameByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="2024_2_SaraFun" />
-      <working_directory value="$PROJECT_DIR$/internal/pkg/message/repo/message" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
       <root_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <framework value="gotest" />
-      <pattern value="^\QTestStorage_GetMessagesBySearch\E$" />
+      <pattern value="^\QTestGetUsernameByUserId\E$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestStorage_GetMessagesBySearch in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
-        <item itemvalue="Go Test.TestStorage_GetChatMessages in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
-        <item itemvalue="Go Test.TestStorage_GetLastMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
-        <item itemvalue="Go Test.TestStorage_AddMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/message" />
-        <item itemvalue="Go Test.TestStorage_AddReport in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/repo/report" />
+        <item itemvalue="Go Test.TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" />
+        <item itemvalue="Go Test.TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (2)" />
+        <item itemvalue="Go Test.TestChangePassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" />
+        <item itemvalue="Go Test.TestGetProfileIdByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+        <item itemvalue="Go Test.TestGetUsernameByUserId in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user (1)" />
       </list>
     </recent_temporary>
   </component>
