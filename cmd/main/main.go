@@ -4,47 +4,68 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/caarlos0/env/v11"
+	grpcauth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/changepassword"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/logout"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signin"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signup"
+	grpccommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/addreaction"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getallchats"
+	getchatsbysearch "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getchatsbysearch"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/deleteimage"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage"
+	imagerepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/repo"
+	imageusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/usecase"
+	grpcmessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/getChatMessages"
+	sendreport "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendReport"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendmessage"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/metrics"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
+	metricsmiddleware "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/httpMetricsMiddleware"
+	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/updateprofile"
+	grpcsurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/addquestion"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/addsurvey"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/deletequestion"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/getquestions"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/getsurveyinfo"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/http/updatequestion"
+	setconnection "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/delivery/setConnection"
+	websocketrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/repo"
+	websocketusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/config"
 	"github.com/gorilla/mux"
+	ws "github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"sparkit/internal/handlers/addreaction"
-	"sparkit/internal/handlers/getmatches"
-	"sparkit/internal/handlers/middleware"
-	"sparkit/internal/repo/reaction"
 	"syscall"
 	"time"
-
-	"sparkit/internal/handlers/checkauth"
-	"sparkit/internal/handlers/deleteimage"
-	"sparkit/internal/handlers/getcurrentprofile"
-	"sparkit/internal/handlers/getprofile"
-	"sparkit/internal/handlers/getuserlist"
-	"sparkit/internal/handlers/logout"
-	"sparkit/internal/handlers/middleware/authcheck"
-	"sparkit/internal/handlers/middleware/corsMiddleware"
-	"sparkit/internal/handlers/signin"
-	"sparkit/internal/handlers/signup"
-	"sparkit/internal/handlers/updateprofile"
-	"sparkit/internal/handlers/uploadimage"
-	"sparkit/internal/repo/image"
-	"sparkit/internal/repo/profile"
-	"sparkit/internal/repo/session"
-	"sparkit/internal/repo/user"
-	imageusecase "sparkit/internal/usecase/image"
-	profileusecase "sparkit/internal/usecase/profile"
-	reactionusecase "sparkit/internal/usecase/reaction"
-	sessionusecase "sparkit/internal/usecase/session"
-	userusecase "sparkit/internal/usecase/user"
 )
 
 func main() {
 
+	var envCfg config.EnvConfig
+	err := env.Parse(&envCfg)
 	// Создаем логгер
 	cfg := zap.Config{
 		Encoding:         "json",
@@ -78,88 +99,7 @@ func main() {
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
 
-	createUsersTable := `CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username text,
-        password text,
-    	profile INT NOT NULL,
-    
-		CONSTRAINT fk_profile FOREIGN KEY (profile)
-		REFERENCES profile (id)
-		ON DELETE SET NULL
-		ON UPDATE CASCADE
-    );`
-	createPhotoTable := `CREATE TABLE IF NOT EXISTS photo (
-    id SERIAL PRIMARY KEY,
-    user_id bigint NOT NULL,
-    link text NOT NULL UNIQUE,
-    
-    CONSTRAINT fk_user FOREIGN KEY (user_id)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-    );`
-
-	createProfileTable := `CREATE TABLE IF NOT EXISTS profile (
-		id SERIAL PRIMARY KEY,
-   firstname text NOT NULL,
-   lastname text NOT NULL,
-   age bigint NOT NULL,
-   gender text NOT NULL,
-   target text NOT NULL,
-   about text NOT NULL,
-   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`
-	createReactionTable := `CREATE TABLE IF NOT EXISTS reaction (
-    id SERIAL PRIMARY KEY ,
-    author bigint NOT NULL ,
-    receiver bigint NOT NULL,
-    type boolean,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_author FOREIGN KEY (author)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-
-    CONSTRAINT fk_receiver FOREIGN KEY (receiver)
-    REFERENCES users (id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-
-    CONSTRAINT unique_pair UNIQUE (author, receiver)
-);`
-	_, err = db.Exec(createProfileTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table profile created successfully!")
-	}
-
-	_, err = db.Exec(createUsersTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table users created successfully!")
-	}
-
-	_, err = db.Exec(createPhotoTable)
-	if err != nil {
-		log.Fatalf("Error creating table: %s", err)
-	} else {
-		fmt.Println("Table photo created successfully!")
-	}
-
-	_, err = db.Exec(createReactionTable)
-	if err != nil {
-		log.Fatalf("Error creating reaction table: %s", err)
-	} else {
-		fmt.Println("Table reaction created successfully!")
-	}
-
-	url := "redis://reufee:sparkit@sparkit-redis:6379/0"
+	url := "redis://" + envCfg.RedisUser + ":" + envCfg.RedisPassword + "@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
 	if err != nil {
 		log.Fatalf("Error parsing redis url: %s", err)
@@ -174,37 +114,88 @@ func main() {
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("bad ping to redis: %v", err)
 	}
-	userStorage := user.New(db, logger)
-	sessionStorage := session.New(redisClient, logger)
-	imageStorage := image.New(db, logger)
-	profileStorage := profile.New(db, logger)
-	reactionStorage := reaction.New(db, logger)
 
-	userUsecase := userusecase.New(userStorage, logger)
-	sessionUsecase := sessionusecase.New(sessionStorage, logger)
+	authConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-auth-service", "8081"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	communicationsConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-communications-service", "8082"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	personalitiesConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-personalities-service", "8083"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	messageConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-message-service", "8084"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	surveyConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-survey-service", "8085"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_metrics, err := metrics.NewHttpMetrics("main")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	wConns := make(map[int]*ws.Conn)
+
+	imageStorage := imagerepo.New(db, logger)
+	wsStorage := websocketrepo.New(wConns, logger)
+
 	imageUseCase := imageusecase.New(imageStorage, logger)
-	profileUseCase := profileusecase.New(profileStorage, logger)
-	reactionUsecase := reactionusecase.New(reactionStorage, logger)
+	websocketUsecase := websocketusecase.New(wsStorage, logger)
+
+	authClient := grpcauth.NewAuthClient(authConn)
+	personalitiesClient := grpcpersonalities.NewPersonalitiesClient(personalitiesConn)
+	communicationsClient := grpccommunications.NewCommunicationsClient(communicationsConn)
+	messageClient := grpcmessage.NewMessageClient(messageConn)
+	surveyClient := grpcsurvey.NewSurveyClient(surveyConn)
 
 	cors := corsMiddleware.New(logger)
-	signUp := signup.NewHandler(userUsecase, sessionUsecase, profileUseCase, logger)
-	signIn := signin.NewHandler(userUsecase, sessionUsecase, logger)
-	getUsers := getuserlist.NewHandler(sessionUsecase, profileUseCase, userUsecase, imageUseCase, reactionUsecase, logger)
-	checkAuth := checkauth.NewHandler(sessionUsecase, logger)
-	logOut := logout.NewHandler(sessionUsecase, logger)
-	uploadImage := uploadimage.NewHandler(imageUseCase, sessionUsecase, logger)
+	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
+	signIn := signin.NewHandler(personalitiesClient, authClient, logger)
+	getUsers := getuserlist.NewHandler(authClient, personalitiesClient, imageUseCase, communicationsClient, logger)
+	checkAuth := checkauth.NewHandler(authClient, logger)
+	logOut := logout.NewHandler(authClient, logger)
+	uploadImage := uploadimage.NewHandler(imageUseCase, authClient, logger)
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
-	getProfile := getprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, logger)
-	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, profileUseCase, userUsecase, sessionUsecase, logger)
-	updateProfile := updateprofile.NewHandler(profileUseCase, sessionUsecase, userUsecase, logger)
-	addReaction := addreaction.NewHandler(reactionUsecase, sessionUsecase, logger)
-	getMatches := getmatches.NewHandler(reactionUsecase, sessionUsecase, profileUseCase, userUsecase, imageUseCase, logger)
-	authMiddleware := authcheck.New(sessionUsecase, logger)
+	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
+	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
+	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
+	addReaction := addreaction.NewHandler(communicationsClient, authClient, logger)
+	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
+	sendReport := sendreport.NewHandler(authClient, messageClient, communicationsClient, logger)
+	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, logger)
+	getAllChats := getallchats.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
+	setConnection := setconnection.NewHandler(websocketUsecase, authClient, logger)
+	changePassword := changepassword.NewHandler(authClient, personalitiesClient, logger)
+	getChat := getChatMessages.NewHandler(authClient, messageClient, personalitiesClient, imageUseCase, logger)
+	getChatBySearch := getchatsbysearch.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
+	addSurvey := addsurvey.NewHandler(surveyClient, authClient, logger)
+	getSurveyInfo := getsurveyinfo.NewHandler(authClient, surveyClient, logger)
+	addQuestion := addquestion.NewHandler(authClient, surveyClient, logger)
+	deleteQuestion := deletequestion.NewHandler(authClient, surveyClient, logger)
+	updateQuestion := updatequestion.NewHandler(authClient, surveyClient, logger)
+	getQuestions := getquestions.NewHandler(authClient, surveyClient, logger)
+	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
+	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
 
 	router := mux.NewRouter()
-	router.Use(cors.Middleware)
-	router.Use(accessLogMiddleware.Handler)
+	router.Handle("/api/metrics", promhttp.Handler())
+	router.Use(
+		accessLogMiddleware.Handler,
+		metricsMiddleware.Middleware,
+		cors.Middleware)
+
 	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)
@@ -214,14 +205,26 @@ func main() {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
-	//loggedMux := accessLogMiddleware(sugar, mux)
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
-	router.Handle("/profile/{userId}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/profile/{username}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
 	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
 	router.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/matches", http.HandlerFunc(getMatches.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/report", http.HandlerFunc(sendReport.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/message", http.HandlerFunc(sendMessage.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/chats", http.HandlerFunc(getAllChats.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/changepassword", http.HandlerFunc(changePassword.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/getchat", http.HandlerFunc(getChat.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/chatsearch", http.HandlerFunc(getChatBySearch.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/sendsurvey", http.HandlerFunc(addSurvey.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/getstats", http.HandlerFunc(getSurveyInfo.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/question/{content}", http.HandlerFunc(deleteQuestion.Handle)).Methods("DELETE", http.MethodOptions)
+	router.Handle("/question", http.HandlerFunc(addQuestion.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/question", http.HandlerFunc(updateQuestion.Handle)).Methods("PUT", http.MethodOptions)
+	router.Handle("/getquestions", http.HandlerFunc(getQuestions.Handle)).Methods("GET", http.MethodOptions)
+	router.Handle("/ws", http.HandlerFunc(setConnection.Handle))
 
 	// Создаем HTTP-сервер
 	srv := &http.Server{

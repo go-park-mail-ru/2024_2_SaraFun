@@ -1,0 +1,133 @@
+syntax = "proto3";
+package personalities;
+option go_package = "../internal/pkg/personalities/delivery/grpc/gen/;gen";
+
+service Personalities {
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc GetFeedList(GetFeedListRequest) returns (GetFeedListResponse);
+  rpc CheckPassword(CheckPasswordRequest) returns (CheckPasswordResponse);
+  rpc GetProfileIDByUserID(GetProfileIDByUserIDRequest) returns (GetProfileIDByUserIDResponse);
+  rpc GetUsernameByUserID(GetUsernameByUserIDRequest) returns (GetUsernameByUserIDResponse);
+  rpc GetUserIDByUsername(GetUserIDByUsernameRequest) returns (GetUserIDByUsernameResponse);
+  rpc CheckUsernameExists(CheckUsernameExistsRequest) returns (CheckUsernameExistsResponse);
+  rpc CreateProfile(CreateProfileRequest) returns (CreateProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+}
+
+message RegisterUserRequest {
+  User User = 1;
+}
+
+message RegisterUserResponse {
+  int32 UserId = 1;
+}
+
+message GetFeedListRequest {
+  int32 UserID = 1;
+  repeated int32 Receivers = 2;
+}
+
+message GetFeedListResponse {
+  repeated User Users = 1;
+}
+
+message CheckPasswordRequest {
+  string Username = 1;
+  string Password = 2;
+}
+
+message CheckPasswordResponse {
+  User User = 1;
+}
+
+message GetProfileIDByUserIDRequest {
+  int32 UserID = 1;
+}
+
+message GetProfileIDByUserIDResponse {
+  int32 ProfileID = 1;
+}
+
+message GetUsernameByUserIDRequest {
+  int32 UserID = 1;
+}
+
+message GetUsernameByUserIDResponse {
+  string Username = 1;
+}
+
+message GetUserIDByUsernameRequest {
+  string Username = 1;
+}
+
+message GetUserIDByUsernameResponse {
+  int32 UserID = 1;
+}
+
+message CheckUsernameExistsRequest {
+  string Username = 1;
+}
+
+message CheckUsernameExistsResponse {
+  bool Exists = 1;
+}
+
+message CreateProfileRequest{
+  Profile Profile = 1;
+}
+
+message CreateProfileResponse{
+  int32 ProfileId = 1;
+}
+
+message UpdateProfileRequest{
+  int32 Id = 1;
+  Profile Profile = 2;
+}
+
+message UpdateProfileResponse{
+}
+
+message GetProfileRequest{
+  int32 Id = 1;
+}
+
+message GetProfileResponse{
+  Profile Profile = 1;
+}
+
+message DeleteProfileRequest{
+  int32 Id = 1;
+}
+
+message DeleteProfileResponse{
+}
+
+message ChangePasswordRequest {
+  int32 UserID = 1;
+  string Password = 2;
+}
+
+message ChangePasswordResponse {
+}
+
+message User {
+  int32 ID = 1;
+  string Username = 2;
+  string Email = 3;
+  string Password = 4;
+  int32 Profile = 5;
+}
+
+message Profile{
+  int32 ID = 1;
+  string FirstName = 2;
+  string LastName = 3;
+  int32 Age = 4;
+  string Gender = 5;
+  string Target = 6;
+  string About = 7;
+}

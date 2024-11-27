@@ -1,0 +1,57 @@
+syntax = "proto3";
+package auth;
+option go_package = "../internal/pkg/auth/delivery/grpc/gen/;gen";
+
+service Auth {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
+  rpc CheckSession(CheckSessionRequest) returns (CheckSessionResponse);
+  rpc GetUserIDBySessionID(GetUserIDBySessionIDRequest) returns (GetUserIDBYSessionIDResponse);
+
+}
+
+message CreateSessionRequest {
+  User User = 1;
+}
+
+message CreateSessionResponse {
+  Session Session = 1;
+}
+
+message DeleteSessionRequest {
+  string SessionID = 1;
+}
+
+message DeleteSessionResponse {
+}
+
+message CheckSessionRequest {
+  string SessionID = 1;
+}
+
+message CheckSessionResponse {
+}
+
+message GetUserIDBySessionIDRequest{
+  string SessionID = 1;
+}
+
+message GetUserIDBYSessionIDResponse{
+  int32 UserId = 1;
+}
+
+message User {
+  int32 ID = 1;
+  string Username = 2;
+  string Email = 3;
+  string Password = 4;
+  int32 Profile = 5;
+}
+
+
+message Session {
+  string SessionID = 1;
+  int32 UserID = 2;
+  string CreatedAt = 3;
+  string ExpiresAt = 4;
+}

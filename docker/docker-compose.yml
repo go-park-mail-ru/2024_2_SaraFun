@@ -7,21 +7,105 @@ services:
         condition: service_healthy
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
-      PSQL_USER: "reufee"
-      PSQL_PASSWORD: "sparkit"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
       PSQL_DBNAME: "sparkitDB"
     ports:
       - '8080:8080'
+    networks:
+      - SparkIt-network
     volumes:
-      - ~/imagedata:/home/reufee/imagedata
+      - ~/imagedata:/home/${OS_USER}/imagedata
+
+  service-sparkit-auth:
+    image: sparkit-auth-service
+    container_name: sparkit-auth-service
+    depends_on:
+      sparkit-redis:
+        condition: service_healthy
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - '8081:8081'
+      - '8031:8031'
+    networks:
+      - SparkIt-network
+
+  service-sparkit-personalities:
+    image: sparkit-personalities-service
+    container_name: sparkit-personalities-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8083:8083'
+      - '8033:8033'
+    networks:
+      - SparkIt-network
+
+  service-sparkit-communications:
+    image: sparkit-communications-service
+    container_name: sparkit-communications-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8082:8082'
+      - '8032:8032'
+    networks:
+      - SparkIt-network
+
+  service-sparkit-message:
+    image: sparkit-message-service
+    container_name: sparkit-message-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8084:8084'
+      - '8034:8034'
+    networks:
+      - SparkIt-network
+  service-sparkit-survey:
+    image: sparkit-survey-service
+    container_name: sparkit-survey-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8085:8085'
+    networks:
+      - SparkIt-network
 
   sparkit-postgres:
     image: postgres:latest
     container_name: sparkit-postgres
     restart: always
     environment:
-      POSTGRES_USER: "reufee"
-      POSTGRES_PASSWORD: "sparkit"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: "sparkitDB"
     healthcheck:
       test: [
@@ -36,7 +120,10 @@ services:
       start_period: "3s"
     ports:
      - "5432:5432"
+    networks:
+      - SparkIt-network
     volumes:
+      - ../build/sql/create_tables.sql:/docker-entrypoint-initdb.d/initdb.sql
       - ~/postgresdata:/var/lib/postgresql/data
 
   sparkit-redis:
@@ -48,6 +135,8 @@ services:
       - REDIS_USER_PASSWORD=$(REDIS_USER_PASSWORD)
     ports:
       - "6379:6379"
+    networks:
+      - SparkIt-network
     volumes:
     -  ~/redisdata:/data
 
@@ -72,7 +161,57 @@ services:
     tty: true
     stdin_open: true
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "8090:9090"
+    networks:
+      - SparkIt-network
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana/
+    networks:
+      - SparkIt-network
+    ports:
+      - "8070:3000"
+
+  node_exporter:
+    depends_on:
+      - prometheus
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - type: bind
+        source : /
+        target: /rootfs:ro
+        bind:
+          propagation: rslave
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+    hostname: node_exporter
+    ports:
+      - "8100:9100"
+    networks:
+      - SparkIt-network
+
+networks:
+  SparkIt-network:
+    name: SparkIt-network
+    driver: bridge
 
 
-
-
+volumes:
+  grafana-storage: {}

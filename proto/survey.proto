@@ -1,0 +1,80 @@
+syntax = "proto3";
+package survey;
+option go_package = "../internal/pkg/survey/delivery/grpc/gen/;gen";
+
+service Survey {
+  rpc AddSurvey(AddSurveyRequest) returns (AddSurveyResponse);
+  rpc GetSurveyInfo(GetSurveyInfoRequest) returns (GetSurveyInfoResponse);
+  rpc AddQuestion(AddQuestionRequest) returns (AddQuestionResponse);
+  rpc UpdateQuestion(UpdateQuestionRequest) returns (UpdateQuestionResponse);
+  rpc DeleteQuestion(DeleteQuestionRequest) returns (DeleteQuestionResponse);
+  rpc GetQuestions(GetQuestionsRequest) returns (GetQuestionResponse);
+}
+
+message AddSurveyRequest {
+  sSurvey Survey = 1;
+}
+
+message AddSurveyResponse {
+  int32 surveyID = 1;
+}
+
+message GetSurveyInfoRequest {
+
+}
+
+message GetSurveyInfoResponse {
+  repeated Stat Stats = 1;
+}
+
+message AddQuestionRequest {
+  AdminQuestion Question = 1;
+}
+
+message AddQuestionResponse {
+  int32 questionID = 1;
+}
+
+message UpdateQuestionRequest {
+    AdminQuestion Question = 1;
+    string Content = 2;
+}
+
+message UpdateQuestionResponse {
+  int32 id = 1;
+}
+
+message DeleteQuestionRequest {
+  string Content = 1;
+}
+
+message DeleteQuestionResponse{
+
+}
+
+message GetQuestionsRequest {
+
+}
+
+message GetQuestionResponse {
+  repeated AdminQuestion Questions = 1;
+}
+
+message sSurvey {
+  int32 Author = 1;
+  string Question = 2;
+  string Comment = 3;
+  int32 Rating = 4;
+  int32 Grade = 5;
+}
+
+message Stat {
+  string Question = 1;
+  float avgRating = 2;
+  int32 Grade = 3;
+}
+
+message AdminQuestion {
+  string Content = 1;
+  int32 Grade = 2;
+}

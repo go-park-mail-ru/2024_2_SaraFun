@@ -1,24 +1,11 @@
 package models
 
 import (
+	"html"
 	"time"
 )
 
 //go:generate mockgen -source=*.go -destination=*_mock.go -package=*
-
-//type User struct {
-//	UUID        string    `json:"id" validate:"required"`
-//	Name      string    `json:"name" validate:"required,min=2,max=50"`
-//	Age       int       `json:"age" validate:"required,min=18,max=100"`
-//	Gender    string    `json:"gender" validate:"required,oneof=male female"`
-//	Email     string    `json:"email" validate:"required,regexp=^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"`
-//	Phone     string    `json:"phone" validate:"required,regexp=^(\\+|[0-9])([0-9]*)$, min=11, max=12"`
-//	Bio       string    `json:"bio,omitempty" validate:"max=150"`
-//	Interests []string  `json:"interests,omitempty"`
-//	Location  string    `json:"location,omitempty"`
-//	CreatedAt time.Time `json:"created_at" validate:"required"`
-//	UpdatedAt time.Time `json:"updated_at,omitempty"`
-//}
 
 type User struct {
 	ID       int    `json:"id" validate:"required"`
@@ -26,6 +13,12 @@ type User struct {
 	Email    string `json:"email" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
 	Profile  int    `json:"profile" validate:"required"`
+}
+
+func (user *User) Sanitize() {
+	user.Username = html.EscapeString(user.Username)
+	user.Email = html.EscapeString(user.Email)
+	user.Password = html.EscapeString(user.Password)
 }
 
 type Profile struct {
@@ -38,9 +31,23 @@ type Profile struct {
 	About     string `json:"about,omitempty"`
 }
 
+func (profile *Profile) Sanitize() {
+	profile.FirstName = html.EscapeString(profile.FirstName)
+	profile.LastName = html.EscapeString(profile.LastName)
+	profile.Gender = html.EscapeString(profile.Gender)
+	profile.Target = html.EscapeString(profile.Target)
+	profile.About = html.EscapeString(profile.About)
+
+}
+
 type Image struct {
-	Id   int    `json:"id"`
-	Link string `json:"link"`
+	Id     int    `json:"id"`
+	Link   string `json:"link"`
+	Number int    `json:"number"`
+}
+
+func (image *Image) Sanitize() {
+	image.Link = html.EscapeString(image.Link)
 }
 
 type Reaction struct {
@@ -57,18 +64,8 @@ type PersonCard struct {
 	Images   []Image `json:"images"`
 }
 
-type Match struct {
-	UserID1   string    `json:"user_id_1" validate:"required"`
-	UserID2   string    `json:"user_id_2" validate:"required"`
-	MatchedAt time.Time `json:"matched_at" validate:"required"`
-}
-
-type Message struct {
-	ID       string    `json:"id" validate:"required"`
-	MatchID  string    `json:"match_id" validate:"required"`
-	SenderID string    `json:"sender_id" validate:"required"`
-	Content  string    `json:"content" validate:"required,min=1,max=500"`
-	SentAt   time.Time `json:"sent_at" validate:"required"`
+func (personCard *PersonCard) Sanitize() {
+	personCard.Username = html.EscapeString(personCard.Username)
 }
 
 type Session struct {
@@ -76,4 +73,55 @@ type Session struct {
 	UserID    int       `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (session *Session) Sanitize() {
+	session.SessionID = html.EscapeString(session.SessionID)
+}
+
+type Report struct {
+	ID       int    `json:"id"`
+	Author   int    `json:"author"`
+	Receiver int    `json:"receiver"`
+	Reason   string `json:"reason"`
+	Body     string `json:"body"`
+}
+
+func (report *Report) Sanitize() {
+	report.Body = html.EscapeString(report.Body)
+	report.Reason = html.EscapeString(report.Reason)
+}
+
+type Message struct {
+	ID       int    `json:"id"`
+	Author   int    `json:"author"`
+	Receiver int    `json:"receiver"`
+	Body     string `json:"body"`
+	Time     string `json:"time"`
+}
+
+func (message *Message) Sanitize() {
+	message.Body = html.EscapeString(message.Body)
+}
+
+type Survey struct {
+	ID       int    `json:"id"`
+	Author   int    `json:"author"`
+	Question string `json:"question"`
+	Comment  string `json:"comment"`
+	Rating   int    `json:"rating"`
+	Grade    int    `json:"grade"`
+}
+
+type SurveyStat struct {
+	Question string  `json:"question"`
+	Grade    int     `json:"grade"`
+	Rating   float32 `json:"rating"`
+	Sum      int     `json:"sum"`
+	Count    int     `json:"count"`
+}
+
+type AdminQuestion struct {
+	Content string `json:"content"`
+	Grade   int    `json:"grade"`
 }
