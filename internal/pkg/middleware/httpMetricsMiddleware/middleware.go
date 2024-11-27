@@ -1,8 +1,11 @@
 package httpMetricsMiddleware
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/metrics"
 	"go.uber.org/zap"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,4 +50,12 @@ func (m *Middleware) Middleware(next http.Handler) http.Handler {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("ResponseWriter does not support Hijacker")
+	}
+	return hijacker.Hijack()
 }
