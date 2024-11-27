@@ -62,17 +62,6 @@ import (
 	"time"
 )
 
-//type envConfig struct {
-//	RedisUser     string `env: "REDIS_USER"`
-//	RedisPassword string `env: "REDIS_PASSWORD"`
-//	DbHost        string `env: "DB_HOST"`
-//	DbPort        string `env: "DB_PORT"`
-//	DbUser        string `env: "DB_USER"`
-//	DbPassword    string `env: "DB_PASSWORD"`
-//	DbName        string `env: "DB_NAME"`
-//	DbSSLMode     string `env: "DB_SSLMODE"`
-//}
-
 func main() {
 
 	var envCfg config.EnvConfig
@@ -109,38 +98,6 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
-	//db, err := connectDB.ConnectDB(envCfg)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Println("Successfully connected to PostgreSQL!")
-	//_, err = db.Exec(createProfileTable)
-	//if err != nil {
-	//	log.Fatalf("Error creating table: %s", err)
-	//} else {
-	//	fmt.Println("Table profile created successfully!")
-	//}
-	//
-	//_, err = db.Exec(createUsersTable)
-	//if err != nil {
-	//	log.Fatalf("Error creating table: %s", err)
-	//} else {
-	//	fmt.Println("Table users created successfully!")
-	//}
-	//
-	//_, err = db.Exec(createPhotoTable)
-	//if err != nil {
-	//	log.Fatalf("Error creating table: %s", err)
-	//} else {
-	//	fmt.Println("Table photo created successfully!")
-	//}
-	//
-	//_, err = db.Exec(createReactionTable)
-	//if err != nil {
-	//	log.Fatalf("Error creating reaction table: %s", err)
-	//} else {
-	//	fmt.Println("Table reaction created successfully!")
-	//}
 
 	url := "redis://" + envCfg.RedisUser + ":" + envCfg.RedisPassword + "@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
@@ -189,20 +146,13 @@ func main() {
 	}
 
 	wConns := make(map[int]*ws.Conn)
-	//userStorage := profilerepo.New(db, logger)
-	//sessionStorage := sessionrepo.New(redisClient, logger)
+
 	imageStorage := imagerepo.New(db, logger)
 	wsStorage := websocketrepo.New(wConns, logger)
-	////profileStorage := profilerepo.New(db, logger)
-	//reactionStorage := reactionrepo.New(db, logger)
-	//
-	////userUsecase := userusecase.New(userStorage, logger)
-	//sessionUsecase := sessionusecase.New(sessionStorage, logger)
+
 	imageUseCase := imageusecase.New(imageStorage, logger)
 	websocketUsecase := websocketusecase.New(wsStorage, logger)
-	////profileUseCase := profileusecase.New(profileStorage, logger)
-	//reactionUsecase := reactionusecase.New(reactionStorage, logger)
-	//
+
 	authClient := grpcauth.NewAuthClient(authConn)
 	personalitiesClient := grpcpersonalities.NewPersonalitiesClient(personalitiesConn)
 	communicationsClient := grpccommunications.NewCommunicationsClient(communicationsConn)
@@ -255,7 +205,6 @@ func main() {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
-	//loggedMux := accessLogMiddleware(sugar, mux)
 	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
 	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
 	router.Handle("/profile/{username}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)

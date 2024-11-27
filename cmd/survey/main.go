@@ -42,7 +42,6 @@ func main() {
 	logger, err := cfg.Build()
 	defer logger.Sync()
 
-	//ctx := context.Background()
 	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
