@@ -112,3 +112,126 @@ func TestDeleteImage(t *testing.T) {
 		})
 	}
 }
+
+func TestSaveImage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+
+	tests := []struct {
+		name          string
+		fileExt       string
+		userId        int
+		ordNumber     int
+		expectedID    int
+		expectedError error
+		mockSetup     func(repo *mocks.MockRepository)
+	}{
+		{
+			name:       "successful save image",
+			fileExt:    ".png",
+			userId:     1,
+			ordNumber:  1,
+			expectedID: 42,
+			mockSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().
+					SaveImage(ctx, gomock.Any(), ".png", 1, 1).
+					Return(42, nil).Times(1)
+			},
+			expectedError: nil,
+		},
+		{
+			name:       "repository error",
+			fileExt:    ".jpg",
+			userId:     2,
+			ordNumber:  1,
+			expectedID: -1,
+			mockSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().
+					SaveImage(ctx, gomock.Any(), ".jpg", 2, 1).
+					Return(-1, errors.New("save image failed")).Times(1)
+			},
+			expectedError: errors.New("UseCase SaveImage err: save image failed"),
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := mocks.NewMockRepository(mockCtrl)
+			tt.mockSetup(repo)
+
+			usecase := New(repo, logger)
+			id, err := usecase.SaveImage(ctx, nil, tt.fileExt, tt.userId, tt.ordNumber)
+
+			require.Equal(t, tt.expectedID, id)
+			if tt.expectedError != nil {
+				require.ErrorContains(t, err, tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateOrdNumbers(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	logger := zap.NewNop()
+
+	tests := []struct {
+		name          string
+		numbers       []models.Image
+		expectedError error
+		mockSetup     func(repo *mocks.MockRepository)
+	}{
+		{
+			name: "successful update",
+			numbers: []models.Image{
+				{Id: 1, Number: 2},
+				{Id: 2, Number: 1},
+			},
+			mockSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().
+					UpdateOrdNumbers(ctx, gomock.Any()).
+					Return(nil).Times(1)
+			},
+			expectedError: nil,
+		},
+		{
+			name: "repository error",
+			numbers: []models.Image{
+				{Id: 1, Number: 2},
+			},
+			mockSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().
+					UpdateOrdNumbers(ctx, gomock.Any()).
+					Return(errors.New("update error")).Times(1)
+			},
+			expectedError: errors.New("UseCase UpdateOrdNumbers err: update error"),
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := mocks.NewMockRepository(mockCtrl)
+			tt.mockSetup(repo)
+
+			usecase := New(repo, logger)
+			err := usecase.UpdateOrdNumbers(ctx, tt.numbers)
+
+			if tt.expectedError != nil {
+				require.ErrorContains(t, err, tt.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

@@ -350,3 +350,159 @@ func TestStorage_ChangePassword(t *testing.T) {
 		})
 	}
 }
+
+func TestStorage_GetUserList(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	logger := zap.NewNop()
+	repo := New(db, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		userId    int
+		mockQuery func()
+		expected  []models.User
+		wantErr   bool
+	}{
+		{
+			name:   "Successful GetUserList",
+			userId: 1,
+			mockQuery: func() {
+				mock.ExpectQuery("SELECT id, username FROM users WHERE id !=").
+					WithArgs(1).
+					WillReturnRows(sqlmock.NewRows([]string{"id", "username"}).
+						AddRow(2, "user2").
+						AddRow(3, "user3"))
+			},
+			expected: []models.User{
+				{ID: 2, Username: "user2"},
+				{ID: 3, Username: "user3"},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockQuery()
+			users, err := repo.GetUserList(ctx, tt.userId)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.expected, users)
+		})
+	}
+}
+
+func TestStorage_GetUsernameByUserId(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	logger := zap.NewNop()
+	repo := New(db, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		userId    int
+		mockQuery func()
+		expected  string
+		wantErr   bool
+	}{
+		{
+			name:   "Successful GetUsernameByUserId",
+			userId: 1,
+			mockQuery: func() {
+				mock.ExpectQuery("SELECT username FROM users WHERE id").
+					WithArgs(1).
+					WillReturnRows(sqlmock.NewRows([]string{"username"}).
+						AddRow("testuser"))
+			},
+			expected: "testuser",
+			wantErr:  false,
+		},
+		{
+			name:   "Error in GetUsernameByUserId",
+			userId: 1,
+			mockQuery: func() {
+				mock.ExpectQuery("SELECT username FROM users WHERE id").
+					WithArgs(1).
+					WillReturnError(errors.New("query error"))
+			},
+			expected: "",
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockQuery()
+			username, err := repo.GetUsernameByUserId(ctx, tt.userId)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.expected, username)
+		})
+	}
+}
+
+func TestStorage_GetFeedList(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	logger := zap.NewNop()
+	repo := New(db, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		userId    int
+		receivers []int
+		mockQuery func()
+		expected  []models.User
+		wantErr   bool
+	}{
+		{
+			name:      "Successful GetFeedList",
+			userId:    1,
+			receivers: []int{2, 3},
+			mockQuery: func() {
+				mock.ExpectQuery("SELECT id, username FROM users WHERE id !=").
+					WithArgs(1, 1).
+					WillReturnRows(sqlmock.NewRows([]string{"id", "username"}).
+						AddRow(4, "user4").
+						AddRow(5, "user5"))
+			},
+			expected: []models.User{
+				{ID: 4, Username: "user4"},
+				{ID: 5, Username: "user5"},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockQuery()
+			users, err := repo.GetFeedList(ctx, tt.userId, tt.receivers)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.expected, users)
+		})
+	}
+}

@@ -1,5 +1,8 @@
 package addquestion
 
+//go:generate mockgen -source=handler.go -destination=./mocks/mock_handler.go -package=mocks
+
+
 import (
 	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"

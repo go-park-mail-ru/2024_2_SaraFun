@@ -102,6 +102,37 @@ func TestStorage_GetLastMessage(t *testing.T) {
 			expectedErr: sparkiterrors.ErrNoResult,
 		},
 		{
+			name:       "Successful GetLastMessage",
+			authorID:   1,
+			receiverID: 2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, created_at FROM message WHERE`).
+					WithArgs(1, 2).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "created_at"}).
+						AddRow("Hello!", 1, "2024-11-27T10:00:00Z"))
+			},
+			expectedMsg: models.Message{
+				Body:   "Hello!",
+				Author: 1,
+				Time:   "2024-11-27T10:00:00Z",
+			},
+			expectedErr: nil,
+		},
+		{
+			name:       "Scanning Error",
+			authorID:   1,
+			receiverID: 2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, created_at FROM message WHERE`).
+					WithArgs(1, 2).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "created_at"}).
+						AddRow(nil, 1, "2024-11-27T10:00:00Z"))
+			},
+			expectedMsg: models.Message{},
+			expectedErr: errors.New("GetLastMessage error: sql: Scan error"),
+		},
+
+		{
 			name:       "Database Error",
 			authorID:   1,
 			receiverID: 2,
@@ -162,6 +193,36 @@ func TestStorage_GetChatMessages(t *testing.T) {
 			expectedMsgs: nil,
 			expectedErr:  errors.New("GetChatMessages error: database error"),
 		},
+		{
+			name:         "Successful GetChatMessages",
+			firstUserID:  1,
+			secondUserID: 2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, receiver, created_at FROM message WHERE`).
+					WithArgs(1, 2).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "receiver", "created_at"}).
+						AddRow("Message 1", 1, 2, "2024-11-27T10:00:00Z").
+						AddRow("Message 2", 2, 1, "2024-11-27T10:05:00Z"))
+			},
+			expectedMsgs: []models.Message{
+				{Body: "Message 1", Author: 1, Receiver: 2, Time: "2024-11-27T10:00:00Z"},
+				{Body: "Message 2", Author: 2, Receiver: 1, Time: "2024-11-27T10:05:00Z"},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:         "Scanning Error",
+			firstUserID:  1,
+			secondUserID: 2,
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, receiver, created_at FROM message WHERE`).
+					WithArgs(1, 2).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "receiver", "created_at"}).
+						AddRow(nil, 1, 2, "2024-11-27T10:00:00Z"))
+			},
+			expectedMsgs: nil,
+			expectedErr:  errors.New("GetChatMessages error: sql: Scan error"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -212,6 +273,38 @@ func TestStorage_GetMessagesBySearch(t *testing.T) {
 			},
 			expectedMsgs: nil,
 			expectedErr:  errors.New("GetMessagesBySearch error: database error"),
+		},
+		{
+			name:   "Successful Search",
+			userID: 1,
+			page:   1,
+			search: "hello",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, receiver, created_at FROM message WHERE`).
+					WithArgs(1, "hello", 25, 0).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "receiver", "created_at"}).
+						AddRow("Hello World", 1, 2, "2024-11-27T10:00:00Z").
+						AddRow("Another Hello", 2, 1, "2024-11-27T10:05:00Z"))
+			},
+			expectedMsgs: []models.Message{
+				{Body: "Hello World", Author: 1, Receiver: 2, Time: "2024-11-27T10:00:00Z"},
+				{Body: "Another Hello", Author: 2, Receiver: 1, Time: "2024-11-27T10:05:00Z"},
+			},
+			expectedErr: nil,
+		},
+		{
+			name:   "Scanning Error",
+			userID: 1,
+			page:   1,
+			search: "hello",
+			mockSetup: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery(`SELECT body, author, receiver, created_at FROM message WHERE`).
+					WithArgs(1, "hello", 25, 0).
+					WillReturnRows(sqlmock.NewRows([]string{"body", "author", "receiver", "created_at"}).
+						AddRow(nil, 1, 2, "2024-11-27T10:00:00Z"))
+			},
+			expectedMsgs: nil,
+			expectedErr:  errors.New("GetMessagesBySearch error: sql: Scan error"),
 		},
 	}
 
