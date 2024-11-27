@@ -5,147 +5,421 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/hashing"
-	"github.com/golang/mock/gomock"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
-	"time"
+
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	signup_mocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signup/mocks"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 )
 
-type TestRequest struct {
-	User    models.User    `json:"user"`
-	Profile models.Profile `json:"profile"`
-}
+//go:generate mockgen -destination=./mocks/mock_PersonalitiesClient.go -package=signup_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen PersonalitiesClient
+//go:generate mockgen -destination=./mocks/mock_AuthClient.go -package=signup_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
 
-func TestHandler(t *testing.T) {
-	logger := zap.NewNop()
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+func TestHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name                    string
 		method                  string
-		path                    string
-		body                    []byte
-		addUserError            error
-		addUserId               int
-		addUserCallsCount       int
-		createSessionError      error
-		createSessionCallsCount int
-		createProfileId         int
-		createProfileError      error
-		createProfileCallsCount int
+		requestBody             interface{}
+		mockPersonalitiesClient func(mock *signup_mocks.MockPersonalitiesClient)
+		mockAuthClient          func(mock *signup_mocks.MockAuthClient)
 		expectedStatus          int
-		expectedMessage         string
-		logger                  *zap.Logger
+		expectedResponse        string
+		expectedCookie          *http.Cookie
 	}{
 		{
-			name:   "success",
-			method: "POST",
-			path:   "http://localhost:8080/signup",
-			body: []byte(`{
-				"user": {
-        			"username": "User1",
-        			"password": "user234"
-   			 	},
-    			"profile": {
-        			"gender": "user",
-        			"age": 40
-    			}
-			}`),
-			addUserError:            nil,
-			addUserId:               1,
-			addUserCallsCount:       1,
-			createSessionError:      nil,
-			createSessionCallsCount: 1,
-			createProfileId:         1,
-			createProfileError:      nil,
-			createProfileCallsCount: 1,
-			expectedStatus:          http.StatusOK,
-			expectedMessage:         "ok",
-			logger:                  logger,
+			name:   "Successful Signup",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: false,
+					}, nil)
+				// Mock CreateProfile
+				mock.EXPECT().
+					CreateProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.CreateProfileResponse{
+						ProfileId: 1,
+					}, nil)
+				// Mock RegisterUser
+				mock.EXPECT().
+					RegisterUser(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.RegisterUserResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockAuthClient: func(mock *signup_mocks.MockAuthClient) {
+				mock.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.CreateSessionResponse{
+						Session: &generatedAuth.Session{
+							SessionID: "session-id",
+						},
+					}, nil)
+			},
+			expectedStatus:   http.StatusOK,
+			expectedResponse: "ok",
+			expectedCookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "session-id",
+			},
 		},
 		{
-			name:                    "wrong method",
-			method:                  "GET",
-			path:                    "http://localhost:8080/signup",
-			body:                    nil,
-			addUserError:            nil,
-			addUserId:               1,
-			addUserCallsCount:       0,
-			createSessionCallsCount: 0,
+			name:                    "Method Not Allowed",
+			method:                  http.MethodGet,
+			requestBody:             nil,
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {},
+			mockAuthClient:          func(mock *signup_mocks.MockAuthClient) {},
 			expectedStatus:          http.StatusMethodNotAllowed,
-			expectedMessage:         "Method not allowed\n",
-			logger:                  logger,
+			expectedResponse:        "Method not allowed\n",
+			expectedCookie:          nil,
 		},
 		{
-			name:   "wrong method",
-			method: "POST",
-			path:   "http://localhost:8080/signup",
-			body: []byte(`{
-						"user": {
-        					"username": "User1",
-        					"password": "user234"
-   			 			},
-    					"profile": {
-        					"gender": "user",
-        					"age": 40
-    					}
-					}`),
-			addUserError:            errors.New("error"),
-			addUserId:               1,
-			addUserCallsCount:       1,
-			createSessionCallsCount: 0,
-			createProfileCallsCount: 1,
-			expectedStatus:          http.StatusInternalServerError,
-			expectedMessage:         "Внутренняя ошибка сервера\n",
-			logger:                  logger,
+			name:                    "Invalid JSON",
+			method:                  http.MethodPost,
+			requestBody:             "invalid json",
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {},
+			mockAuthClient:          func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:          http.StatusBadRequest,
+			expectedResponse:        "invalid character 'i' looking for beginning of value\n",
+			expectedCookie:          nil,
+		},
+		{
+			name:   "Username Already Exists",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "existinguser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "existinguser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: true,
+					}, nil)
+			},
+			mockAuthClient:   func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: "user already exists\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:   "Error Checking Username Exists",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists with error
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(nil, errors.New("database error"))
+			},
+			mockAuthClient:   func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "failed to check username exists\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:   "Error Creating Profile",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: false,
+					}, nil)
+				// Mock CreateProfile with error
+				mock.EXPECT().
+					CreateProfile(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("profile creation error"))
+			},
+			mockAuthClient:   func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "profile creation error\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:   "Error Registering User",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: false,
+					}, nil)
+				// Mock CreateProfile
+				mock.EXPECT().
+					CreateProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.CreateProfileResponse{
+						ProfileId: 1,
+					}, nil)
+				// Mock RegisterUser with error
+				mock.EXPECT().
+					RegisterUser(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("user registration error"))
+			},
+			mockAuthClient:   func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "Внутренняя ошибка сервера\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:   "Error Creating Session",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: "testpass",
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: false,
+					}, nil)
+				// Mock CreateProfile
+				mock.EXPECT().
+					CreateProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.CreateProfileResponse{
+						ProfileId: 1,
+					}, nil)
+				// Mock RegisterUser
+				mock.EXPECT().
+					RegisterUser(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.RegisterUserResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockAuthClient: func(mock *signup_mocks.MockAuthClient) {
+				mock.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("session creation error"))
+			},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "Не удалось создать сессию\n",
+			expectedCookie:   nil,
+		},
+		{
+			name:   "Error Hashing Password",
+			method: http.MethodPost,
+			requestBody: Request{
+				User: models.User{
+					Username: "testuser",
+					Password: strings.Repeat("a", 100), // 100 символов
+					Email:    "test@example.com",
+				},
+				Profile: models.Profile{
+					FirstName: "Test",
+					LastName:  "User",
+					Age:       30,
+					Gender:    "Male",
+					Target:    "Friendship",
+					About:     "Just testing",
+				},
+			},
+			mockPersonalitiesClient: func(mock *signup_mocks.MockPersonalitiesClient) {
+				// Mock CheckUsernameExists
+				mock.EXPECT().
+					CheckUsernameExists(gomock.Any(), &generatedPersonalities.CheckUsernameExistsRequest{
+						Username: "testuser",
+					}).
+					Return(&generatedPersonalities.CheckUsernameExistsResponse{
+						Exists: false,
+					}, nil)
+				// Mock CreateProfile
+				mock.EXPECT().
+					CreateProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.CreateProfileResponse{
+						ProfileId: 1,
+					}, nil)
+			},
+			mockAuthClient:   func(mock *signup_mocks.MockAuthClient) {},
+			expectedStatus:   http.StatusBadRequest,
+			expectedResponse: "bad password\n",
+			expectedCookie:   nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userService := sign_up_mocks.NewMockUserService(mockCtrl)
-			sessionService := sign_up_mocks.NewMockSessionService(mockCtrl)
-			profileService := sign_up_mocks.NewMockProfileService(mockCtrl)
-			handler := NewHandler(userService, sessionService, profileService, tt.logger)
+			// Создаем контроллер gomock
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			var reqB TestRequest
-			if tt.body != nil {
-				if err := json.Unmarshal(tt.body, &reqB); err != nil {
-					t.Error(err)
+			// Создаем моки клиентов
+			mockPersonalitiesClient := signup_mocks.NewMockPersonalitiesClient(ctrl)
+			mockAuthClient := signup_mocks.NewMockAuthClient(ctrl)
+
+			// Настраиваем моки
+			tt.mockPersonalitiesClient(mockPersonalitiesClient)
+			tt.mockAuthClient(mockAuthClient)
+
+			// Создаем логгер
+			logger := zap.NewNop()
+
+			// Создаем обработчик
+			handler := NewHandler(mockPersonalitiesClient, mockAuthClient, logger)
+
+			// Создаем HTTP-запрос
+			var req *http.Request
+			if tt.requestBody != nil {
+				var bodyBytes []byte
+				switch v := tt.requestBody.(type) {
+				case string:
+					bodyBytes = []byte(v)
+				default:
+					bodyBytes, _ = json.Marshal(v)
 				}
+				req = httptest.NewRequest(tt.method, "/", bytes.NewReader(bodyBytes))
+			} else {
+				req = httptest.NewRequest(tt.method, "/", nil)
 			}
-			reqB.User.Password, _ = hashing.HashPassword(reqB.User.Password)
-			profileService.EXPECT().CreateProfile(gomock.Any(), reqB.Profile).Return(tt.createProfileId, tt.createProfileError).Times(tt.createProfileCallsCount)
-			userService.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.addUserId, tt.addUserError).Times(tt.addUserCallsCount)
-			sessionService.EXPECT().CreateSession(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, user models.User) (*models.Session, error) {
-				session := &models.Session{
-					SessionID: uuid.New().String(),
-					UserID:    reqB.User.ID,
-					CreatedAt: time.Now(),
-				}
-				return session, tt.createSessionError
-			}).Times(tt.createSessionCallsCount)
-			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(tt.body))
-			w := httptest.NewRecorder()
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel() // Отменяем контекст после завершения работы
-			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+
+			// Добавляем контекст с RequestID
+			ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
 			req = req.WithContext(ctx)
-			handler.Handle(w, req)
-			if w.Code != tt.expectedStatus {
-				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
-			}
-			if w.Body.String() != tt.expectedMessage {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedMessage)
+
+			// Создаем ResponseRecorder
+			rr := httptest.NewRecorder()
+
+			// Вызываем обработчик
+			handler.Handle(rr, req)
+
+			// Проверяем статус код
+			if status := rr.Code; status != tt.expectedStatus {
+				t.Errorf("expected status code %d, got %d", tt.expectedStatus, status)
 			}
 
+			// Проверяем тело ответа
+			if !strings.Contains(rr.Body.String(), tt.expectedResponse) {
+				t.Errorf("expected response body to contain %q, got %q", tt.expectedResponse, rr.Body.String())
+			}
+
+			// Проверяем cookie
+			if tt.expectedCookie != nil {
+				cookies := rr.Result().Cookies()
+				if len(cookies) == 0 {
+					t.Errorf("expected cookie to be set, but none were found")
+				} else {
+					found := false
+					for _, cookie := range cookies {
+						if cookie.Name == tt.expectedCookie.Name && cookie.Value == tt.expectedCookie.Value {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("expected cookie %v, but it was not found", tt.expectedCookie)
+					}
+				}
+			} else {
+				if len(rr.Result().Cookies()) > 0 {
+					t.Errorf("expected no cookies to be set, but found %v", rr.Result().Cookies())
+				}
+			}
 		})
 	}
-
 }

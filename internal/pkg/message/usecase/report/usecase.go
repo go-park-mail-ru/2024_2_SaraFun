@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
+
 type Repository interface {
 	AddReport(ctx context.Context, report models.Report) (int, error)
 	GetReportIfExists(ctx context.Context, firstUserID int, secondUserID int) (models.Report, error)

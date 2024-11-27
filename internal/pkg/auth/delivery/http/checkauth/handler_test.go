@@ -3,108 +3,105 @@ package checkauth
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
-	"time"
 
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	checkauth_mocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 )
 
-func TestCheckAuthHandler(t *testing.T) {
-	logger := zap.NewNop()
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+//go:generate mockgen -destination=./mocks/mock_AuthClient.go -package=checkauth_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
 
+func TestHandler_Handle(t *testing.T) {
 	tests := []struct {
-		name              string
-		method            string
-		cookieValue       string
-		checkSessionError error
-		expectedStatus    int
-		expectedResponse  string
-		logger            *zap.Logger
+		name           string
+		method         string
+		cookie         *http.Cookie
+		mockBehavior   func(mockAuthClient *checkauth_mocks.MockAuthClient)
+		expectedStatus int
+		expectedBody   string
 	}{
 		{
-			name:              "successful session check",
-			method:            http.MethodGet,
-			cookieValue:       "valid-session-id",
-			expectedStatus:    http.StatusOK,
-			expectedResponse:  "ok",
-			checkSessionError: nil,
-			logger:            logger,
+			name:   "Successful Check",
+			method: http.MethodGet,
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "valid-session-id",
+			},
+			mockBehavior: func(mockAuthClient *checkauth_mocks.MockAuthClient) {
+				mockAuthClient.EXPECT().
+					CheckSession(gomock.Any(), &generatedAuth.CheckSessionRequest{SessionID: "valid-session-id"}).
+					Return(&generatedAuth.CheckSessionResponse{}, nil)
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   "ok",
 		},
 		{
-			name:             "wrong method",
-			method:           http.MethodPost,
-			expectedStatus:   http.StatusMethodNotAllowed,
-			expectedResponse: "method is not allowed\n",
-			logger:           logger,
+			name:           "Method Not Allowed",
+			method:         http.MethodPost,
+			cookie:         nil,
+			mockBehavior:   func(mockAuthClient *checkauth_mocks.MockAuthClient) {},
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedBody:   "method is not allowed",
 		},
 		{
-			name:             "session cookie not found",
-			method:           http.MethodGet,
-			expectedStatus:   http.StatusUnauthorized,
-			expectedResponse: "session not found\n",
-			logger:           logger,
+			name:           "Missing Cookie",
+			method:         http.MethodGet,
+			cookie:         nil,
+			mockBehavior:   func(mockAuthClient *checkauth_mocks.MockAuthClient) {},
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "session not found",
 		},
 		{
-			name:              "invalid session",
-			method:            http.MethodGet,
-			cookieValue:       "invalid-session-id",
-			expectedStatus:    http.StatusUnauthorized,
-			expectedResponse:  "session is not valid\n",
-			checkSessionError: errors.New("invalid session"),
-			logger:            logger,
+			name:   "Invalid Session",
+			method: http.MethodGet,
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "invalid-session-id",
+			},
+			mockBehavior: func(mockAuthClient *checkauth_mocks.MockAuthClient) {
+				mockAuthClient.EXPECT().
+					CheckSession(gomock.Any(), &generatedAuth.CheckSessionRequest{SessionID: "invalid-session-id"}).
+					Return(nil, errors.New("session invalid"))
+			},
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "bad session",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := checkauth_mocks.checkauth_mocks.NewMockSessionService(mockCtrl)
-			handler := NewHandler(service, tt.logger)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			if tt.method == http.MethodGet && tt.cookieValue != "" {
-				req := httptest.NewRequest(tt.method, "/checkauth", nil)
-				req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
-				w := httptest.NewRecorder()
+			mockAuthClient := checkauth_mocks.NewMockAuthClient(ctrl)
+			logger := zap.NewNop()
+			handler := NewHandler(mockAuthClient, logger)
 
-				if tt.checkSessionError != nil {
-					service.EXPECT().CheckSession(gomock.Any(), tt.cookieValue).Return(tt.checkSessionError).Times(1)
-				} else {
-					service.EXPECT().CheckSession(gomock.Any(), tt.cookieValue).Return(nil).Times(1)
-				}
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel() // Отменяем контекст после завершения работы
-				ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-				req = req.WithContext(ctx)
-				handler.Handle(w, req)
+			tt.mockBehavior(mockAuthClient)
 
-				if w.Code != tt.expectedStatus {
-					t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
-				}
+			req := httptest.NewRequest(tt.method, "/", nil)
+			if tt.cookie != nil {
+				req.AddCookie(tt.cookie)
+			}
+			ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+			req = req.WithContext(ctx)
 
-				if w.Body.String() != tt.expectedResponse {
-					t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedResponse)
-				}
-			} else {
-				req := httptest.NewRequest(tt.method, "/checkauth", nil)
-				w := httptest.NewRecorder()
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel() // Отменяем контекст после завершения работы
-				ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-				req = req.WithContext(ctx)
-				handler.Handle(w, req)
+			rr := httptest.NewRecorder()
 
-				if w.Code != tt.expectedStatus {
-					t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
-				}
+			handler.Handle(rr, req)
 
-				if w.Body.String() != tt.expectedResponse {
-					t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedResponse)
-				}
+			if status := rr.Code; status != tt.expectedStatus {
+				t.Errorf("expected status code %d, got %d", tt.expectedStatus, status)
+			}
+
+			if !strings.Contains(rr.Body.String(), tt.expectedBody) {
+				t.Errorf("expected body to contain %q, got %q", tt.expectedBody, rr.Body.String())
 			}
 		})
 	}

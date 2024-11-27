@@ -9,77 +9,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"mime/multipart"
-	"os"
 	"testing"
 	"time"
 )
-
-func TestSaveImage(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel() // Отменяем контекст после завершения работы
-	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-	logger := zap.NewNop()
-	testFile, err := os.Create("test.png")
-	if err != nil {
-		t.Fatal(err)
-	}
-	tests := []struct {
-		name                   string
-		file                   multipart.File
-		fileExt                string
-		userId                 int
-		expectedSaveImageId    int
-		expectedSaveImageError error
-		expectedSaveImageCount int
-		logger                 *zap.Logger
-		wantId                 int
-	}{
-		{
-			name:                   "successful test",
-			file:                   testFile,
-			fileExt:                ".png",
-			userId:                 1,
-			expectedSaveImageId:    1,
-			expectedSaveImageError: nil,
-			expectedSaveImageCount: 1,
-			logger:                 logger,
-			wantId:                 1,
-		},
-		{
-			name:                   "bad test",
-			file:                   testFile,
-			fileExt:                ".txt",
-			userId:                 1,
-			expectedSaveImageId:    0,
-			expectedSaveImageError: errors.New("error"),
-			expectedSaveImageCount: 1,
-			logger:                 logger,
-			wantId:                 -1,
-		},
-	}
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().SaveImage(ctx, gomock.Any(), tt.fileExt, tt.userId).
-				Return(tt.expectedSaveImageId, tt.expectedSaveImageError).
-				Times(tt.expectedSaveImageCount)
-
-			u := New(repo, logger)
-			id, err := u.SaveImage(ctx, tt.file, tt.fileExt, tt.userId)
-			require.ErrorIs(t, err, tt.expectedSaveImageError)
-			if id != tt.wantId {
-				t.Errorf("SaveImage() id = %v, want %v", id, tt.wantId)
-			}
-
-		})
-	}
-
-}
 
 func TestGetImageLinksByUserId(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

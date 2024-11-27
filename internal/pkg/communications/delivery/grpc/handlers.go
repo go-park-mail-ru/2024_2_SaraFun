@@ -1,5 +1,8 @@
 package communicationsgrpc
 
+//go:generate mockgen -source=handlers.go -destination=mocks/reaction_usecase_mock.go -package=mocks
+
+
 import (
 	"context"
 	"fmt"
