@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=updateprofile_mocks . ProfileService
+////go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=updateprofile_mocks . ProfileService
 //type ProfileService interface {
 //	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
 //}
@@ -22,7 +22,7 @@ type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_UserService.go -package=updateprofile_mocks . UserService
+////go:generate mockgen -destination=./mocks/mock_UserService.go -package=updateprofile_mocks . UserService
 //type UserService interface {
 //	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 //}
