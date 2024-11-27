@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="852e297e-c4bd-412c-bc9b-3eb74febeda4" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "Go Test.TestAddMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/message.executor": "Run",
+    "Go Test.TestAddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/reaction.executor": "Run",
+    "Go Test.TestAddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/reaction.executor": "Run",
+    "Go Test.TestAddReport in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/report.executor": "Run",
+    "Go Test.TestCheckPassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor": "Run",
+    "Go Test.TestCheckSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor": "Run",
+    "Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile.executor": "Run",
+    "Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile.executor": "Run",
+    "Go Test.TestCreateSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor": "Run",
+    "Go Test.TestDeleteImageHandler in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/deleteimage.executor": "Run",
+    "Go Test.TestDeleteSession in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor": "Run",
+    "Go Test.TestGetFeed in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor": "Run",
+    "Go Test.TestGetMatchList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/reaction.executor": "Run",
+    "Go Test.TestGetReactionList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/repo/reaction.executor": "Run",
+    "Go Test.TestGetUserIDBySessionID in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc.executor": "Run",
+    "Go Test.TestGetUserIDBySessionID in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/usecase.executor": "Run",
+    "Go Test.TestGrpcCommunicationsHandler_AddReaction in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc.executor": "Run",
+    "Go Test.TestGrpcCommunicationsHandler_GetMatchList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc.executor": "Run",
+    "Go Test.TestGrpcCommunicationsHandler_GetReactionList in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc.executor": "Run",
+    "Go Test.TestHandler in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/logout.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signin.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signup.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/addreaction.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches.executor": "Run",
+    "Go Test.TestHandler_Handle in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage.executor": "Run",
+    "Go Test.TestHandler_Handle/Failed_to_Get_Profile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches.executor": "Run",
+    "Go Test.TestHandler_Handle/Failed_to_Get_Username in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches.executor": "Run",
+    "Go Test.TestHandler_Handle/Failed_to_Marshal_JSON in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches.executor": "Run",
+    "Go Test.TestHandler_Handle/Failed_to_Write_Response in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches.executor": "Run",
+    "Go Test.TestHandler_Handle/Invalid_Request_ID_Type in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage.executor": "Run",
+    "Go Test.TestHandler_Handle_Success in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth.executor": "Run",
+    "Go Test.TestMiddleware in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/CSPMiddleware.executor": "Run",
+    "Go Test.TestMiddleware in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware.executor": "Run",
+    "Go Test.TestMiddleware_Handler in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck.executor": "Run",
+    "Go Test.TestRegisterUser in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user.executor": "Run",
+    "Go Test.TestSaveImage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/repo.executor": "Run",
+    "Go Test.TestSaveImage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/usecase.executor": "Run",
+    "Go Test.TestSigninHandler in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/signin.executor": "Run",
+    "Go Test.TestUploadImageHandler in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/image/delivery/uploadimage.executor": "Run",
+    "Go Test.TestUseCase_AddMessage in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/message.executor": "Run"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\79263\GolandProjects\2024_2_SaraFun\internal\pkg\personalities\delivery\http\getcurrentprofile\mocks" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Test.TestCheckPassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user">
+    <configuration name="TestCheckPassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestCheckPassword\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/repo/profile" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestCreateProfile\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/profile" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestCreateProfile\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGetFeed in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestGetFeed\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestRegisterUser in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="2024_2_SaraFun" />
+      <working_directory value="$PROJECT_DIR$/internal/pkg/personalities/usecase/user" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestRegisterUser\E$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.TestCheckPassword in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+        <item itemvalue="Go Test.TestGetFeed in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+        <item itemvalue="Go Test.TestRegisterUser in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user" />
+        <item itemvalue="Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile" />
+        <item itemvalue="Go Test.TestCreateProfile in github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile" />
+      </list>
+    </recent_temporary>
+  </component>
+</project>

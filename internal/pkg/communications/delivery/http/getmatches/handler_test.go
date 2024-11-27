@@ -1,141 +1,391 @@
 package getmatches
 
 import (
-	"bytes"
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	getmatches_mocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches/mocks"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
-func TestHandler(t *testing.T) {
-	logger := zap.NewNop()
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+//go:generate mockgen -destination=./mocks/mock_CommunicationsClient.go -package=getmatches_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen CommunicationsClient
+//go:generate mockgen -destination=./mocks/mock_AuthClient.go -package=getmatches_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
+//go:generate mockgen -destination=./mocks/mock_PersonalitiesClient.go -package=getmatches_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen PersonalitiesClient
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=getmatches_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches ImageService
 
+func TestHandler_Handle(t *testing.T) {
 	tests := []struct {
-		name                         string
-		method                       string
-		path                         string
-		body                         []byte
-		GetMatchList_List            []int
-		GetMatchList_Err             error
-		GetUserIDBySessionID_Id      int
-		GetUserIDBYSessionID_Err     error
-		GetProfile_Profiles          []models.Profile
-		GetProfile_Err               error
-		GetUsernameByUserId_Username string
-		GetUsernameByUserId_Err      error
-		GetMatchListCount            int
-		GetProfileCount              int
-		GetUsernameByUserIdCount     int
-		GetUserIdBySessionIDCount    int
-		GetImageLinksArr             []models.Image
-		GetImageLinksErr             error
-		GetImageLinksCount           int
-		expectedStatus               int
-		expectedMessage              string
-		logger                       *zap.Logger
+		name                     string
+		setupRequest             func() *http.Request
+		mockAuthClient           func(mock *getmatches_mocks.MockAuthClient)
+		mockCommunicationsClient func(mock *getmatches_mocks.MockCommunicationsClient)
+		mockPersonalitiesClient  func(mock *getmatches_mocks.MockPersonalitiesClient)
+		mockImageService         func(mock *getmatches_mocks.MockImageService)
+		expectedStatus           int
+		expectedResponseContains string
 	}{
 		{
-			name:                         "successfull test",
-			method:                       "GET",
-			path:                         "http://localhost:8080/matches",
-			GetMatchList_List:            []int{1},
-			GetMatchList_Err:             nil,
-			GetUserIDBySessionID_Id:      1,
-			GetUserIDBYSessionID_Err:     nil,
-			GetProfile_Profiles:          []models.Profile{{FirstName: "1"}},
-			GetProfile_Err:               nil,
-			GetUsernameByUserId_Username: "username",
-			GetUsernameByUserId_Err:      nil,
-			GetMatchListCount:            1,
-			GetProfileCount:              1,
-			GetUserIdBySessionIDCount:    1,
-			GetUsernameByUserIdCount:     1,
-			GetImageLinksArr:             []models.Image{{Id: 1, Link: "link1"}, {Id: 2, Link: "link2"}, {Id: 3, Link: "link3"}},
-			GetImageLinksErr:             nil,
-			GetImageLinksCount:           1,
-			expectedMessage:              "[{\"user\":1,\"username\":\"username\",\"profile\":{\"id\":0,\"first_name\":\"1\"},\"images\":[{\"id\":1,\"link\":\"link1\"},{\"id\":2,\"link\":\"link2\"},{\"id\":3,\"link\":\"link3\"}]}]",
-			expectedStatus:               http.StatusOK,
-			logger:                       logger,
+			name: "Successful Response",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "valid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), &generatedAuth.GetUserIDBySessionIDRequest{
+						SessionID: "valid-session-id",
+					}).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					GetMatchList(gomock.Any(), &generatedCommunications.GetMatchListRequest{
+						UserID: 1,
+					}).
+					Return(&generatedCommunications.GetMatchListResponse{
+						Authors: []int32{2, 3},
+					}, nil)
+			},
+			mockPersonalitiesClient: func(mock *getmatches_mocks.MockPersonalitiesClient) {
+				// Mock GetProfile for author 2
+				mock.EXPECT().
+					GetProfile(gomock.Any(), &generatedPersonalities.GetProfileRequest{
+						Id: 2,
+					}).
+					Return(&generatedPersonalities.GetProfileResponse{
+						Profile: &generatedPersonalities.Profile{
+							ID:        2,
+							FirstName: "John",
+							LastName:  "Doe",
+							Age:       30,
+							Gender:    "Male",
+							Target:    "Friendship",
+							About:     "About John",
+						},
+					}, nil)
+				// Mock GetUsernameByUserID for author 2
+				mock.EXPECT().
+					GetUsernameByUserID(gomock.Any(), &generatedPersonalities.GetUsernameByUserIDRequest{
+						UserID: 2,
+					}).
+					Return(&generatedPersonalities.GetUsernameByUserIDResponse{
+						Username: "johndoe",
+					}, nil)
+				// Mock GetProfile for author 3
+				mock.EXPECT().
+					GetProfile(gomock.Any(), &generatedPersonalities.GetProfileRequest{
+						Id: 3,
+					}).
+					Return(&generatedPersonalities.GetProfileResponse{
+						Profile: &generatedPersonalities.Profile{
+							ID:        3,
+							FirstName: "Jane",
+							LastName:  "Smith",
+							Age:       28,
+							Gender:    "Female",
+							Target:    "Dating",
+							About:     "About Jane",
+						},
+					}, nil)
+				// Mock GetUsernameByUserID for author 3
+				mock.EXPECT().
+					GetUsernameByUserID(gomock.Any(), &generatedPersonalities.GetUsernameByUserIDRequest{
+						UserID: 3,
+					}).
+					Return(&generatedPersonalities.GetUsernameByUserIDResponse{
+						Username: "janesmith",
+					}, nil)
+			},
+			mockImageService: func(mock *getmatches_mocks.MockImageService) {
+				// Mock GetImageLinksByUserId for author 2
+				mock.EXPECT().
+					GetImageLinksByUserId(gomock.Any(), 2).
+					Return([]models.Image{
+						{Id: 1, Link: "http://example.com/image1.jpg"},
+					}, nil)
+				// Mock GetImageLinksByUserId for author 3
+				mock.EXPECT().
+					GetImageLinksByUserId(gomock.Any(), 3).
+					Return([]models.Image{
+						{Id: 2, Link: "http://example.com/image2.jpg"},
+					}, nil)
+			},
+			expectedStatus:           http.StatusOK,
+			expectedResponseContains: `"username":"johndoe"`,
 		},
 		{
-			name:                         "bad test",
-			method:                       "GET",
-			path:                         "http://localhost:8080/matches",
-			GetMatchList_List:            []int{1},
-			GetMatchList_Err:             nil,
-			GetUserIDBySessionID_Id:      1,
-			GetUserIDBYSessionID_Err:     errors.New("ERROR"),
-			GetProfile_Profiles:          []models.Profile{{FirstName: "1"}},
-			GetProfile_Err:               nil,
-			GetUsernameByUserId_Username: "username",
-			GetUsernameByUserId_Err:      nil,
-			GetMatchListCount:            0,
-			GetProfileCount:              0,
-			GetUserIdBySessionIDCount:    1,
-			GetUsernameByUserIdCount:     0,
-			GetImageLinksCount:           0,
-			expectedMessage:              "session not found\n",
-			expectedStatus:               http.StatusUnauthorized,
-			logger:                       logger,
+			name: "Missing Session Cookie",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient:           func(mock *getmatches_mocks.MockAuthClient) {},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {},
+			mockPersonalitiesClient:  func(mock *getmatches_mocks.MockPersonalitiesClient) {},
+			mockImageService:         func(mock *getmatches_mocks.MockImageService) {},
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
+		},
+		{
+			name: "Failed to Get User ID",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "invalid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("session not found"))
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {},
+			mockPersonalitiesClient:  func(mock *getmatches_mocks.MockPersonalitiesClient) {},
+			mockImageService:         func(mock *getmatches_mocks.MockImageService) {},
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
+		},
+		{
+			name: "Failed to Get Match List",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "valid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					GetMatchList(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("failed to get matches"))
+			},
+			mockPersonalitiesClient:  func(mock *getmatches_mocks.MockPersonalitiesClient) {},
+			mockImageService:         func(mock *getmatches_mocks.MockImageService) {},
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
+		},
+		{
+			name: "Failed to Get Profile",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "valid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					GetMatchList(gomock.Any(), gomock.Any()).
+					Return(&generatedCommunications.GetMatchListResponse{
+						Authors: []int32{2},
+					}, nil)
+			},
+			mockPersonalitiesClient: func(mock *getmatches_mocks.MockPersonalitiesClient) {
+				mock.EXPECT().
+					GetProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.GetProfileResponse{
+						Profile: &generatedPersonalities.Profile{
+							ID:        0,
+							FirstName: "",
+							LastName:  "",
+							Age:       0,
+							Gender:    "",
+							Target:    "",
+							About:     "",
+						},
+					}, errors.New("failed to get profile"))
+			},
+			mockImageService:         func(mock *getmatches_mocks.MockImageService) {},
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get profile",
+		},
+
+		{
+			name: "Failed to Get Image Links",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "valid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					GetMatchList(gomock.Any(), gomock.Any()).
+					Return(&generatedCommunications.GetMatchListResponse{
+						Authors: []int32{2},
+					}, nil)
+			},
+			mockPersonalitiesClient: func(mock *getmatches_mocks.MockPersonalitiesClient) {
+				mock.EXPECT().
+					GetProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.GetProfileResponse{
+						Profile: &generatedPersonalities.Profile{
+							ID:        2,
+							FirstName: "John",
+							LastName:  "Doe",
+							Age:       30,
+							Gender:    "Male",
+							Target:    "Friendship",
+							About:     "About John",
+						},
+					}, nil)
+			},
+			mockImageService: func(mock *getmatches_mocks.MockImageService) {
+				mock.EXPECT().
+					GetImageLinksByUserId(gomock.Any(), 2).
+					Return(nil, errors.New("failed to get images"))
+			},
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "failed to get images",
+		},
+		{
+			name: "Failed to Get Username",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest(http.MethodGet, "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: "valid-session-id",
+				})
+				ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
+				return req.WithContext(ctx)
+			},
+			mockAuthClient: func(mock *getmatches_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *getmatches_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					GetMatchList(gomock.Any(), gomock.Any()).
+					Return(&generatedCommunications.GetMatchListResponse{
+						Authors: []int32{2},
+					}, nil)
+			},
+			mockPersonalitiesClient: func(mock *getmatches_mocks.MockPersonalitiesClient) {
+				mock.EXPECT().
+					GetProfile(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.GetProfileResponse{
+						Profile: &generatedPersonalities.Profile{
+							ID:        2,
+							FirstName: "John",
+							LastName:  "Doe",
+							Age:       30,
+							Gender:    "Male",
+							Target:    "Friendship",
+							About:     "About John",
+						},
+					}, nil)
+				mock.EXPECT().
+					GetUsernameByUserID(gomock.Any(), gomock.Any()).
+					Return(&generatedPersonalities.GetUsernameByUserIDResponse{
+						Username: "",
+					}, errors.New("failed to get username"))
+			},
+			mockImageService: func(mock *getmatches_mocks.MockImageService) {
+				mock.EXPECT().
+					GetImageLinksByUserId(gomock.Any(), 2).
+					Return([]models.Image{
+						{Id: 1, Link: "http://example.com/image1.jpg"},
+					}, nil)
+			},
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get username",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reactionService := sign_up_mocks.NewMockReactionService(mockCtrl)
-			sessionService := sign_up_mocks.NewMockSessionService(mockCtrl)
-			profileService := sign_up_mocks.NewMockProfileService(mockCtrl)
-			userService := sign_up_mocks.NewMockUserService(mockCtrl)
-			imageService := sign_up_mocks.NewMockImageService(mockCtrl)
+			// Create gomock controller
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			handler := NewHandler(reactionService, sessionService, profileService, userService, imageService, logger)
+			// Create mock clients and services
+			mockAuthClient := getmatches_mocks.NewMockAuthClient(ctrl)
+			mockCommunicationsClient := getmatches_mocks.NewMockCommunicationsClient(ctrl)
+			mockPersonalitiesClient := getmatches_mocks.NewMockPersonalitiesClient(ctrl)
+			mockImageService := getmatches_mocks.NewMockImageService(ctrl)
 
-			reactionService.EXPECT().GetMatchList(gomock.Any(), gomock.Any()).
-				Return(tt.GetMatchList_List, tt.GetMatchList_Err).
-				Times(tt.GetMatchListCount)
-			sessionService.EXPECT().GetUserIDBySessionID(gomock.Any(), gomock.Any()).
-				Return(tt.GetUserIDBySessionID_Id, tt.GetUserIDBYSessionID_Err).
-				Times(tt.GetUserIdBySessionIDCount)
-			//profileService.EXPECT().GetProfile(gomock.Any(), gomock.Any()).Return(tt)
-			for i, userId := range tt.GetMatchList_List {
-				profileService.EXPECT().GetProfile(gomock.Any(), userId).
-					Return(tt.GetProfile_Profiles[i], tt.GetProfile_Err).
-					Times(tt.GetProfileCount)
-				imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), userId).Return(tt.GetImageLinksArr, tt.GetImageLinksErr).
-					Times(tt.GetImageLinksCount)
-			}
-			userService.EXPECT().GetUsernameByUserId(gomock.Any(), gomock.Any()).
-				Return(tt.GetUsernameByUserId_Username, tt.GetUsernameByUserId_Err).
-				Times(tt.GetUsernameByUserIdCount)
+			// Setup mocks
+			tt.mockAuthClient(mockAuthClient)
+			tt.mockCommunicationsClient(mockCommunicationsClient)
+			tt.mockPersonalitiesClient(mockPersonalitiesClient)
+			tt.mockImageService(mockImageService)
 
-			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(tt.body))
-			cookie := &http.Cookie{
-				Name:  consts.SessionCookie,
-				Value: "4gg-4gfd6-445gfdf",
-			}
-			req.AddCookie(cookie)
-			w := httptest.NewRecorder()
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel() // Отменяем контекст после завершения работы
-			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-			req = req.WithContext(ctx)
-			handler.Handle(w, req)
-			if w.Code != tt.expectedStatus {
-				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
-			}
-			if w.Body.String() != tt.expectedMessage {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedMessage)
+			// Create logger
+			logger := zap.NewNop()
+
+			// Create handler
+			handler := NewHandler(mockCommunicationsClient, mockAuthClient, mockPersonalitiesClient, mockImageService, logger)
+
+			// Create request
+			req := tt.setupRequest()
+
+			// Create ResponseRecorder
+			rr := httptest.NewRecorder()
+
+			// Call handler
+			handler.Handle(rr, req)
+
+			// Check status code
+			if status := rr.Code; status != tt.expectedStatus {
+				t.Errorf("expected status code %d, got %d", tt.expectedStatus, status)
 			}
 
+			// Check response body
+			if !strings.Contains(rr.Body.String(), tt.expectedResponseContains) {
+				t.Errorf("expected response body to contain %q, got %q", tt.expectedResponseContains, rr.Body.String())
+			}
 		})
 	}
 }

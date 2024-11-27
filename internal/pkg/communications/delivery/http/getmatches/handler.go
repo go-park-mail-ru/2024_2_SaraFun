@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=sign_up_mocks . ReactionService
+////go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=sign_up_mocks . ReactionService
 //type ReactionService interface {
 //	GetMatchList(ctx context.Context, userId int) ([]int, error)
 //}
@@ -22,7 +22,7 @@ type CommunicationsClient interface {
 		in *generatedCommunications.GetMatchListRequest) (*generatedCommunications.GetMatchListResponse, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 //type SessionService interface {
 //	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 //}
@@ -31,12 +31,12 @@ type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
+////go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 //type ProfileService interface {
 //	GetProfile(ctx context.Context, id int) (models.Profile, error)
 //}
 //
-//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
+////go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 //type UserService interface {
 //	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
 //}

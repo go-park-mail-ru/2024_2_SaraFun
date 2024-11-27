@@ -5,7 +5,7 @@ import (
 	"errors"
 	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/user/usecase/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/hashing"
 	"github.com/golang/mock/gomock"

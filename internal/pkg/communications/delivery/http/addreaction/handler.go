@@ -12,12 +12,12 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=sign_up_mocks . ReactionService
+////go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=sign_up_mocks . ReactionService
 //type ReactionService interface {
 //	AddReaction(ctx context.Context, reaction models.Reaction) error
 //}
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 //type SessionService interface {
 //	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 //}

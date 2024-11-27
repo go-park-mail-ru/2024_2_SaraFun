@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=checkauth_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=checkauth_mocks . SessionService
 //type SessionService interface {
 //	CheckSession(ctx context.Context, sessionID string) error
 //}

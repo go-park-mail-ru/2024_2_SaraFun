@@ -12,12 +12,14 @@ import (
 	"path/filepath"
 )
 
-//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=uploadimage_mocks . ImageService
+//go:generate mockgen -destination=./mocks/mock_image_service.go -package=mocks . ImageService
+//go:generate mockgen -destination=./mocks/mock_session_service.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
+
+
 type ImageService interface {
 	SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int) (int, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=uploadimage_mocks . SessionService
 type SessionService interface {
 	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 }

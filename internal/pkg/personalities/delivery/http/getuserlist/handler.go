@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=getuserlist_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=getuserlist_mocks . SessionService
 //type SessionService interface {
 //	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 //}
@@ -21,7 +21,7 @@ type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=getuserlist_mocks . ProfileService
+////go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=getuserlist_mocks . ProfileService
 //type ProfileService interface {
 //	GetProfile(ctx context.Context, id int) (models.Profile, error)
 //}
@@ -41,12 +41,12 @@ type PersonalitiesClient interface {
 		in *generatedPersonalities.GetFeedListRequest) (*generatedPersonalities.GetFeedListResponse, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=getuserlist_mocks . ImageService
+// //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=getuserlist_mocks . ImageService
 type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=getuserlist_mocks . ReactionService
+////go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=getuserlist_mocks . ReactionService
 //type ReactionService interface {
 //	GetReactionList(ctx context.Context, userId int) ([]int, error)
 //}

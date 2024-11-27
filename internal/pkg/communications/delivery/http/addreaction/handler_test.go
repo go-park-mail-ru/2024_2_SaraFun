@@ -3,102 +3,198 @@ package addreaction
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
-	"github.com/golang/mock/gomock"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
+
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	addreaction_mocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/addreaction/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 )
 
-func TestHandler(t *testing.T) {
-	logger := zap.NewNop()
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
+//go:generate mockgen -destination=./mocks/mock_CommunicationsClient.go -package=addreaction_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen CommunicationsClient
+//go:generate mockgen -destination=./mocks/mock_AuthClient.go -package=addreaction_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
 
+func TestHandler_Handle(t *testing.T) {
 	tests := []struct {
-		name                        string
-		method                      string
-		path                        string
-		body                        []byte
-		Reaction                    models.Reaction
-		AddReactionError            error
-		AddReactionCount            int
-		GetUserIDBySessionID_UserId int
-		GetUserIDBySessionID_Error  error
-		GetUserIDBySessionID_Count  int
-		expectedStatus              int
-		expectedMessage             string
+		name                     string
+		cookie                   *http.Cookie
+		requestBody              interface{}
+		mockAuthClient           func(mock *addreaction_mocks.MockAuthClient)
+		mockCommunicationsClient func(mock *addreaction_mocks.MockCommunicationsClient)
+		expectedStatus           int
+		expectedResponse         string
 	}{
 		{
-			name:   "successfull test",
-			method: "POST",
-			path:   "http://localhost:8080/reaction",
-			body: []byte(`{
-													"receiver": 2,
-													"type": true
-												  }`),
-			Reaction:                    models.Reaction{Author: 1, Receiver: 2, Type: true},
-			AddReactionError:            nil,
-			AddReactionCount:            1,
-			GetUserIDBySessionID_UserId: 1,
-			GetUserIDBySessionID_Error:  nil,
-			GetUserIDBySessionID_Count:  1,
-			expectedStatus:              http.StatusOK,
-			expectedMessage:             "ok",
+			name: "Successful Add Reaction",
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "valid-session-id",
+			},
+			requestBody: models.Reaction{
+				Receiver: 2,
+				Type:     true, // Type is now a string
+			},
+			mockAuthClient: func(mock *addreaction_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), &generatedAuth.GetUserIDBySessionIDRequest{
+						SessionID: "valid-session-id",
+					}).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *addreaction_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					AddReaction(gomock.Any(), &generatedCommunications.AddReactionRequest{
+						Reaction: &generatedCommunications.Reaction{
+							ID:       0,
+							Author:   1,
+							Receiver: 2,
+							Type:     true, // Type is a string
+						},
+					}).
+					Return(&generatedCommunications.AddReactionResponse{}, nil)
+			},
+			expectedStatus:   http.StatusOK,
+			expectedResponse: "ok",
 		},
 		{
-			name:   "bad test",
-			method: "POST",
-			path:   "http://localhost:8080/reaction",
-			body: []byte(`{
-													"receiver": 200,
-													"type": true
-												  }`),
-			Reaction:                    models.Reaction{Author: 1, Receiver: 200, Type: true},
-			AddReactionError:            errors.New("error"),
-			AddReactionCount:            1,
-			GetUserIDBySessionID_UserId: 1,
-			GetUserIDBySessionID_Error:  nil,
-			GetUserIDBySessionID_Count:  1,
-			expectedStatus:              http.StatusInternalServerError,
-			expectedMessage:             "internal server error\n",
+			name:                     "Missing Session Cookie",
+			cookie:                   nil,
+			requestBody:              nil,
+			mockAuthClient:           func(mock *addreaction_mocks.MockAuthClient) {},
+			mockCommunicationsClient: func(mock *addreaction_mocks.MockCommunicationsClient) {},
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponse:         "session not found\n",
+		},
+		{
+			name: "Error Getting User ID",
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "invalid-session-id",
+			},
+			requestBody: nil,
+			mockAuthClient: func(mock *addreaction_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), &generatedAuth.GetUserIDBySessionIDRequest{
+						SessionID: "invalid-session-id",
+					}).
+					Return(nil, errors.New("session not found"))
+			},
+			mockCommunicationsClient: func(mock *addreaction_mocks.MockCommunicationsClient) {},
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponse:         "session not found\n",
+		},
+		{
+			name: "Invalid JSON",
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "valid-session-id",
+			},
+			requestBody: "invalid json",
+			mockAuthClient: func(mock *addreaction_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *addreaction_mocks.MockCommunicationsClient) {},
+			expectedStatus:           http.StatusBadRequest,
+			expectedResponse:         "bad request\n",
+		},
+		{
+			name: "Error Adding Reaction",
+			cookie: &http.Cookie{
+				Name:  consts.SessionCookie,
+				Value: "valid-session-id",
+			},
+			requestBody: models.Reaction{
+				Receiver: 2,
+				Type:     true,
+			},
+			mockAuthClient: func(mock *addreaction_mocks.MockAuthClient) {
+				mock.EXPECT().
+					GetUserIDBySessionID(gomock.Any(), gomock.Any()).
+					Return(&generatedAuth.GetUserIDBYSessionIDResponse{
+						UserId: 1,
+					}, nil)
+			},
+			mockCommunicationsClient: func(mock *addreaction_mocks.MockCommunicationsClient) {
+				mock.EXPECT().
+					AddReaction(gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("internal error"))
+			},
+			expectedStatus:   http.StatusInternalServerError,
+			expectedResponse: "internal server error\n",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reactionService := sign_up_mocks.NewMockReactionService(mockCtrl)
-			sessionService := sign_up_mocks.NewMockSessionService(mockCtrl)
+			// Create gomock controller
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-			handler := NewHandler(reactionService, sessionService, logger)
+			// Create mock clients
+			mockAuthClient := addreaction_mocks.NewMockAuthClient(ctrl)
+			mockCommunicationsClient := addreaction_mocks.NewMockCommunicationsClient(ctrl)
 
-			reactionService.EXPECT().AddReaction(gomock.Any(), tt.Reaction).Return(tt.AddReactionError).
-				Times(tt.AddReactionCount)
-			sessionService.EXPECT().GetUserIDBySessionID(gomock.Any(), gomock.Any()).
-				Return(tt.GetUserIDBySessionID_UserId, tt.GetUserIDBySessionID_Error).
-				Times(tt.GetUserIDBySessionID_Count)
+			// Setup mocks
+			tt.mockAuthClient(mockAuthClient)
+			tt.mockCommunicationsClient(mockCommunicationsClient)
 
-			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(tt.body))
-			cookie := &http.Cookie{
-				Name:  consts.SessionCookie,
-				Value: "4gg-4gfd6-445gfdf",
+			// Create logger
+			logger := zap.NewNop()
+
+			// Create handler
+			handler := NewHandler(mockCommunicationsClient, mockAuthClient, logger)
+
+			// Create HTTP request
+			var req *http.Request
+			if tt.requestBody != nil {
+				var bodyBytes []byte
+				switch v := tt.requestBody.(type) {
+				case string:
+					bodyBytes = []byte(v)
+				default:
+					bodyBytes, _ = json.Marshal(v)
+				}
+				req = httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(bodyBytes))
+			} else {
+				req = httptest.NewRequest(http.MethodPost, "/", nil)
 			}
-			req.AddCookie(cookie)
-			w := httptest.NewRecorder()
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel() // Отменяем контекст после завершения работы
-			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+
+			// Add cookie if present
+			if tt.cookie != nil {
+				req.AddCookie(tt.cookie)
+			}
+
+			// Add context with RequestID
+			ctx := context.WithValue(req.Context(), consts.RequestIDKey, "test-request-id")
 			req = req.WithContext(ctx)
-			handler.Handle(w, req)
-			if w.Code != tt.expectedStatus {
-				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
+
+			// Create ResponseRecorder
+			rr := httptest.NewRecorder()
+
+			// Call handler
+			handler.Handle(rr, req)
+
+			// Check status code
+			if status := rr.Code; status != tt.expectedStatus {
+				t.Errorf("expected status code %d, got %d", tt.expectedStatus, status)
 			}
-			if w.Body.String() != tt.expectedMessage {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedMessage)
+
+			// Check response body
+			if rr.Body.String() != tt.expectedResponse {
+				t.Errorf("expected response body %q, got %q", tt.expectedResponse, rr.Body.String())
 			}
 		})
 	}

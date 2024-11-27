@@ -14,18 +14,18 @@ import (
 	"time"
 )
 
-//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
+////go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 //type UserService interface {
 //	RegisterUser(ctx context.Context, user models.User) (int, error)
 //	CheckUsernameExists(ctx context.Context, username string) (bool, error)
 //}
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 //type SessionService interface {
 //	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 //}
 
-//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
+////go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 //type ProfileService interface {
 //	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
 //}

@@ -16,12 +16,12 @@ type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
+////go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
 //type ProfileService interface {
 //	GetProfile(ctx context.Context, id int) (models.Profile, error)
 //}
 
-//go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
+////go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
 //type UserService interface {
 //	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
 //}
@@ -33,7 +33,7 @@ type PersonalitiesClient interface {
 		in *generatedPersonalities.GetProfileIDByUserIDRequest) (*generatedPersonalities.GetProfileIDByUserIDResponse, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
+////go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
 //type SessionService interface {
 //	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
 //}
