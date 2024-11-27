@@ -34,7 +34,7 @@ type envConfig struct {
 func main() {
 	var envCfg envConfig
 	if err := env.Parse(&envCfg); err != nil {
-		log.Fatalf("Config parse error: %w", err)
+		log.Fatalf("Config parse error: %v", err)
 	}
 	ctx := context.Background()
 	cfg := zap.Config{
