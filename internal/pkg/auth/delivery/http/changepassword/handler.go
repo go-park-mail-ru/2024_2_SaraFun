@@ -12,6 +12,9 @@ import (
 	"net/http"
 )
 
+//go:generate mockgen -destination=./mocks/mock_AuthClient.go -package=changepassword_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen AuthClient
+//go:generate mockgen -destination=./mocks/mock_PersonalitiesClient.go -package=changepassword_mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen PersonalitiesClient
+
 type Request struct {
 	CurrentPassword string `json:"current_password"`
 	NewPassword     string `json:"new_password"`

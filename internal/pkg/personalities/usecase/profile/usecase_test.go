@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/profile/usecase/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ import (
 
 func TestCreateProfile(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel() // Отменяем контекст после завершения работы
+	defer cancel()
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()
@@ -70,7 +70,7 @@ func TestCreateProfile(t *testing.T) {
 
 func TestUpdateProfile(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel() // Отменяем контекст после завершения работы
+	defer cancel()
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
 	defer logger.Sync()

@@ -59,5 +59,5 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().AddDate(0, 0, -1),
 	})
 	h.logger.Info("session deleted success", zap.String("session", cookie.Value))
-	fmt.Fprintf(w, "Вы успешно вышли из учетной записи")
+	fmt.Fprintf(w, "log out is complete")
 }

@@ -1,5 +1,7 @@
 package grpc
 
+//go:generate mockgen -source=handlers.go -destination=./mocks/mock_survey_usecase.go -package=mocks
+
 import (
 	"context"
 	"fmt"
