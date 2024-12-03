@@ -2,20 +2,19 @@ package updateprofile
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+//go:generate easyjson -all handler.go
+
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=updateprofile_mocks . ProfileService
-//type ProfileService interface {
-//	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
-//}
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=updateprofile_mocks . SessionService
 type SessionService interface {
@@ -23,9 +22,6 @@ type SessionService interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=updateprofile_mocks . UserService
-//type UserService interface {
-//	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
-//}
 
 type PersonalitiesClient interface {
 	UpdateProfile(ctx context.Context,
@@ -58,6 +54,7 @@ type Request struct {
 	ImgNumbers []imgNumbers `json:"imgNumbers"`
 }
 
+//easyjson:skip
 type Handler struct {
 	personalitiesClient generatedPersonalities.PersonalitiesClient
 	sessionClient       generatedAuth.AuthClient
@@ -94,7 +91,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var request Request
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &request); err != nil {
 		h.logger.Error("error decoding profile", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

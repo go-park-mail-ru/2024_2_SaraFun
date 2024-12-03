@@ -189,42 +189,71 @@ func main() {
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
 
-	router := mux.NewRouter()
-	router.Handle("/api/metrics", promhttp.Handler())
+	router := mux.NewRouter().PathPrefix("/api").Subrouter()
+
+	//router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
 	router.Use(
 		accessLogMiddleware.Handler,
 		metricsMiddleware.Middleware,
 		cors.Middleware)
 
-	router.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)
-	router.Handle("/checkauth", http.HandlerFunc(checkAuth.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/logout", http.HandlerFunc(logOut.Handle)).Methods("GET", http.MethodOptions)
+	//main
+	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
+	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
+	router.Handle("/ws", http.HandlerFunc(setConnection.Handle))
+	router.Handle("/metrics", promhttp.Handler())
 	router.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello World\n")
 		logger.Info("Hello World")
 	})
-	router.Handle("/uploadimage", http.HandlerFunc(uploadImage.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/image/{imageId}", http.HandlerFunc(deleteImage.Handle)).Methods("DELETE", http.MethodOptions)
-	router.Handle("/profile/{username}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
-	router.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/matches", http.HandlerFunc(getMatches.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/report", http.HandlerFunc(sendReport.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/message", http.HandlerFunc(sendMessage.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/chats", http.HandlerFunc(getAllChats.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/changepassword", http.HandlerFunc(changePassword.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/getchat", http.HandlerFunc(getChat.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/chatsearch", http.HandlerFunc(getChatBySearch.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/sendsurvey", http.HandlerFunc(addSurvey.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/getstats", http.HandlerFunc(getSurveyInfo.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/question/{content}", http.HandlerFunc(deleteQuestion.Handle)).Methods("DELETE", http.MethodOptions)
-	router.Handle("/question", http.HandlerFunc(addQuestion.Handle)).Methods("POST", http.MethodOptions)
-	router.Handle("/question", http.HandlerFunc(updateQuestion.Handle)).Methods("PUT", http.MethodOptions)
-	router.Handle("/getquestions", http.HandlerFunc(getQuestions.Handle)).Methods("GET", http.MethodOptions)
-	router.Handle("/ws", http.HandlerFunc(setConnection.Handle))
+
+	//auth
+	auth := router.PathPrefix("/auth").Subrouter()
+	{
+		auth.Handle("/signup", http.HandlerFunc(signUp.Handle)).Methods("POST", http.MethodOptions)
+		auth.Handle("/signin", http.HandlerFunc(signIn.Handle)).Methods("POST", http.MethodOptions)
+		auth.Handle("/checkauth", http.HandlerFunc(checkAuth.Handle)).Methods("GET", http.MethodOptions)
+		auth.Handle("/logout", http.HandlerFunc(logOut.Handle)).Methods("GET", http.MethodOptions)
+		auth.Handle("/changepassword", http.HandlerFunc(changePassword.Handle)).Methods("POST", http.MethodOptions)
+	}
+
+	//personalities
+	personalities := router.PathPrefix("/personalities").Subrouter()
+	{
+		personalities.Handle("/getusers", authMiddleware.Handler(http.HandlerFunc(getUsers.Handle))).Methods("GET", http.MethodOptions)
+		personalities.Handle("/profile/{username}", http.HandlerFunc(getProfile.Handle)).Methods("GET", http.MethodOptions)
+		personalities.Handle("/updateprofile", http.HandlerFunc(updateProfile.Handle)).Methods("PUT", http.MethodOptions)
+		personalities.Handle("/profile", http.HandlerFunc(getCurrentProfile.Handle)).Methods("GET", http.MethodOptions)
+	}
+
+	//communications
+	communications := router.PathPrefix("/communications").Subrouter()
+	{
+		communications.Handle("/reaction", http.HandlerFunc(addReaction.Handle)).Methods("POST", http.MethodOptions)
+		communications.Handle("/matches", http.HandlerFunc(getMatches.Handle)).Methods("GET", http.MethodOptions)
+	}
+
+	//message
+	message := router.PathPrefix("/message").Subrouter()
+	{
+		message.Handle("/report", http.HandlerFunc(sendReport.Handle)).Methods("POST", http.MethodOptions)
+		message.Handle("/message", http.HandlerFunc(sendMessage.Handle)).Methods("POST", http.MethodOptions)
+		message.Handle("/chats", http.HandlerFunc(getAllChats.Handle)).Methods("GET", http.MethodOptions)
+		message.Handle("/getchat", http.HandlerFunc(getChat.Handle)).Methods("GET", http.MethodOptions)
+		message.Handle("/chatsearch", http.HandlerFunc(getChatBySearch.Handle)).Methods("POST", http.MethodOptions)
+	}
+
+	//survey
+	survey := router.PathPrefix("/survey").Subrouter()
+	{
+		survey.Handle("/sendsurvey", http.HandlerFunc(addSurvey.Handle)).Methods("POST", http.MethodOptions)
+		survey.Handle("/getstats", http.HandlerFunc(getSurveyInfo.Handle)).Methods("GET", http.MethodOptions)
+		survey.Handle("/question/{content}", http.HandlerFunc(deleteQuestion.Handle)).Methods("DELETE", http.MethodOptions)
+		survey.Handle("/question", http.HandlerFunc(addQuestion.Handle)).Methods("POST", http.MethodOptions)
+		survey.Handle("/question", http.HandlerFunc(updateQuestion.Handle)).Methods("PUT", http.MethodOptions)
+		survey.Handle("/getquestions", http.HandlerFunc(getQuestions.Handle)).Methods("GET", http.MethodOptions)
+	}
 
 	// Создаем HTTP-сервер
 	srv := &http.Server{

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/reaction/usecase/reaction/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/usecase/reaction/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -163,6 +163,142 @@ func TestGetReaction(t *testing.T) {
 					t.Errorf("Bad reaction list result: want %d, got %d", v, receivers[i])
 				}
 			}
+		})
+	}
+}
+
+func TestGetMatchTime(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name         string
+		firstUser    int
+		secondUser   int
+		repoReturn   string
+		repoError    error
+		repoCount    int
+		expectedTime string
+	}{
+		{
+			name:         "successfull test",
+			firstUser:    1,
+			secondUser:   2,
+			repoReturn:   time.DateTime,
+			repoError:    nil,
+			repoCount:    1,
+			expectedTime: time.DateTime,
+		},
+		{
+			name:         "bad test",
+			firstUser:    1,
+			secondUser:   2,
+			repoReturn:   "",
+			repoError:    errors.New("test error"),
+			repoCount:    1,
+			expectedTime: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetMatchTime(ctx, tt.firstUser, tt.secondUser).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			time, err := s.GetMatchTime(ctx, tt.firstUser, tt.secondUser)
+			require.ErrorIs(t, err, tt.repoError)
+			require.Equal(t, tt.expectedTime, time)
+		})
+	}
+}
+
+func TestGetMatchesBySearch(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name         string
+		userId       int
+		search       string
+		repoReturn   []int
+		repoError    error
+		repoCount    int
+		expectedList []int
+	}{
+		{
+			name:         "good test",
+			userId:       1,
+			search:       "sparkit",
+			repoReturn:   []int{1, 2, 3},
+			repoError:    nil,
+			repoCount:    1,
+			expectedList: []int{1, 2, 3},
+		},
+		{
+			name:         "bad test",
+			userId:       1,
+			search:       "",
+			repoReturn:   nil,
+			repoError:    errors.New("test error"),
+			repoCount:    1,
+			expectedList: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetMatchesByString(ctx, tt.userId, tt.search).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			list, err := s.GetMatchesBySearch(ctx, tt.userId, tt.search)
+			require.ErrorIs(t, err, tt.repoError)
+			require.Equal(t, tt.expectedList, list)
+		})
+	}
+}
+
+func TestUpdateOrCreateReaction(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+
+	tests := []struct {
+		name      string
+		reaction  models.Reaction
+		repoError error
+		repoCount int
+	}{
+		{
+			name: "good test",
+			reaction: models.Reaction{
+				Author:   1,
+				Receiver: 2,
+				Type:     true,
+			},
+			repoError: nil,
+			repoCount: 1,
+		},
+		{
+			name:      "bad test",
+			reaction:  models.Reaction{},
+			repoError: errors.New("test error"),
+			repoCount: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().UpdateOrCreateReaction(ctx, tt.reaction).Return(tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			err := s.UpdateOrCreateReaction(ctx, tt.reaction)
+			require.ErrorIs(t, err, tt.repoError)
 		})
 	}
 }

@@ -2,14 +2,16 @@ package getcurrentprofile
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
+
+//go:generate easyjson -all handler.go
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
@@ -17,14 +19,8 @@ type ImageService interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
-//type ProfileService interface {
-//	GetProfile(ctx context.Context, id int) (models.Profile, error)
-//}
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
-//type UserService interface {
-//	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
-//}
 
 type PersonalitiesClient interface {
 	GetProfile(ctx context.Context,
@@ -34,9 +30,6 @@ type PersonalitiesClient interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
-//type SessionService interface {
-//	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
-//}
 
 type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
@@ -47,14 +40,7 @@ type Response struct {
 	Images  []models.Image `json:"images"`
 }
 
-//type Handler struct {
-//	imageService   ImageService
-//	profileService ProfileService
-//	userService    UserService
-//	sessionService SessionService
-//	logger         *zap.Logger
-//}
-
+//easyjson:skip
 type Handler struct {
 	imageService        ImageService
 	personalitiesClient generatedPersonalities.PersonalitiesClient
@@ -132,7 +118,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Profile: profileResponse,
 		Images:  links,
 	}
-	jsonData, err := json.Marshal(response)
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("json marshal error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

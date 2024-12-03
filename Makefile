@@ -13,6 +13,12 @@ build-sparkit:
 service-sparkit-image:
 	docker build -t sparkit-service -f ${DOCKER_DIR}/sparkit.Dockerfile .
 
+echo:
+	echo "123"
+
+echo2: echo
+	echo "321"
+
 .PHONY: builder-image
 builder-image:
 	docker build -t sparkit-builder -f ${DOCKER_DIR}/builder.Dockerfile .
@@ -39,7 +45,11 @@ sparkit-down:
 
 .PHONY: sparkit-test
 sparkit-test:
-	go test -coverprofile=coverage.out -coverpkg=$(go list ./... | grep -v "/mocks" | paste -sd ',') ./...
+	go test -json ./... -coverprofile coverprofile_.tmp -coverpkg=./... ; \
+        grep -v -e '/mocks' -e 'mock_repository.go' -e 'mock.go' -e 'docs.go' -e '_easyjson.go' -e '.pb.go' -e 'gen.go' coverprofile_.tmp > coverprofile.tmp ; \
+        rm coverprofile_.tmp ; \
+        go tool cover -html coverprofile.tmp -o ../heatmap.html; \
+        go tool cover -func coverprofile.tmp
 
 .PHONY: sparkit-test-cover
 sparkit-test-cover:

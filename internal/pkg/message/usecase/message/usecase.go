@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	AddMessage(ctx context.Context, message *models.Message) (int, error)
 	GetLastMessage(ctx context.Context, authorID int, receiverID int) (models.Message, error)

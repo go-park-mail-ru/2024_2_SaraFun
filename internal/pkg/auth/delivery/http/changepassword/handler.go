@@ -6,11 +6,14 @@ import (
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
 )
+
+//go:generate easyjson -all handler.go
 
 type Request struct {
 	CurrentPassword string `json:"current_password"`
@@ -21,6 +24,7 @@ type ErrResponse struct {
 	Message string `json:"message"`
 }
 
+//easyjson:skip
 type Handler struct {
 	authClient          generatedAuth.AuthClient
 	personalitiesClient generatedPersonalities.PersonalitiesClient
@@ -39,7 +43,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req Request
-	err := json.NewDecoder(r.Body).Decode(&req)
+	//err := json.NewDecoder(r.Body).Decode(&req)
+	//if err != nil {
+	//	h.logger.Error("json decoding error", zap.Error(err))
+	//	http.Error(w, "Нам не нравится ваш запрос :(", http.StatusBadRequest)
+	//	return
+	//}
+	err := easyjson.UnmarshalFromReader(r.Body, &req)
 	if err != nil {
 		h.logger.Error("json decoding error", zap.Error(err))
 		http.Error(w, "Нам не нравится ваш запрос :(", http.StatusBadRequest)

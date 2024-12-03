@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
@@ -75,7 +74,7 @@ func (u *UseCase) GetUserList(ctx context.Context, userId int) ([]models.User, e
 	users, err := u.repo.GetUserList(ctx, userId)
 	if err != nil {
 		u.logger.Error("bad getuserlist", zap.Error(err))
-		return []models.User{}, errors.New("failed to get user list")
+		return []models.User{}, fmt.Errorf("failed to get user list: %w", err)
 	}
 	return users, nil
 }
