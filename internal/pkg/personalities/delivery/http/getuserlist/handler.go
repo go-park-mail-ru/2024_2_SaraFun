@@ -2,35 +2,25 @@ package getuserlist
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+//go:generate easyjson -all handler.go
+
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=getuserlist_mocks . SessionService
-//type SessionService interface {
-//	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
-//}
 
 type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=getuserlist_mocks . ProfileService
-//type ProfileService interface {
-//	GetProfile(ctx context.Context, id int) (models.Profile, error)
-//}
-//
-////go:generate mockgen -destination=./mocks/mock_UserService.go -package=getuserlist_mocks . UserService
-//type UserService interface {
-//	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
-//	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
-//}
 
 type PersonalitiesClient interface {
 	GetProfile(ctx context.Context,
@@ -47,13 +37,14 @@ type ImageService interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=getuserlist_mocks . ReactionService
-//type ReactionService interface {
-//	GetReactionList(ctx context.Context, userId int) ([]int, error)
-//}
 
 type CommunicationsClient interface {
 	GetReactionList(ctx context.Context,
 		in *generatedCommunications.GetReactionListRequest) (*generatedCommunications.GetReactionListResponse, error)
+}
+
+type Response struct {
+	Responses []models.PersonCard
 }
 
 type Handler struct {
@@ -152,7 +143,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		cards = append(cards, card)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	jsonData, err := json.Marshal(cards)
+	response := Response{Responses: cards}
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad marshalling json", zap.Error(err))
 		http.Error(w, "bad marshalling json", http.StatusInternalServerError)
@@ -164,17 +156,4 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.Info("GetMatches Handler: success")
 
-	//перевести в формат json
-	//jsonData, err := json.Marshal(users)
-	//if err != nil {
-	//	h.logger.Error("failed to marshal user list", zap.Error(err))
-	//	http.Error(w, "ошибка в сериализации в json", http.StatusInternalServerError)
-	//	return
-	//}
-	//w.Header().Set("Content-Type", "application/json")
-	//if _, err := w.Write(jsonData); err != nil {
-	//	h.logger.Error("failed to write jsonData", zap.Error(err))
-	//	http.Error(w, "не получилось записать json", http.StatusInternalServerError)
-	//	return
-	//}
 }

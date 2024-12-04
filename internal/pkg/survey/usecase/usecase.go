@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	AddSurvey(ctx context.Context, survey models.Survey) (int, error)
 	GetSurveyInfo(ctx context.Context) ([]models.Survey, error)

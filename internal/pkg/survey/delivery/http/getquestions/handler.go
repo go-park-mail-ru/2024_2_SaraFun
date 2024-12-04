@@ -1,19 +1,26 @@
 package getquestions
 
 import (
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+//go:generate easyjson -all handler.go
+
+//easyjson:skip
 type Handler struct {
 	authClient   generatedAuth.AuthClient
 	surveyClient generatedSurvey.SurveyClient
 	logger       *zap.Logger
+}
+
+type Response struct {
+	Questions []models.AdminQuestion `json:"questions"`
 }
 
 func NewHandler(authClient generatedAuth.AuthClient, surveyClient generatedSurvey.SurveyClient, logger *zap.Logger) *Handler {
@@ -54,7 +61,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Grade:   int(question.Grade),
 		})
 	}
-	jsonData, err := json.Marshal(respQuestions)
+	response := Response{Questions: respQuestions}
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("error marshaling survey stats", zap.Error(err))
 		http.Error(w, "survey bad json marshaling", http.StatusInternalServerError)

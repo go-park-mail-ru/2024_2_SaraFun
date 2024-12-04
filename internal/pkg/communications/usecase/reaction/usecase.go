@@ -70,20 +70,6 @@ func (u *UseCase) GetMatchTime(ctx context.Context, firstUser int, secondUser in
 func (u *UseCase) GetMatchesBySearch(ctx context.Context, userID int, search string) ([]int, error) {
 	var authors []int
 	var err error
-	//if firstname == "" {
-	//	authors, err = u.repo.GetMatchesByUsername(ctx, userID, username)
-	//	if err != nil {
-	//		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByUsername", zap.Error(err))
-	//		return nil, fmt.Errorf("failed to GetMatchesByUsername: %w", err)
-	//	}
-	//} else {
-	//	authors, err = u.repo.GetMatchesByFirstName(ctx, userID, firstname)
-	//	if err != nil {
-	//		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByFirstName", zap.Error(err))
-	//		return nil, fmt.Errorf("failed to GetMatchesByFirstName: %w", err)
-	//	}
-	//
-	//}
 	authors, err = u.repo.GetMatchesByString(ctx, userID, search)
 	if err != nil {
 		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesBySearch", zap.Error(err))

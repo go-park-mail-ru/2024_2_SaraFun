@@ -2,16 +2,18 @@ package getChatMessages
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
+
+//go:generate easyjson -all handler.go
 
 type ResponseMessage struct {
 	Body string `json:"body"`
@@ -30,6 +32,7 @@ type Response struct {
 	Images   []models.Image    `json:"images"`
 }
 
+//easyjson:skip
 type Handler struct {
 	authClient          generatedAuth.AuthClient
 	messageClient       generatedMessage.MessageClient
@@ -69,11 +72,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	firstUserID := userId.UserId
-	//err = json.NewDecoder(r.Body).Decode(&secondUserID)
-	//if err != nil {
-	//	h.logger.Error("dont decode secondUser id", zap.Error(err))
-	//	http.Error(w, "dont decode secondUser id", http.StatusBadRequest)
-	//}
 	secondUserID, err := strconv.Atoi(r.URL.Query().Get("userID"))
 	if err != nil {
 		h.logger.Error("dont get user id", zap.Error(err))
@@ -152,7 +150,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	resp.Images = links
 
 	w.Header().Set("Content-Type", "application/json")
-	jsonData, err := json.Marshal(resp)
+	jsonData, err := easyjson.Marshal(resp)
 	if err != nil {
 		h.logger.Error("dont marshal response", zap.Error(err))
 		http.Error(w, "dont marshal response", http.StatusInternalServerError)

@@ -19,11 +19,6 @@ type SessionClient interface {
 	DeleteSession(ctx context.Context, in *generatedAuth.DeleteSessionRequest) (*generatedAuth.DeleteSessionResponse, error)
 }
 
-//type Handler struct {
-//	service SessionService
-//	logger  *zap.Logger
-//}
-
 type Handler struct {
 	client generatedAuth.AuthClient
 	logger *zap.Logger

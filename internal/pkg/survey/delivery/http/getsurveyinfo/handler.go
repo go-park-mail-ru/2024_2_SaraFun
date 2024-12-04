@@ -1,13 +1,15 @@
 package getsurveyinfo
 
 import (
-	"encoding/json"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
+
+//go:generate easyjson -all handler.go
 
 type Response struct {
 	Question      string
@@ -15,6 +17,11 @@ type Response struct {
 	Grade         int
 }
 
+type Responses struct {
+	Responses []Response
+}
+
+//easyjson:skip
 type Handler struct {
 	sessionClient generatedAuth.AuthClient
 	surveyClient  generatedSurvey.SurveyClient
@@ -68,8 +75,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		respStats = append(respStats, stat)
 	}
-
-	jsonData, err := json.Marshal(respStats)
+	responses := Responses{Responses: respStats}
+	jsonData, err := easyjson.Marshal(responses)
 	if err != nil {
 		h.logger.Error("error marshaling survey stats", zap.Error(err))
 		http.Error(w, "survey bad json marshaling", http.StatusInternalServerError)

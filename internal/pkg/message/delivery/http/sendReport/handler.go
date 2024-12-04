@@ -1,12 +1,12 @@
 package sendReport
 
 import (
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -33,7 +33,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	report := models.Report{}
 	report.Sanitize()
-	err := json.NewDecoder(r.Body).Decode(&report)
+	err := easyjson.UnmarshalFromReader(r.Body, &report)
 	if err != nil {
 		h.logger.Error("bad json decode", zap.Error(err))
 		http.Error(w, "bad json decode", http.StatusBadRequest)

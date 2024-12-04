@@ -2,13 +2,13 @@ package getallchats
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 	"sort"
@@ -16,9 +16,8 @@ import (
 )
 
 //go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=sign_up_mocks . ReactionService
-//type ReactionService interface {
-//	GetMatchList(ctx context.Context, userId int) ([]int, error)
-//}
+
+//go:generate easyjson -all handler.go
 
 type CommunicationsClient interface {
 	GetMatchList(ctx context.Context,
@@ -26,23 +25,14 @@ type CommunicationsClient interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
-//type SessionService interface {
-//	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
-//}
 
 type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
-//type ProfileService interface {
-//	GetProfile(ctx context.Context, id int) (models.Profile, error)
-//}
-//
+
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
-//type UserService interface {
-//	GetUsernameByUserId(ctx context.Context, userId int) (string, error)
-//}
 
 type PersonalitiesClient interface {
 	GetUsernameByUserId(ctx context.Context,
@@ -56,10 +46,7 @@ type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }
 
-//type Response struct {
-//	Matches []models.PersonCard `json:"matches"`
-//}
-
+//easyjson:skip
 type Handler struct {
 	communicationsClient generatedCommunications.CommunicationsClient
 	sessionClient        generatedAuth.AuthClient
@@ -78,6 +65,10 @@ type Response struct {
 	LastMessage string         `json:"last_message"`
 	Self        bool           `json:"self"`
 	Time        string         `json:"time"`
+}
+
+type Responses struct {
+	Responses []Response `json:"responses"`
 }
 
 func NewHandler(communicationsClient generatedCommunications.CommunicationsClient, sessionClient generatedAuth.AuthClient,
@@ -202,12 +193,18 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		return a.Before(b)
 	})
-
+	responses := Responses{Responses: chats}
 	w.Header().Set("Content-Type", "application/json")
-	jsonData, err := json.Marshal(chats)
+	//jsonData, err := json.Marshal(chats)
+	//if err != nil {
+	//	h.logger.Error("GetMatches Handler: bad marshalling json", zap.Error(err))
+	//	http.Error(w, "bad marshalling json", http.StatusInternalServerError)
+	//}
+	jsonData, err := easyjson.Marshal(responses)
 	if err != nil {
-		h.logger.Error("GetMatches Handler: bad marshalling json", zap.Error(err))
-		http.Error(w, "bad marshalling json", http.StatusInternalServerError)
+		h.logger.Error("json marshal error", zap.Error(err))
+		http.Error(w, "json marshal error", http.StatusInternalServerError)
+		return
 	}
 	_, err = w.Write(jsonData)
 	if err != nil {

@@ -10,18 +10,10 @@ import (
 )
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=checkauth_mocks . SessionService
-//type SessionService interface {
-//	CheckSession(ctx context.Context, sessionID string) error
-//}
 
 type SessionClient interface {
 	CheckSession(ctx context.Context, in *generatedAuth.CheckSessionRequest) (*generatedAuth.CheckSessionResponse, error)
 }
-
-//type Handler struct {
-//	sessionService SessionService
-//	logger         *zap.Logger
-//}
 
 type Handler struct {
 	sessionClient generatedAuth.AuthClient
@@ -52,11 +44,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		h.logger.Error("checkauth sessionClient check session error", zap.Error(err))
 		http.Error(w, "bad session", http.StatusUnauthorized)
 	}
-	//if check != nil {
-	//	h.logger.Error("session check", zap.String("session", cookie.Value), zap.Error(check))
-	//	http.Error(w, "session is not valid", http.StatusUnauthorized)
-	//	return
-	//}
+
 	h.logger.Info("good session check", zap.String("session", cookie.Value))
 	fmt.Fprintf(w, "ok")
 }

@@ -21,21 +21,22 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) AddSurvey(ctx context.Context, survey models.Survey) (int, error) {
-	_, err := repo.DB.Exec("INSERT INTO survey (author, question, rating, grade, comment) VALUES ($1, $2, $3, $4, $5)",
-		survey.Author, survey.Question, survey.Rating, survey.Grade, survey.Comment)
+	var surveyID int
+	err := repo.DB.QueryRow("INSERT INTO survey (author, question, rating, grade, comment) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		survey.Author, survey.Question, survey.Rating, survey.Grade, survey.Comment).Scan(&surveyID)
 	if err != nil {
 		repo.logger.Error("bad insert survey", zap.Error(err))
 		return -1, err
 	}
 	repo.logger.Info("success added survey")
-	return survey.ID, nil
+	return surveyID, nil
 }
 
 func (repo *Storage) GetSurveyInfo(ctx context.Context) ([]models.Survey, error) {
 	rows, err := repo.DB.Query("SELECT author, question, rating, grade, comment FROM survey")
 	if err != nil {
 		repo.logger.Error("bad insert survey", zap.Error(err))
-		return nil, fmt.Errorf("bad select survey: %v", err)
+		return nil, fmt.Errorf("bad select survey: %w", err)
 	}
 	defer rows.Close()
 	var surveys []models.Survey
@@ -69,7 +70,7 @@ func (repo *Storage) UpdateQuestion(ctx context.Context, question models.AdminQu
 		question.Content, question.Grade, content).Scan(&id)
 	if err != nil {
 		repo.logger.Error("bad insert question", zap.Error(err))
-		return -1, fmt.Errorf("bad update question: %v", err)
+		return -1, fmt.Errorf("bad update question: %w", err)
 	}
 	return id, nil
 }
@@ -78,7 +79,7 @@ func (repo *Storage) DeleteQuestion(ctx context.Context, content string) error {
 	_, err := repo.DB.Exec("DELETE FROM question WHERE content = $1", content)
 	if err != nil {
 		repo.logger.Error("bad insert question", zap.Error(err))
-		return fmt.Errorf("bad delete question: %v", err)
+		return fmt.Errorf("bad delete question: %w", err)
 	}
 	return nil
 }
@@ -87,7 +88,7 @@ func (repo *Storage) GetQuestions(ctx context.Context) ([]models.AdminQuestion, 
 	rows, err := repo.DB.Query("SELECT content, grade FROM question")
 	if err != nil {
 		repo.logger.Error("bad insert question", zap.Error(err))
-		return nil, fmt.Errorf("bad get questions: %v", err)
+		return nil, fmt.Errorf("bad get questions: %w", err)
 	}
 	defer rows.Close()
 	var questions []models.AdminQuestion
@@ -96,7 +97,7 @@ func (repo *Storage) GetQuestions(ctx context.Context) ([]models.AdminQuestion, 
 		err = rows.Scan(&question.Content, &question.Grade)
 		if err != nil {
 			repo.logger.Error("bad get question", zap.Error(err))
-			return nil, fmt.Errorf("bad get question: %v", err)
+			return nil, fmt.Errorf("bad get question: %w", err)
 		}
 		questions = append(questions, question)
 	}

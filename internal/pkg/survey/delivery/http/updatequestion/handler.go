@@ -1,14 +1,16 @@
 package updatequestion
 
 import (
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
+
+//go:generate easyjson -all handler.go
 
 type Request struct {
 	OldContent string `json:"old_content"`
@@ -16,6 +18,11 @@ type Request struct {
 	Grade      int    `json:"grade"`
 }
 
+type Response struct {
+	ID int32 `json:"id"`
+}
+
+//easyjson:skip
 type Handler struct {
 	authCLient   generatedAuth.AuthClient
 	surveyClient generatedSurvey.SurveyClient
@@ -48,7 +55,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	var question models.AdminQuestion
 	var request Request
-	err = json.NewDecoder(r.Body).Decode(&request)
+	err = easyjson.UnmarshalFromReader(r.Body, &request)
 	if err != nil {
 		h.logger.Error("decode question", zap.Error(err))
 		http.Error(w, "json decode question error", http.StatusBadRequest)
@@ -75,7 +82,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "add question error", http.StatusInternalServerError)
 		return
 	}
-	jsonData, err := json.Marshal(questionID.Id)
+	response := Response{ID: questionID.Id}
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("encode question", zap.Error(err))
 		http.Error(w, "encode question error", http.StatusInternalServerError)

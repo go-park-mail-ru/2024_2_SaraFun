@@ -6,14 +6,22 @@ import (
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+//go:generate easyjson -all handler.go
+
+//easyjson:skip
 type Handler struct {
 	authCLient   generatedAuth.AuthClient
 	surveyClient generatedSurvey.SurveyClient
 	logger       *zap.Logger
+}
+
+type Response struct {
+	ID int32 `json:"id"`
 }
 
 func NewHandler(authClient generatedAuth.AuthClient, surveyClient generatedSurvey.SurveyClient, logger *zap.Logger) *Handler {
@@ -60,7 +68,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "add question error", http.StatusInternalServerError)
 		return
 	}
-	jsonData, err := json.Marshal(questionID.QuestionID)
+	response := Response{ID: questionID.QuestionID}
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("encode question", zap.Error(err))
 		http.Error(w, "encode question error", http.StatusInternalServerError)

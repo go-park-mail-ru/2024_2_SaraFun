@@ -2,23 +2,17 @@ package sendmessage
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-//type MessageService interface {
-//	AddMessage(ctx context.Context, message *models.Message) (int, error)
-//}
-
-//type SessionService interface {
-//	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
-//}
+//go:generate easyjson -all handler.go
 
 type WebSocketService interface {
 	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
@@ -28,6 +22,7 @@ type ErrResponse struct {
 	Info string `json:"info"`
 }
 
+//easyjson:skip
 type Handler struct {
 	messageClient        generatedMessage.MessageClient
 	sessionClient        generatedAuth.AuthClient
@@ -50,7 +45,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	msg := &models.Message{}
 	msg.Sanitize()
-	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, msg); err != nil {
 		h.logger.Info("Error decoding message", zap.Error(err))
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -87,7 +82,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		err := json.NewEncoder(w).Encode(errResponse)
+		_, _, err := easyjson.MarshalToHTTPResponseWriter(errResponse, w)
 		if err != nil {
 			h.logger.Info("Error encoding message", zap.Error(err))
 			http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)

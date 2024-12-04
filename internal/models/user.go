@@ -6,6 +6,7 @@ import (
 )
 
 //go:generate mockgen -source=*.go -destination=*_mock.go -package=*
+//go:generate easyjson -all user.go
 
 type User struct {
 	ID       int    `json:"id" validate:"required"`

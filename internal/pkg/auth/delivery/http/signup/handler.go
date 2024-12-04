@@ -2,49 +2,29 @@ package signup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/hashing"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
-//type UserService interface {
-//	RegisterUser(ctx context.Context, user models.User) (int, error)
-//	CheckUsernameExists(ctx context.Context, username string) (bool, error)
-//}
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
-//type SessionService interface {
-//	CreateSession(ctx context.Context, user models.User) (models.Session, error)
-//}
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
-//type ProfileService interface {
-//	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
-//}
 
-//type UserClient interface {
-//	RegisterUser(ctx context.Context,
-//		in *generatedPersonalities.RegisterUserRequest) (*generatedPersonalities.RegisterUserResponse, error)
-//	CheckUsernameExists(ctx context.Context,
-//		in *generatedPersonalities.CheckUsernameExistsRequest) (*generatedPersonalities.CheckUsernameExistsResponse, error)
-//}
+//go:generate easyjson --all handler.go
 
 type SessionClient interface {
 	CreateSession(ctx context.Context, in *generatedAuth.CreateSessionRequest) (*generatedAuth.CreateSessionResponse, error)
 }
-
-//type ProfileClient interface {
-//	CreateProfile(ctx context.Context,
-//		in *generatedPersonalities.CreateProfileRequest) (*generatedPersonalities.CreateProfileResponse, error)
-//}
 
 type PersonalitiesClient interface {
 	RegisterUser(ctx context.Context,
@@ -55,13 +35,7 @@ type PersonalitiesClient interface {
 		in *generatedPersonalities.CreateProfileRequest) (*generatedPersonalities.CreateProfileResponse, error)
 }
 
-//type Handler struct {
-//	userService    UserService
-//	sessionService SessionService
-//	profileService ProfileService
-//	logger         *zap.Logger
-//}
-
+//easyjson:skip
 type Handler struct {
 	personalitiesClient generatedPersonalities.PersonalitiesClient
 	sessionClient       generatedAuth.AuthClient
@@ -90,10 +64,17 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	request := Request{}
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		h.logger.Error("failed to decode request", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	//request := Request{}
+	//if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	//	h.logger.Error("failed to decode request", zap.Error(err))
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
+	request := &Request{}
+	err := easyjson.UnmarshalFromReader(r.Body, request)
+	if err != nil {
+		h.logger.Error("failed to parse request", zap.Error(err))
+		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
 	request.User.Sanitize()

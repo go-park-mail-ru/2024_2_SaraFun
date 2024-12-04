@@ -79,7 +79,7 @@ func (repo *Storage) GetProfileIdByUserId(ctx context.Context, userId int) (int,
 	var profileId int
 	err := repo.DB.QueryRow("SELECT profile FROM users WHERE id=$1", userId).Scan(&profileId)
 	if err != nil {
-		return -1, fmt.Errorf("GetProfileIdByUserId err: %v", err)
+		return -1, fmt.Errorf("GetProfileIdByUserId err: %w", err)
 	}
 	return profileId, nil
 }
@@ -90,7 +90,7 @@ func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (strin
 	var username string
 	err := repo.DB.QueryRow("SELECT username FROM users WHERE id=$1", userId).Scan(&username)
 	if err != nil {
-		return "", fmt.Errorf("GetUserByUsername err: %v", err)
+		return "", fmt.Errorf("GetUserByUsername err: %w", err)
 	}
 	return username, nil
 }
@@ -98,7 +98,7 @@ func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (strin
 func (repo *Storage) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
 	rows, err := repo.DB.Query("SELECT id, username FROM users WHERE id != $1 AND id NOT IN (SELECT receiver FROM reaction WHERE author = $2)", userId, userId)
 	if err != nil {
-		return []models.User{}, fmt.Errorf("GetFeedList err: %v", err)
+		return []models.User{}, fmt.Errorf("GetFeedList err: %w", err)
 	}
 	defer rows.Close()
 	var users []models.User
@@ -112,34 +112,13 @@ func (repo *Storage) GetFeedList(ctx context.Context, userId int, receivers []in
 	return users, nil
 }
 
-//
-//func (repo *Storage) GetFeedList(ctx context.Context, user models.User, profile models.Profile, receivers []int) ([]models.User, error) {
-//	rows, err := repo.DB.Query("SELECT id, username, profile FROM users WHERE id != $1 AND ", user.ID, profile.Gender)
-//	if err != nil {
-//		repo.logger.Error("failed to get rows for GetFeedList", zap.Error(err))
-//	}
-//	defer rows.Close()
-//	var users []models.User
-//	for rows.Next() {
-//		var usr models.User
-//		if err := rows.Scan(&usr.ID, &usr.Username, &usr.Profile); err != nil {
-//			repo.logger.Error("failed to scan row for GetFeedList", zap.Error(err))
-//			return nil, errors.New("Repo GetFeedList: bad row scan")
-//		}
-//		if !slices.Contains(receivers, usr.ID) {
-//			users = append(users, usr)
-//		}
-//	}
-//	return users, nil
-//}
-
 func (repo *Storage) GetUserIdByUsername(ctx context.Context, username string) (int, error) {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	var userId int
 	err := repo.DB.QueryRow("SELECT id FROM users WHERE username=$1", username).Scan(&userId)
 	if err != nil {
-		return -1, fmt.Errorf("GetUserByUsername err: %v", err)
+		return -1, fmt.Errorf("GetUserByUsername err: %w", err)
 	}
 	return userId, nil
 }
@@ -151,7 +130,7 @@ func (repo *Storage) CheckUsernameExists(ctx context.Context, username string) (
 	err := repo.DB.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE username=$1)", username).Scan(&exists)
 	if err != nil {
 		repo.logger.Error("failed to check username unique", zap.Error(err))
-		return false, fmt.Errorf("CheckUsernameUnique err: %v", err)
+		return false, fmt.Errorf("CheckUsernameUnique err: %w", err)
 	}
 	return exists, nil
 }
@@ -160,7 +139,7 @@ func (repo *Storage) ChangePassword(ctx context.Context, userID int, password st
 	_, err := repo.DB.ExecContext(ctx, "UPDATE users SET password = $1 WHERE id = $2", password, userID)
 	if err != nil {
 		repo.logger.Error("failed to change password", zap.Error(err))
-		return fmt.Errorf("ChangePassword err: %v", err)
+		return fmt.Errorf("ChangePassword err: %w", err)
 	}
 	return nil
 }

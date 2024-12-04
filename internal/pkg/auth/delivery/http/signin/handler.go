@@ -2,12 +2,12 @@ package signin
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -16,13 +16,6 @@ import (
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=signin_mocks . UserService
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=signin_mocks . SessionService
 
-//type UserService interface {
-//	CheckPassword(ctx context.Context, username string, password string) (models.User, error)
-//}
-//type SessionService interface {
-//	CreateSession(ctx context.Context, user models.User) (models.Session, error)
-//}
-
 type UserClient interface {
 	CheckPassword(ctx context.Context, in *generatedPersonalities.CheckPasswordRequest) (*generatedPersonalities.CheckPasswordResponse, error)
 }
@@ -30,12 +23,6 @@ type UserClient interface {
 type SessionClient interface {
 	CreateSession(ctx context.Context, in *generatedAuth.CreateSessionRequest) (*generatedAuth.CreateSessionResponse, error)
 }
-
-//type Handler struct {
-//	userService    UserService
-//	sessionService SessionService
-//	logger         *zap.Logger
-//}
 
 type Handler struct {
 	userClient    generatedPersonalities.PersonalitiesClient
@@ -62,11 +49,18 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	userData := models.User{}
 
-	if err := json.NewDecoder(r.Body).Decode(&userData); err != nil {
-		h.logger.Error("failed to decode body", zap.Error(err))
+	//if err := json.NewDecoder(r.Body).Decode(&userData); err != nil {
+	//	h.logger.Error("failed to decode body", zap.Error(err))
+	//	http.Error(w, "Неверный формат данных", http.StatusBadRequest)
+	//	return
+	//}
+	err := easyjson.UnmarshalFromReader(r.Body, &userData)
+	if err != nil {
+		h.logger.Error("failed to parse body", zap.Error(err))
 		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
+
 	if user, err := h.userClient.CheckPassword(ctx,
 		&generatedPersonalities.CheckPasswordRequest{Username: userData.Username, Password: userData.Password}); err != nil {
 		h.logger.Error("invalid credentials", zap.Error(err))
