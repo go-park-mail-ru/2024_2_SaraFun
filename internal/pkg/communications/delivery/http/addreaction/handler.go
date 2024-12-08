@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
@@ -18,24 +19,38 @@ import (
 
 //go:generate easyjson -all handler.go
 
-type SessionClient interface {
-	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
+type ImageService interface {
+	GetFirstImage(ctx context.Context, userID int) (models.Image, error)
 }
 
-type ReactionClient interface {
-	AddReaction(ctx context.Context,
-		in *generatedCommunications.AddReactionRequest) (*generatedCommunications.AddReactionResponse, error)
+type WebSocketService interface {
+	SendNotification(ctx context.Context, receiverID int, receiverImageLink string, authorUsername string) error
 }
 
 //easyjson:skip
 type Handler struct {
-	reactionClient generatedCommunications.CommunicationsClient
-	SessionClient  generatedAuth.AuthClient
-	logger         *zap.Logger
+	reactionClient       generatedCommunications.CommunicationsClient
+	SessionClient        generatedAuth.AuthClient
+	personalitiesClient  generatedPersonalities.PersonalitiesClient
+	communicationsClient generatedCommunications.CommunicationsClient
+	imageService         ImageService
+	wsService            WebSocketService
+	logger               *zap.Logger
 }
 
-func NewHandler(reactionClient generatedCommunications.CommunicationsClient, sessionClient generatedAuth.AuthClient, logger *zap.Logger) *Handler {
-	return &Handler{reactionClient: reactionClient, SessionClient: sessionClient, logger: logger}
+func NewHandler(reactionClient generatedCommunications.CommunicationsClient,
+	sessionClient generatedAuth.AuthClient, personalitiesClient generatedPersonalities.PersonalitiesClient,
+	communicationsClient generatedCommunications.CommunicationsClient, imageService ImageService,
+	wsService WebSocketService, logger *zap.Logger) *Handler {
+	return &Handler{
+		reactionClient:       reactionClient,
+		SessionClient:        sessionClient,
+		personalitiesClient:  personalitiesClient,
+		communicationsClient: communicationsClient,
+		imageService:         imageService,
+		wsService:            wsService,
+		logger:               logger,
+	}
 }
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +97,56 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	checkMatchExistsRequest := &generatedCommunications.CheckMatchExistsRequest{
+		FirstUser:  int32(reaction.Author),
+		SecondUser: int32(reaction.Receiver),
+	}
+
+	checkMatchExistsResponse, err := h.communicationsClient.CheckMatchExists(ctx, checkMatchExistsRequest)
+	if err != nil {
+		h.logger.Error("AddReaction Handler: error checking match exists", zap.Error(err))
+		return
+	}
+	if checkMatchExistsResponse.Exists {
+		firstReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: int32(reaction.Author)}
+		secondReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: int32(reaction.Receiver)}
+
+		firstUsername, err := h.personalitiesClient.GetUsernameByUserID(ctx, firstReq)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error getting first username", zap.Error(err))
+			return
+		}
+		secondUsername, err := h.personalitiesClient.GetUsernameByUserID(ctx, secondReq)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error getting second username", zap.Error(err))
+			return
+		}
+
+		firstUserImage, err := h.imageService.GetFirstImage(ctx, reaction.Author)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error getting first image", zap.Error(err))
+			return
+		}
+		secondUserImage, err := h.imageService.GetFirstImage(ctx, reaction.Receiver)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error getting second image", zap.Error(err))
+			return
+		}
+
+		err = h.wsService.SendNotification(ctx, reaction.Receiver, firstUserImage.Link, firstUsername.Username)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error sending notification", zap.Error(err))
+			return
+		}
+		err = h.wsService.SendNotification(ctx, reaction.Author, secondUserImage.Link, secondUsername.Username)
+		if err != nil {
+			h.logger.Error("AddReaction Handler: error sending notification", zap.Error(err))
+			return
+		}
+
+	}
+
 	h.logger.Info("AddReaction Handler: added reaction", zap.Any("reaction", reaction))
 	fmt.Fprintf(w, "ok")
 }

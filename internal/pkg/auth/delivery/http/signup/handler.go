@@ -43,8 +43,14 @@ type Handler struct {
 }
 
 type Request struct {
-	User    models.User
-	Profile models.Profile
+	User      models.User
+	Profile   models.Profile
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Age       int    `json:"age"`
+	Gender    string `json:"gender"`
 }
 
 func NewHandler(personalitiesClient generatedPersonalities.PersonalitiesClient, sessionsClient generatedAuth.AuthClient, logger *zap.Logger) *Handler {
@@ -77,10 +83,21 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
-	request.User.Sanitize()
-	request.Profile.Sanitize()
+	h.logger.Info("request", zap.Any("request", request))
+	user := models.User{
+		Username: request.Username,
+		Password: request.Password,
+	}
+	profile := models.Profile{
+		FirstName: request.FirstName,
+		LastName:  request.LastName,
+		Age:       request.Age,
+		Gender:    request.Gender,
+	}
+	user.Sanitize()
+	profile.Sanitize()
 	//personalitiesGRPC
-	checkUsernameRequest := &generatedPersonalities.CheckUsernameExistsRequest{Username: request.User.Username}
+	checkUsernameRequest := &generatedPersonalities.CheckUsernameExistsRequest{Username: user.Username}
 	exists, err := h.personalitiesClient.CheckUsernameExists(ctx, checkUsernameRequest)
 	if err != nil {
 		h.logger.Error("failed to check username exists", zap.Error(err))
@@ -88,19 +105,19 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if exists.Exists {
-		h.logger.Error("user already exists", zap.String("username", request.User.Username))
+		h.logger.Error("user already exists", zap.String("username", user.Username))
 		http.Error(w, "Пользователь с таким никнеймом уже существует", http.StatusBadRequest)
 		return
 	}
 
 	//personalitiesGRPC
 	genProfile := &generatedPersonalities.Profile{ID: int32(request.Profile.ID),
-		FirstName: request.Profile.FirstName,
-		LastName:  request.Profile.LastName,
-		Age:       int32(request.Profile.Age),
-		Gender:    request.Profile.Gender,
-		Target:    request.Profile.Target,
-		About:     request.Profile.About,
+		FirstName: profile.FirstName,
+		LastName:  profile.LastName,
+		Age:       int32(profile.Age),
+		Gender:    profile.Gender,
+		Target:    profile.Target,
+		About:     profile.About,
 	}
 	createProfileRequest := &generatedPersonalities.CreateProfileRequest{Profile: genProfile}
 	profileId, err := h.personalitiesClient.CreateProfile(ctx, createProfileRequest)
@@ -109,21 +126,21 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	request.User.Profile = int(profileId.ProfileId)
-	hashedPass, err := hashing.HashPassword(request.User.Password)
+	user.Profile = int(profileId.ProfileId)
+	hashedPass, err := hashing.HashPassword(user.Password)
 	if err != nil {
 		h.logger.Error("failed to hash password", zap.Error(err))
 		http.Error(w, "bad password", http.StatusBadRequest)
 		return
 	}
-	request.User.Password = hashedPass
+	user.Password = hashedPass
 	// personalities grpc
 	genUser := &generatedPersonalities.User{
-		ID:       int32(request.User.ID),
-		Username: request.User.Username,
-		Password: request.User.Password,
-		Email:    request.User.Email,
-		Profile:  int32(request.User.Profile),
+		ID:       int32(user.ID),
+		Username: user.Username,
+		Password: user.Password,
+		Email:    user.Email,
+		Profile:  int32(user.Profile),
 	}
 	registerUserRequest := &generatedPersonalities.RegisterUserRequest{User: genUser}
 	id, err := h.personalitiesClient.RegisterUser(ctx, registerUserRequest)
@@ -132,15 +149,15 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Внутренняя ошибка сервера", http.StatusInternalServerError)
 		return
 	}
-	request.User.ID = int(id.UserId)
+	user.ID = int(id.UserId)
 
 	//auth grpc
 	sessUser := &generatedAuth.User{
-		ID:       int32(request.User.ID),
-		Username: request.User.Username,
-		Password: request.User.Password,
-		Email:    request.User.Email,
-		Profile:  int32(request.User.Profile),
+		ID:       int32(user.ID),
+		Username: user.Username,
+		Password: user.Password,
+		Email:    user.Email,
+		Profile:  int32(user.Profile),
 	}
 	createSessionRequest := &generatedAuth.CreateSessionRequest{
 		User: sessUser,
@@ -160,6 +177,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 		})
 	}
-	h.logger.Info("good signup", zap.String("username", request.User.Username))
+	h.logger.Info("good signup", zap.String("username", user.Username))
 	fmt.Fprintf(w, "Вы успешно зарегистрировались")
 }
