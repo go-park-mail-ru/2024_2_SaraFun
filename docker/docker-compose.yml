@@ -5,6 +5,8 @@ services:
     depends_on:
       sparkit-postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
       PSQL_USER: ${POSTGRES_USER}
@@ -16,6 +18,8 @@ services:
       - SparkIt-network
     volumes:
       - ~/imagedata:/home/${OS_USER}/imagedata
+      - ${SERVER_CERT_PATH}:/etc/ssl/certs/server.crt
+      - ${SERVER_KEY_PATH}:/etc/ssl/private/server.key
 
   service-sparkit-auth:
     image: sparkit-auth-service
@@ -23,6 +27,8 @@ services:
     depends_on:
       sparkit-redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_USER=${REDIS_USER}
@@ -39,6 +45,8 @@ services:
     depends_on:
       sparkit-postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
       PSQL_USER: ${POSTGRES_USER}
@@ -56,6 +64,8 @@ services:
     depends_on:
       sparkit-postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
       PSQL_USER: ${POSTGRES_USER}
@@ -73,6 +83,8 @@ services:
     depends_on:
       sparkit-postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
       PSQL_USER: ${POSTGRES_USER}
@@ -89,6 +101,8 @@ services:
     depends_on:
       sparkit-postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       PSQL_HOST: "sparkit-postgres:5432"
       PSQL_USER: ${POSTGRES_USER}
@@ -123,7 +137,10 @@ services:
     networks:
       - SparkIt-network
     volumes:
-      - ../build/sql/create_tables.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - ../build/sql/db/initUser/initUser.sql:/docker-entrypoint-initdb.d/initUser.sql
+      - ../build/sql/db/migration/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/initDB.sql
+      - ../build/sql/db/configuration/script.sh:/docker-entrypoint-initdb.d/script.sh
+      - ../build/sql/db/configuration/custom.conf:/db_configurations/custom.conf
       - ~/postgresdata:/var/lib/postgresql/data
 
   sparkit-redis:

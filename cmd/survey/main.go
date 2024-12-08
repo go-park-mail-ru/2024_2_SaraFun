@@ -10,6 +10,8 @@ import (
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	surveyrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/repo"
 	surveyusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/usecase"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/config"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/connectDB"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -41,13 +43,23 @@ func main() {
 	}
 	logger, err := cfg.Build()
 	defer logger.Sync()
-
-	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
+	envCfg, err := config.NewConfig(logger)
+	if err != nil {
+		log.Println(err)
+	}
+	connStr, err := connectDB.GetConnectURL(envCfg)
+	if err != nil {
+		log.Println(err)
+	}
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	db.SetMaxOpenConns(16)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(0)
 
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
