@@ -50,6 +50,7 @@ type Request struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Age       int    `json:"age"`
+	BirthDate string `json:"birth_date"`
 	Gender    string `json:"gender"`
 }
 
@@ -89,10 +90,11 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Password: request.Password,
 	}
 	profile := models.Profile{
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Age:       request.Age,
-		Gender:    request.Gender,
+		FirstName:    request.FirstName,
+		LastName:     request.LastName,
+		Age:          request.Age,
+		Gender:       request.Gender,
+		BirthdayDate: request.BirthDate,
 	}
 	user.Sanitize()
 	profile.Sanitize()
@@ -118,6 +120,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Gender:    profile.Gender,
 		Target:    profile.Target,
 		About:     profile.About,
+		BirthDate: profile.BirthdayDate,
 	}
 	createProfileRequest := &generatedPersonalities.CreateProfileRequest{Profile: genProfile}
 	profileId, err := h.personalitiesClient.CreateProfile(ctx, createProfileRequest)

@@ -21,6 +21,7 @@ type ResponseMessage struct {
 	Time string `json:"time"`
 }
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
 	GetImageLinksByUserId(ctx context.Context, id int) ([]models.Image, error)
 }

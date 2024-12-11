@@ -42,9 +42,11 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	//content := r.URL.Query().Get("content")
 	vars := mux.Vars(r)
 	content := vars["content"]
+	h.logger.Info("delete question", zap.String("content", content))
 	deleteQuestionReq := &generatedSurvey.DeleteQuestionRequest{
 		Content: content,
 	}
+	h.logger.Info("delete question", zap.Any("deleteQuest", deleteQuestionReq))
 	_, err = h.surveyClient.DeleteQuestion(ctx, deleteQuestionReq)
 	if err != nil {
 		h.logger.Error("delete question", zap.Error(err))

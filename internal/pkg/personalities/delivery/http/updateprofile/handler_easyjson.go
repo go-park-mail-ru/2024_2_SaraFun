@@ -123,6 +123,8 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 			out.Target = string(in.String())
 		case "about":
 			out.About = string(in.String())
+		case "birth_date":
+			out.BirthDate = string(in.String())
 		case "imgNumbers":
 			if in.IsNull() {
 				in.Skip()
@@ -194,6 +196,11 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 		const prefix string = ",\"about\":"
 		out.RawString(prefix)
 		out.String(string(in.About))
+	}
+	{
+		const prefix string = ",\"birth_date\":"
+		out.RawString(prefix)
+		out.String(string(in.BirthDate))
 	}
 	{
 		const prefix string = ",\"imgNumbers\":"

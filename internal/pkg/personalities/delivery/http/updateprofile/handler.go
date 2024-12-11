@@ -51,6 +51,7 @@ type Request struct {
 	Age        int          `json:"age"`
 	Target     string       `json:"target"`
 	About      string       `json:"about"`
+	BirthDate  string       `json:"birth_date"`
 	ImgNumbers []imgNumbers `json:"imgNumbers"`
 }
 
@@ -106,6 +107,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Gender:    request.Gender,
 		Target:    request.Target,
 		About:     request.About,
+		BirthDate: request.BirthDate,
 	}
 	h.logger.Info("Updating profile", zap.Any("profile", genProfile))
 	updateProfileRequest := &generatedPersonalities.UpdateProfileRequest{
@@ -120,7 +122,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var ordNumbers []models.Image
-	h.logger.Info("test")
 	imgs := request.ImgNumbers
 	for _, val := range imgs {
 		img := models.Image{

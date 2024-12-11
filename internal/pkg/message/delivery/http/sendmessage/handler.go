@@ -14,6 +14,7 @@ import (
 
 //go:generate easyjson -all handler.go
 
+//go:generate mockgen -destination=./mocks/mock_WebSocketService.go -package=sign_up_mocks . WebSocketService
 type WebSocketService interface {
 	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
 }

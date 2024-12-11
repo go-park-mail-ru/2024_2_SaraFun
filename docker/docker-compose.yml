@@ -139,6 +139,7 @@ services:
     volumes:
       - ../build/sql/db/initUser/initUser.sql:/docker-entrypoint-initdb.d/initUser.sql
       - ../build/sql/db/migration/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/initDB.sql
+      - ../build/sql/db/migration/000002_add_birthday_date.up.sql:/migrations/addBirthDate.sql
       - ../build/sql/db/configuration/script.sh:/docker-entrypoint-initdb.d/script.sh
       - ../build/sql/db/configuration/custom.conf:/db_configurations/custom.conf
       - ~/postgresdata:/var/lib/postgresql/data

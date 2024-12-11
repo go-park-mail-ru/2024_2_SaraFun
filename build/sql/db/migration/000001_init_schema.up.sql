@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS profile (
                                        id SERIAL PRIMARY KEY,
                                        firstname text NOT NULL,
                                        lastname text NOT NULL,
-                                       age bigint NOT NULL,
                                        gender text NOT NULL,
                                        target text NOT NULL,
                                        about text NOT NULL,

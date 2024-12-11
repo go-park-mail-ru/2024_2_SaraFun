@@ -23,13 +23,14 @@ func (user *User) Sanitize() {
 }
 
 type Profile struct {
-	ID        int    `json:"id" validate:"required"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	Age       int    `json:"age,omitempty"`
-	Gender    string `json:"gender,omitempty"`
-	Target    string `json:"target,omitempty"`
-	About     string `json:"about,omitempty"`
+	ID           int    `json:"id" validate:"required"`
+	FirstName    string `json:"first_name,omitempty"`
+	LastName     string `json:"last_name,omitempty"`
+	Age          int    `json:"age,omitempty"`
+	BirthdayDate string `json:"birthday_date,omitempty"`
+	Gender       string `json:"gender,omitempty"`
+	Target       string `json:"target,omitempty"`
+	About        string `json:"about,omitempty"`
 }
 
 func (profile *Profile) Sanitize() {
@@ -38,7 +39,7 @@ func (profile *Profile) Sanitize() {
 	profile.Gender = html.EscapeString(profile.Gender)
 	profile.Target = html.EscapeString(profile.Target)
 	profile.About = html.EscapeString(profile.About)
-
+	profile.BirthdayDate = html.EscapeString(profile.BirthdayDate)
 }
 
 type Image struct {

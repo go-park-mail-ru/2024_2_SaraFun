@@ -50,6 +50,8 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgAuthDeliv
 			out.LastName = string(in.String())
 		case "age":
 			out.Age = int(in.Int())
+		case "birth_date":
+			out.BirthDate = string(in.String())
 		case "gender":
 			out.Gender = string(in.String())
 		default:
@@ -100,6 +102,11 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgAuthDeliv
 		const prefix string = ",\"age\":"
 		out.RawString(prefix)
 		out.Int(int(in.Age))
+	}
+	{
+		const prefix string = ",\"birth_date\":"
+		out.RawString(prefix)
+		out.String(string(in.BirthDate))
 	}
 	{
 		const prefix string = ",\"gender\":"

@@ -605,6 +605,8 @@ func easyjson9e1087fdDecodeGithubComGoParkMailRu20242SaraFunInternalModels6(in *
 			out.LastName = string(in.String())
 		case "age":
 			out.Age = int(in.Int())
+		case "birthday_date":
+			out.BirthdayDate = string(in.String())
 		case "gender":
 			out.Gender = string(in.String())
 		case "target":
@@ -644,6 +646,11 @@ func easyjson9e1087fdEncodeGithubComGoParkMailRu20242SaraFunInternalModels6(out 
 		const prefix string = ",\"age\":"
 		out.RawString(prefix)
 		out.Int(int(in.Age))
+	}
+	if in.BirthdayDate != "" {
+		const prefix string = ",\"birthday_date\":"
+		out.RawString(prefix)
+		out.String(string(in.BirthdayDate))
 	}
 	if in.Gender != "" {
 		const prefix string = ",\"gender\":"

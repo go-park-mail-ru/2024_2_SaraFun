@@ -153,13 +153,14 @@ func (h *GrpcPersonalitiesHandler) CheckUsernameExists(ctx context.Context,
 func (h *GrpcPersonalitiesHandler) CreateProfile(ctx context.Context,
 	in *generatedPersonalities.CreateProfileRequest) (*generatedPersonalities.CreateProfileResponse, error) {
 	profile := models.Profile{
-		ID:        int(in.Profile.ID),
-		FirstName: in.Profile.FirstName,
-		LastName:  in.Profile.LastName,
-		Age:       int(in.Profile.Age),
-		Gender:    in.Profile.Gender,
-		Target:    in.Profile.Target,
-		About:     in.Profile.About,
+		ID:           int(in.Profile.ID),
+		FirstName:    in.Profile.FirstName,
+		LastName:     in.Profile.LastName,
+		Age:          int(in.Profile.Age),
+		Gender:       in.Profile.Gender,
+		Target:       in.Profile.Target,
+		About:        in.Profile.About,
+		BirthdayDate: in.Profile.BirthDate,
 	}
 	profileId, err := h.profileUC.CreateProfile(ctx, profile)
 	h.logger.Info("create profile error", zap.Error(err))
@@ -174,13 +175,14 @@ func (h *GrpcPersonalitiesHandler) UpdateProfile(ctx context.Context,
 	in *generatedPersonalities.UpdateProfileRequest) (*generatedPersonalities.UpdateProfileResponse, error) {
 	id := int(in.Profile.ID)
 	profile := models.Profile{
-		ID:        int(in.Profile.ID),
-		FirstName: in.Profile.FirstName,
-		LastName:  in.Profile.LastName,
-		Age:       int(in.Profile.Age),
-		Gender:    in.Profile.Gender,
-		Target:    in.Profile.Target,
-		About:     in.Profile.About,
+		ID:           int(in.Profile.ID),
+		FirstName:    in.Profile.FirstName,
+		LastName:     in.Profile.LastName,
+		Age:          int(in.Profile.Age),
+		Gender:       in.Profile.Gender,
+		Target:       in.Profile.Target,
+		About:        in.Profile.About,
+		BirthdayDate: in.Profile.BirthDate,
 	}
 	h.logger.Info("in", zap.Any("profile", profile))
 	h.logger.Info("profile", zap.Any("profile", profile))
