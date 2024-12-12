@@ -42,8 +42,8 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
-          username: ubuntu
-          key: $${{ secrets.PRIVATE_KEY }}
+          username: ${{ secrets.USERNAME}}
+          key: ${{ secrets.PRIVATE_KEY }}
           script: cd /home/ubuntu/2024-2_SaraFun/ && git pull
       - name: Build containers
         uses: appleboy/ssh-action@master
