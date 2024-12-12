@@ -24,7 +24,7 @@ type ImageService interface {
 }
 
 type WebSocketService interface {
-	SendNotification(ctx context.Context, receiverID int, receiverImageLink string, authorUsername string) error
+	SendNotification(ctx context.Context, receiverID int, authorUsername string, authorImageLink string) error
 }
 
 //easyjson:skip
@@ -134,12 +134,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			secondUserImage.Link = ""
 		}
 
-		err = h.wsService.SendNotification(ctx, reaction.Receiver, firstUserImage.Link, firstUsername.Username)
+		err = h.wsService.SendNotification(ctx, reaction.Receiver, firstUsername.Username, firstUserImage.Link)
 		if err != nil {
 			h.logger.Error("AddReaction Handler: error sending notification", zap.Error(err))
 			return
 		}
-		err = h.wsService.SendNotification(ctx, reaction.Author, secondUserImage.Link, secondUsername.Username)
+		err = h.wsService.SendNotification(ctx, reaction.Author, secondUsername.Username, secondUserImage.Link)
 		if err != nil {
 			h.logger.Error("AddReaction Handler: error sending notification", zap.Error(err))
 			return

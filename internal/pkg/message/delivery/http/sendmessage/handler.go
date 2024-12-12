@@ -6,6 +6,7 @@ import (
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
@@ -16,7 +17,7 @@ import (
 
 //go:generate mockgen -destination=./mocks/mock_WebSocketService.go -package=sign_up_mocks . WebSocketService
 type WebSocketService interface {
-	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
+	WriteMessage(ctx context.Context, authorID int, receiverID int, message string, username string) error
 }
 
 type ErrResponse struct {
@@ -28,6 +29,7 @@ type Handler struct {
 	messageClient        generatedMessage.MessageClient
 	sessionClient        generatedAuth.AuthClient
 	communicationsClient generatedCommunications.CommunicationsClient
+	personalitiesClient  generatedPersonalities.PersonalitiesClient
 	ws                   WebSocketService
 	logger               *zap.Logger
 }
@@ -105,7 +107,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
-	err = h.ws.WriteMessage(ctx, msg.Author, msg.Receiver, msg.Body)
+	getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: userId.UserId}
+	username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
+	if err != nil {
+		h.logger.Info("Error getting username by userID", zap.Error(err))
+		return
+	}
+	err = h.ws.WriteMessage(ctx, msg.Author, msg.Receiver, msg.Body, username.Username)
 	if err != nil {
 		h.logger.Info("Error writing message", zap.Error(err))
 		//http.Error(w, "internal server error", http.StatusInternalServerError)
