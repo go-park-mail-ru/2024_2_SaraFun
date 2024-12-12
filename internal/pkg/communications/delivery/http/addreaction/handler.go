@@ -126,12 +126,12 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		firstUserImage, err := h.imageService.GetFirstImage(ctx, reaction.Author)
 		if err != nil {
 			h.logger.Error("AddReaction Handler: error getting first image", zap.Error(err))
-			return
+			firstUserImage.Link = ""
 		}
 		secondUserImage, err := h.imageService.GetFirstImage(ctx, reaction.Receiver)
 		if err != nil {
 			h.logger.Error("AddReaction Handler: error getting second image", zap.Error(err))
-			return
+			secondUserImage.Link = ""
 		}
 
 		err = h.wsService.SendNotification(ctx, reaction.Receiver, firstUserImage.Link, firstUsername.Username)
