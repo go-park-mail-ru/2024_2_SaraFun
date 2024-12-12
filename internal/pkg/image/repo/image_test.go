@@ -46,6 +46,7 @@ func TestSaveImage(t *testing.T) {
 		file        multipart.File
 		fileExt     string
 		userId      int
+		ordNumber   int
 		queryErr    error
 		queryResult *sqlmock.Rows
 		wantId      int
@@ -56,6 +57,7 @@ func TestSaveImage(t *testing.T) {
 			file:        testFile,
 			fileExt:     "png",
 			userId:      1,
+			ordNumber:   1,
 			queryErr:    nil,
 			queryResult: successRow,
 			wantId:      1,
@@ -83,7 +85,7 @@ func TestSaveImage(t *testing.T) {
 				mock.ExpectQuery("INSERT INTO photo").WillReturnRows(tt.queryResult)
 			}
 
-			id, err := storage.SaveImage(ctx, tt.file, tt.fileExt, tt.userId)
+			id, err := storage.SaveImage(ctx, tt.file, tt.fileExt, tt.userId, tt.ordNumber)
 			require.ErrorIs(t, err, tt.queryErr)
 			if id != tt.wantId {
 				t.Errorf("SaveImage() id = %v, want %v", id, tt.wantId)

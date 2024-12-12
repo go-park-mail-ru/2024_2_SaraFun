@@ -29,6 +29,7 @@ func TestSaveImage(t *testing.T) {
 		file                   multipart.File
 		fileExt                string
 		userId                 int
+		ordNumber              int
 		expectedSaveImageId    int
 		expectedSaveImageError error
 		expectedSaveImageCount int
@@ -40,6 +41,7 @@ func TestSaveImage(t *testing.T) {
 			file:                   testFile,
 			fileExt:                ".png",
 			userId:                 1,
+			ordNumber:              1,
 			expectedSaveImageId:    1,
 			expectedSaveImageError: nil,
 			expectedSaveImageCount: 1,
@@ -51,6 +53,7 @@ func TestSaveImage(t *testing.T) {
 			file:                   testFile,
 			fileExt:                ".txt",
 			userId:                 1,
+			ordNumber:              1,
 			expectedSaveImageId:    0,
 			expectedSaveImageError: errors.New("error"),
 			expectedSaveImageCount: 1,
@@ -65,12 +68,12 @@ func TestSaveImage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockRepository(mockCtrl)
-			repo.EXPECT().SaveImage(ctx, gomock.Any(), tt.fileExt, tt.userId).
+			repo.EXPECT().SaveImage(ctx, gomock.Any(), tt.fileExt, tt.userId, tt.ordNumber).
 				Return(tt.expectedSaveImageId, tt.expectedSaveImageError).
 				Times(tt.expectedSaveImageCount)
 
 			u := New(repo, logger)
-			id, err := u.SaveImage(ctx, tt.file, tt.fileExt, tt.userId)
+			id, err := u.SaveImage(ctx, tt.file, tt.fileExt, tt.userId, tt.ordNumber)
 			require.ErrorIs(t, err, tt.expectedSaveImageError)
 			if id != tt.wantId {
 				t.Errorf("SaveImage() id = %v, want %v", id, tt.wantId)
