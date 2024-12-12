@@ -49,6 +49,21 @@ func (mr *MockRepositoryMockRecorder) AddReaction(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReaction", reflect.TypeOf((*MockRepository)(nil).AddReaction), arg0, arg1)
 }
 
+// CheckMatchExists mocks base method.
+func (m *MockRepository) CheckMatchExists(arg0 context.Context, arg1, arg2 int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckMatchExists", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckMatchExists indicates an expected call of CheckMatchExists.
+func (mr *MockRepositoryMockRecorder) CheckMatchExists(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckMatchExists", reflect.TypeOf((*MockRepository)(nil).CheckMatchExists), arg0, arg1, arg2)
+}
+
 // GetMatchList mocks base method.
 func (m *MockRepository) GetMatchList(arg0 context.Context, arg1 int) ([]int, error) {
 	m.ctrl.T.Helper()
