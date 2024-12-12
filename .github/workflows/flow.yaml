@@ -26,6 +26,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
+      - name: ImageData
+        run: cd /home/runner && mkdir imagedata
       - name: Build
         run: go build -v ./...
       - name: Test
