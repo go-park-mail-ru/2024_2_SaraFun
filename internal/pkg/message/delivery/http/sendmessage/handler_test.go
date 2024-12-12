@@ -10,6 +10,8 @@ import (
 	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
 	messagemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen/mocks"
 	websocketmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/http/sendmessage/mocks"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	personalitiesmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
@@ -29,8 +31,9 @@ func TestHandler(t *testing.T) {
 	messageClient := messagemocks.NewMockMessageClient(mockCtrl)
 	authClient := authmocks.NewMockAuthClient(mockCtrl)
 	communicationsClient := communicationsmocks.NewMockCommunicationsClient(mockCtrl)
+	personalitiesClient := personalitiesmocks.NewMockPersonalitiesClient(mockCtrl)
 	wsClient := websocketmocks.NewMockWebSocketService(mockCtrl)
-	handler := NewHandler(messageClient, wsClient, authClient, communicationsClient, logger)
+	handler := NewHandler(messageClient, wsClient, authClient, communicationsClient, personalitiesClient, logger)
 
 	tests := []struct {
 		name            string
@@ -45,6 +48,9 @@ func TestHandler(t *testing.T) {
 		authReturn      int
 		authError       error
 		authTimes       int
+		usernameReturn  string
+		usernameError   error
+		usernameTimes   int
 		messageIDReturn int
 		messageError    error
 		messageTimes    int
@@ -73,6 +79,9 @@ func TestHandler(t *testing.T) {
 				Time:     time.DateTime,
 			},
 			status:          "",
+			usernameReturn:  "sparkit",
+			usernameError:   nil,
+			usernameTimes:   1,
 			messageIDReturn: 1,
 			messageError:    nil,
 			messageTimes:    1,
@@ -101,6 +110,9 @@ func TestHandler(t *testing.T) {
 				Time:     time.DateTime,
 			},
 			status:          "block exists",
+			usernameReturn:  "sparkit",
+			usernameError:   nil,
+			usernameTimes:   1,
 			messageIDReturn: 1,
 			messageError:    nil,
 			messageTimes:    1,
@@ -133,7 +145,11 @@ func TestHandler(t *testing.T) {
 			addMessageResponse := &generatedMessage.AddMessageResponse{MessageID: int32(tt.messageIDReturn)}
 			messageClient.EXPECT().AddMessage(ctx, addMessageReq).Return(addMessageResponse, tt.messageError).Times(tt.messageTimes)
 
-			wsClient.EXPECT().WriteMessage(ctx, tt.message.Author, tt.message.Receiver, tt.message.Body).Return(tt.wsError).Times(tt.wsTimes)
+			getUsernameReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: int32(tt.authReturn)}
+			getUsernameResponse := &generatedPersonalities.GetUsernameByUserIDResponse{Username: tt.usernameReturn}
+			personalitiesClient.EXPECT().GetUsernameByUserID(ctx, getUsernameReq).Return(getUsernameResponse, tt.usernameError).Times(tt.usernameTimes)
+
+			wsClient.EXPECT().WriteMessage(ctx, tt.message.Author, tt.message.Receiver, tt.message.Body, tt.usernameReturn).Return(tt.wsError).Times(tt.wsTimes)
 
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(tt.body))
 			req = req.WithContext(ctx)

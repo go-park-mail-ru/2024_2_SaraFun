@@ -35,15 +35,15 @@ func (m *MockWebSocketService) EXPECT() *MockWebSocketServiceMockRecorder {
 }
 
 // WriteMessage mocks base method.
-func (m *MockWebSocketService) WriteMessage(arg0 context.Context, arg1, arg2 int, arg3 string) error {
+func (m *MockWebSocketService) WriteMessage(arg0 context.Context, arg1, arg2 int, arg3, arg4 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WriteMessage", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "WriteMessage", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // WriteMessage indicates an expected call of WriteMessage.
-func (mr *MockWebSocketServiceMockRecorder) WriteMessage(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockWebSocketServiceMockRecorder) WriteMessage(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMessage", reflect.TypeOf((*MockWebSocketService)(nil).WriteMessage), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMessage", reflect.TypeOf((*MockWebSocketService)(nil).WriteMessage), arg0, arg1, arg2, arg3, arg4)
 }

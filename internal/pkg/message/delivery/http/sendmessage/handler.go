@@ -34,12 +34,16 @@ type Handler struct {
 	logger               *zap.Logger
 }
 
-func NewHandler(messageClient generatedMessage.MessageClient, ws WebSocketService, sessionClient generatedAuth.AuthClient, communicationsClient generatedCommunications.CommunicationsClient, logger *zap.Logger) *Handler {
+func NewHandler(messageClient generatedMessage.MessageClient,
+	ws WebSocketService, sessionClient generatedAuth.AuthClient,
+	communicationsClient generatedCommunications.CommunicationsClient,
+	personalitiesClient generatedPersonalities.PersonalitiesClient, logger *zap.Logger) *Handler {
 	return &Handler{
 		messageClient:        messageClient,
 		ws:                   ws,
 		sessionClient:        sessionClient,
 		communicationsClient: communicationsClient,
+		personalitiesClient:  personalitiesClient,
 		logger:               logger,
 	}
 }

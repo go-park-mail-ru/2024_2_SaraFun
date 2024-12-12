@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	AddConnection(ctx context.Context, conn *ws.Conn, userId int) error
 	DeleteConnection(ctx context.Context, userId int) error
-	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
+	WriteMessage(ctx context.Context, authorID int, receiverID int, message string, username string) error
 	SendNotification(ctx context.Context, receiverID int, receiverImageLink string, authorUsername string) error
 }
 
@@ -46,9 +46,9 @@ func (u *UseCase) DeleteConnection(ctx context.Context, userId int) error {
 	return nil
 }
 
-func (u *UseCase) WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error {
+func (u *UseCase) WriteMessage(ctx context.Context, authorID int, receiverID int, message string, username string) error {
 	u.logger.Info("Usecase WriteMessage start", zap.Int("user_id", receiverID))
-	err := u.repo.WriteMessage(ctx, authorID, receiverID, message)
+	err := u.repo.WriteMessage(ctx, authorID, receiverID, message, username)
 	if err != nil {
 		u.logger.Error("repo WriteMessage call in Usecase failed", zap.Error(err))
 		return fmt.Errorf("repo WriteMessage call in Usecase failed: %w", err)

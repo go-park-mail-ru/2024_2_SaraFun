@@ -190,7 +190,7 @@ func main() {
 	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, imageUseCase, websocketUsecase, logger)
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
 	sendReport := sendreport.NewHandler(authClient, messageClient, communicationsClient, logger)
-	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, logger)
+	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, personalitiesClient, logger)
 	getAllChats := getallchats.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, messageClient, logger)
 	setConnection := setconnection.NewHandler(websocketUsecase, authClient, logger)
 	changePassword := changepassword.NewHandler(authClient, personalitiesClient, logger)
