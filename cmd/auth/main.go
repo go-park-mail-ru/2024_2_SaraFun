@@ -53,8 +53,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logger.Sync()
-
+	//defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error("failed to sync logger", zap.Error(err))
+		}
+	}()
 	url := "redis://" + envCfg.RedisUser + ":" + envCfg.RedisPassword + "@sparkit-redis:6379/0"
 	opts, err := redis.ParseURL(url)
 	if err != nil {

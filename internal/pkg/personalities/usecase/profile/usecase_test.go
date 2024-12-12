@@ -18,7 +18,7 @@ func TestCreateProfile(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name                    string
@@ -73,7 +73,7 @@ func TestUpdateProfile(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name               string
@@ -120,7 +120,7 @@ func TestGetProfile(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name          string
@@ -176,7 +176,7 @@ func TestDeleteProfile(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name        string

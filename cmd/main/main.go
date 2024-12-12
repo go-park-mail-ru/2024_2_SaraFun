@@ -78,7 +78,12 @@ func main() {
 	}
 
 	logger, err := cfg.Build()
-	defer logger.Sync()
+	//defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error("failed to sync logger", zap.Error(err))
+		}
+	}()
 
 	sugar := logger.Sugar()
 	if err != nil {

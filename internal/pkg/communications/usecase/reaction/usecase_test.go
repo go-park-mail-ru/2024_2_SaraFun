@@ -115,7 +115,7 @@ func TestGetReaction(t *testing.T) {
 	logger := zap.NewNop()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 
 	tests := []struct {
 		name            string

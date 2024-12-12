@@ -42,7 +42,12 @@ func main() {
 		},
 	}
 	logger, err := cfg.Build()
-	defer logger.Sync()
+	//defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			logger.Error("failed to sync logger", zap.Error(err))
+		}
+	}()
 	envCfg, err := config.NewConfig(logger)
 	if err != nil {
 		log.Println(err)

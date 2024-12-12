@@ -174,13 +174,13 @@ func TestGetChatMessages(t *testing.T) {
 			queryRows:    successQueryRows,
 			queryError:   nil,
 			expectedMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "success1",
 					Time:     time.DateTime,
 				},
-				models.Message{
+				{
 					Author:   2,
 					Receiver: 1,
 					Body:     "success2",
@@ -248,13 +248,13 @@ func TestGetMessagesBySearch(t *testing.T) {
 			queryRows:  successRows,
 			queryError: nil,
 			expectedMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "success1",
 					Time:     time.DateTime,
 				},
-				models.Message{
+				{
 					Author:   2,
 					Receiver: 1,
 					Body:     "success2",

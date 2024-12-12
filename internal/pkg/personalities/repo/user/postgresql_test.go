@@ -393,15 +393,15 @@ func TestGetFeedList(t *testing.T) {
 				AddRow(3, "Крепыш"),
 			queryError: nil,
 			expectedList: []models.User{
-				models.User{
+				{
 					ID:       1,
 					Username: "Король",
 				},
-				models.User{
+				{
 					ID:       2,
 					Username: "Кирилл",
 				},
-				models.User{
+				{
 					ID:       3,
 					Username: "Крепыш",
 				},

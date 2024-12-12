@@ -85,14 +85,14 @@ func TestGetSurveyInfo(t *testing.T) {
 		{
 			name: "successfull test",
 			repoSurveys: []models.Survey{
-				models.Survey{
+				{
 					Author:   1,
 					Question: "test?",
 					Comment:  "test",
 					Rating:   5,
 					Grade:    5,
 				},
-				models.Survey{
+				{
 					Author:   2,
 					Question: "test?",
 					Comment:  "test",
@@ -103,7 +103,7 @@ func TestGetSurveyInfo(t *testing.T) {
 			repoError: nil,
 			repoCount: 1,
 			expectedStats: map[string]models.SurveyStat{
-				"test?": models.SurveyStat{
+				"test?": {
 					Question: "test?",
 					Grade:    5,
 					Rating:   4,
@@ -289,7 +289,7 @@ func TestGetQuestions(t *testing.T) {
 		{
 			name: "successfull test",
 			repoQuestions: []models.AdminQuestion{
-				models.AdminQuestion{
+				{
 					Content: "Насколько вам нравятся свайпы?",
 					Grade:   5,
 				},
@@ -297,7 +297,7 @@ func TestGetQuestions(t *testing.T) {
 			repoError: nil,
 			repoCount: 1,
 			expectedQuestions: []models.AdminQuestion{
-				models.AdminQuestion{
+				{
 					Content: "Насколько вам нравятся свайпы?",
 					Grade:   5,
 				},
@@ -306,7 +306,7 @@ func TestGetQuestions(t *testing.T) {
 		{
 			name: "bad test",
 			repoQuestions: []models.AdminQuestion{
-				models.AdminQuestion{
+				{
 					Content: "",
 					Grade:   0,
 				},

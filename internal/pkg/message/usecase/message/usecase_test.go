@@ -141,7 +141,7 @@ func TestGetChatMessages(t *testing.T) {
 			firstUserID:  1,
 			secondUserID: 2,
 			repoMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "privet",
@@ -151,7 +151,7 @@ func TestGetChatMessages(t *testing.T) {
 			repoErr:   nil,
 			repoCount: 1,
 			expectedMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "privet",
@@ -164,7 +164,7 @@ func TestGetChatMessages(t *testing.T) {
 			firstUserID:  1,
 			secondUserID: 2,
 			repoMessages: []models.Message{
-				models.Message{
+				{
 					Author: 1,
 				},
 			},
@@ -208,7 +208,7 @@ func TestGetMessagesBySearch(t *testing.T) {
 			page:   1,
 			search: "privet",
 			repoMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "privet",
@@ -218,7 +218,7 @@ func TestGetMessagesBySearch(t *testing.T) {
 			repoErr:   nil,
 			repoCount: 1,
 			expectedMessages: []models.Message{
-				models.Message{
+				{
 					Author:   1,
 					Receiver: 2,
 					Body:     "privet",

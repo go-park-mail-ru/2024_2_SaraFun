@@ -71,7 +71,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer func() {
 			h.logger.Info("deleteConnection defer func")
-			h.useCase.DeleteConnection(ctx, int(userId.UserId))
+			err := h.useCase.DeleteConnection(ctx, int(userId.UserId))
+			if err != nil {
+				h.logger.Error("setConnection delete connection error", zap.Error(err))
+			}
 		}()
 
 		for {

@@ -96,7 +96,7 @@ func (u *UseCase) DeleteProfile(ctx context.Context, id int) error {
 }
 
 func GetAge(birthdayDate string) (int, error) {
-	birthDate, err := time.Parse("2006-02-01", birthdayDate)
+	birthDate, err := time.Parse("2006-01-02", birthdayDate)
 	if err != nil {
 		return -1, fmt.Errorf("birth date format error: %w", err)
 	}

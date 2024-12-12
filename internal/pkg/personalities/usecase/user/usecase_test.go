@@ -20,7 +20,7 @@ func TestRegisterUser(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 	user1 := models.User{ID: 1}
 	user2 := models.User{ID: 2}
 	tests := []struct {
@@ -63,7 +63,7 @@ func TestCheckPassword(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 	password1, _ := hashing.HashPassword("123456")
 	password2, _ := hashing.HashPassword("222222")
 	user1 := models.User{ID: 1, Username: "Kirill", Password: password1}
@@ -138,7 +138,7 @@ func TestGetFeed(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name        string

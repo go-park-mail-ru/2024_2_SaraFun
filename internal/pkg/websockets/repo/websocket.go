@@ -55,7 +55,7 @@ func (s *Storage) WriteMessage(ctx context.Context, authorID int, receiverID int
 	defer s.mu.Unlock()
 	conn, ok := s.wConns[receiverID]
 	if !ok {
-		return fmt.Errorf("user ws conn not found", receiverID)
+		return fmt.Errorf("user ws conn not found: %v", receiverID)
 	}
 	msg := JsonMessage{authorID, message}
 	err := conn.WriteJSON(&msg)
@@ -71,7 +71,7 @@ func (s *Storage) SendNotification(ctx context.Context, receiverID int, authorIm
 	defer s.mu.Unlock()
 	conn, ok := s.wConns[receiverID]
 	if !ok {
-		return fmt.Errorf("user ws conn not found", receiverID)
+		return fmt.Errorf("user ws conn not found: %v", receiverID)
 	}
 	notification := JsonNotification{
 		Username:  authorUsername,

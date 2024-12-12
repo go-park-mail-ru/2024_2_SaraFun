@@ -102,7 +102,7 @@ func TestGetSurveyInfo(t *testing.T) {
 				AddRow(1, "test?", 5, 5, "test comment"),
 			queryError: nil,
 			expectedSurveys: []models.Survey{
-				models.Survey{
+				{
 					Author:   1,
 					Question: "test?",
 					Comment:  "test comment",
@@ -311,7 +311,7 @@ func TestGetQuestions(t *testing.T) {
 			queryRows:  sqlmock.NewRows([]string{"content", "grade"}).AddRow("test", 5),
 			queryError: nil,
 			expectedQuestions: []models.AdminQuestion{
-				models.AdminQuestion{
+				{
 					Content: "test",
 					Grade:   5,
 				},
