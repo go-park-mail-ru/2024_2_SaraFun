@@ -3,171 +3,261 @@ package getuserlist
 import (
 	"context"
 	"errors"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist/mocks"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	authmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen/mocks"
+	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	communicationsmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen/mocks"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	personalitiesmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen/mocks"
+
+	imageservicemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getuserlist/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 )
 
-func TestGetUserListHandler(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel() // Отменяем контекст после завершения работы
-	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gfctx")
+// 1. Успешный сценарий получения списка пользователей.
+// 2. Отсутствие cookie, приводящее к ошибке авторизации.
+// 3. Ошибка при получении userID по сессии.
+// 4. Ошибка при получении списка реакций.
+// 5. Ошибка при получении списка пользователей (feed).
+// 6. Ошибка при получении профиля пользователя.
+// 7. Ошибка при получении изображений пользователя.
+// 8. Ошибка при получении имени пользователя (username).
+
+func TestHandler(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "test_req_id")
+
 	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
+	sessionClient := authmocks.NewMockAuthClient(mockCtrl)
+	personalitiesClient := personalitiesmocks.NewMockPersonalitiesClient(mockCtrl)
+	imageService := imageservicemocks.NewMockImageService(mockCtrl)
+	communicationsClient := communicationsmocks.NewMockCommunicationsClient(mockCtrl)
+
+	handler := NewHandler(sessionClient, personalitiesClient, imageService, communicationsClient, logger)
+
 	tests := []struct {
-		name               string
-		method             string
-		path               string
-		UserBySessionId    int
-		UserBySessionErr   error
-		UserBySessionCount int
-		GetProfile         models.Profile
-		GetProfileError    error
-		GetProfileCount    int
-		UsernameByID       string
-		UsernameByIDError  error
-		UsernameByIDCount  int
-		GetUserList        []models.User
-		GetUserListError   error
-		GetUserListCount   int
-		GetImages          []models.Image
-		GetImagesError     error
-		GetImagesCount     int
-		GetReactions       []int
-		GetReactionsError  error
-		GetReactionsCount  int
-		expectedStatus     int
-		expectedMessage    string
-		cookieValue        string
-		logger             *zap.Logger
+		name                     string
+		method                   string
+		cookieValue              string
+		authUserID               int32
+		authError                error
+		reactionListError        error
+		feedListError            error
+		feedUsers                []*generatedPersonalities.User
+		profileError             error
+		imageError               error
+		usernameError            error
+		expectedStatus           int
+		expectedResponseContains string
 	}{
 		{
-			name:               "successfull test",
-			method:             http.MethodGet,
-			path:               "/users",
-			UserBySessionId:    1,
-			UserBySessionErr:   nil,
-			UserBySessionCount: 1,
-			GetProfile:         models.Profile{FirstName: "Kirill"},
-			GetProfileError:    nil,
-			GetProfileCount:    1,
-			UsernameByID:       "username",
-			UsernameByIDError:  nil,
-			UsernameByIDCount:  1,
-			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
-			GetUserListError:   nil,
-			GetUserListCount:   1,
-			GetImages:          []models.Image{{Id: 1, Link: "link"}},
-			GetImagesError:     nil,
-			GetImagesCount:     1,
-			GetReactions:       []int{2},
-			GetReactionsError:  nil,
-			GetReactionsCount:  1,
-			expectedStatus:     http.StatusOK,
-			expectedMessage:    "[{\"user\":2,\"username\":\"username\",\"profile\":{\"id\":0,\"first_name\":\"Kirill\"},\"images\":[{\"id\":1,\"link\":\"link\"}]}]",
-			logger:             logger,
+			name:                     "good test",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			feedUsers:                []*generatedPersonalities.User{{ID: 100}},
+			expectedStatus:           http.StatusOK,
+			expectedResponseContains: `"first_name":`,
 		},
 		{
-			name:               "bad test",
-			method:             http.MethodGet,
-			path:               "/users",
-			UserBySessionId:    1,
-			UserBySessionErr:   nil,
-			UserBySessionCount: 1,
-			GetProfile:         models.Profile{FirstName: "Kirill"},
-			GetProfileError:    errors.New("error"),
-			GetProfileCount:    1,
-			UsernameByID:       "username",
-			UsernameByIDError:  nil,
-			UsernameByIDCount:  0,
-			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
-			GetUserListError:   nil,
-			GetUserListCount:   1,
-			GetImages:          []models.Image{{Id: 1, Link: "link"}},
-			GetImagesError:     nil,
-			GetImagesCount:     0,
-			GetReactions:       []int{2},
-			GetReactionsError:  nil,
-			GetReactionsCount:  1,
-			expectedStatus:     http.StatusInternalServerError,
-			expectedMessage:    "bad get profile\n",
-			logger:             logger,
+			name:                     "no cookie",
+			method:                   http.MethodGet,
+			cookieValue:              "",
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
 		},
 		{
-			name:               "bad test",
-			method:             http.MethodGet,
-			path:               "/users",
-			UserBySessionId:    1,
-			UserBySessionErr:   nil,
-			UserBySessionCount: 1,
-			GetProfile:         models.Profile{FirstName: "Kirill"},
-			GetProfileError:    nil,
-			GetProfileCount:    1,
-			UsernameByID:       "username",
-			UsernameByIDError:  nil,
-			UsernameByIDCount:  0,
-			GetUserList:        []models.User{{ID: 2, Username: "Andrey"}},
-			GetUserListError:   nil,
-			GetUserListCount:   1,
-			GetImages:          []models.Image{{Id: 1, Link: "link"}},
-			GetImagesError:     errors.New("error"),
-			GetImagesCount:     1,
-			GetReactions:       []int{2},
-			GetReactionsError:  nil,
-			GetReactionsCount:  1,
-			expectedStatus:     http.StatusInternalServerError,
-			expectedMessage:    "error\n",
-			logger:             logger,
+			name:                     "session not found",
+			method:                   http.MethodGet,
+			cookieValue:              "bad_session",
+			authError:                errors.New("session error"),
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
+		},
+		{
+			name:                     "reaction list failed",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			reactionListError:        errors.New("reaction error"),
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "reaction list failed",
+		},
+		{
+			name:                     "feed list error",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			feedListError:            errors.New("feed error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "ошибка в получении списка пользователей",
+		},
+		{
+			name:                     "profile error",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			feedUsers:                []*generatedPersonalities.User{{ID: 100}},
+			profileError:             errors.New("profile error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get profile",
+		},
+		{
+			name:                     "image error",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			feedUsers:                []*generatedPersonalities.User{{ID: 100}},
+			imageError:               errors.New("image error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "image error",
+		},
+		{
+			name:                     "username error",
+			method:                   http.MethodGet,
+			cookieValue:              "valid_session",
+			authUserID:               10,
+			feedUsers:                []*generatedPersonalities.User{{ID: 100}},
+			usernameError:            errors.New("username error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get username",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sessionService := getuserlist_mocks.NewMockSessionService(mockCtrl)
-			profileService := getuserlist_mocks.NewMockProfileService(mockCtrl)
-			userService := getuserlist_mocks.NewMockUserService(mockCtrl)
-			imageService := getuserlist_mocks.NewMockImageService(mockCtrl)
-			reactionService := getuserlist_mocks.NewMockReactionService(mockCtrl)
-
-			sessionService.EXPECT().GetUserIDBySessionID(ctx, gomock.Any()).
-				Return(tt.UserBySessionId, tt.UserBySessionErr).Times(tt.UserBySessionCount)
-			imageService.EXPECT().GetImageLinksByUserId(ctx, gomock.Any()).
-				Return(tt.GetImages, tt.GetImagesError).Times(tt.GetImagesCount)
-			reactionService.EXPECT().GetReactionList(ctx, tt.UserBySessionId).
-				Return(tt.GetReactions, tt.GetReactionsError).Times(tt.GetReactionsCount)
-			userService.EXPECT().GetFeedList(ctx, gomock.Any(), gomock.Any()).
-				Return(tt.GetUserList, tt.GetUserListError).Times(tt.GetUserListCount)
-			for _, user := range tt.GetUserList {
-				profileService.EXPECT().GetProfile(ctx, user.ID).
-					Return(tt.GetProfile, tt.GetProfileError).Times(tt.GetProfileCount)
-				userService.EXPECT().GetUsernameByUserId(ctx, user.ID).
-					Return(tt.UsernameByID, tt.UsernameByIDError).Times(tt.UsernameByIDCount)
+			if tt.cookieValue != "" {
+				getUserIDReq := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: tt.cookieValue}
+				if tt.authError == nil {
+					resp := &generatedAuth.GetUserIDBYSessionIDResponse{UserId: tt.authUserID}
+					sessionClient.EXPECT().GetUserIDBySessionID(gomock.Any(), getUserIDReq).Return(resp, nil).Times(1)
+				} else {
+					sessionClient.EXPECT().GetUserIDBySessionID(gomock.Any(), getUserIDReq).Return(nil, tt.authError).Times(1)
+				}
 			}
 
-			handler := NewHandler(sessionService, profileService, userService, imageService, reactionService, tt.logger)
+			if tt.authError == nil && tt.cookieValue != "" {
+				getReactionListReq := &generatedCommunications.GetReactionListRequest{UserId: tt.authUserID}
+				if tt.reactionListError == nil {
+					commResp := &generatedCommunications.GetReactionListResponse{Receivers: []int32{}}
+					communicationsClient.EXPECT().GetReactionList(gomock.Any(), getReactionListReq).
+						Return(commResp, nil).Times(1)
+				} else {
+					communicationsClient.EXPECT().GetReactionList(gomock.Any(), getReactionListReq).
+						Return(nil, tt.reactionListError).Times(1)
+				}
+			}
 
-			req := httptest.NewRequest(tt.method, tt.path, nil).WithContext(ctx)
+			if tt.authError == nil && tt.reactionListError == nil && tt.cookieValue != "" {
+				// feed list
+				getFeedReq := &generatedPersonalities.GetFeedListRequest{UserID: tt.authUserID, Receivers: []int32{}}
+				if tt.feedListError == nil {
+					usersResp := &generatedPersonalities.GetFeedListResponse{Users: tt.feedUsers}
+					personalitiesClient.EXPECT().GetFeedList(gomock.Any(), getFeedReq).
+						Return(usersResp, nil).Times(1)
+				} else {
+					personalitiesClient.EXPECT().GetFeedList(gomock.Any(), getFeedReq).
+						Return(nil, tt.feedListError).Times(1)
+				}
+			}
 
-			req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
+			if tt.authError == nil && tt.reactionListError == nil && tt.feedListError == nil && tt.cookieValue != "" {
+				for _, usr := range tt.feedUsers {
+					getProfileReq := &generatedPersonalities.GetProfileRequest{Id: usr.ID}
+					if tt.profileError == nil {
+						profileResp := &generatedPersonalities.GetProfileResponse{
+							Profile: &generatedPersonalities.Profile{
+								ID:        usr.ID,
+								FirstName: "John",
+								LastName:  "Doe",
+								Age:       25,
+								Gender:    "male",
+								Target:    "friendship",
+								About:     "Hi",
+							},
+						}
+						personalitiesClient.EXPECT().GetProfile(gomock.Any(), getProfileReq).
+							Return(profileResp, nil).Times(1)
+					} else {
+						personalitiesClient.EXPECT().GetProfile(gomock.Any(), getProfileReq).
+							Return(nil, tt.profileError).Times(1)
+						break
+					}
+
+					if tt.profileError == nil {
+						if tt.imageError == nil {
+							imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(usr.ID)).
+								Return([]models.Image{{Link: "http://example.com/img.jpg"}}, nil).Times(1)
+						} else {
+							imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(usr.ID)).
+								Return(nil, tt.imageError).Times(1)
+							break
+						}
+					}
+
+					if tt.profileError == nil && tt.imageError == nil {
+						getUsernameReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: usr.ID}
+						if tt.usernameError == nil {
+							personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
+								Return(&generatedPersonalities.GetUsernameByUserIDResponse{Username: "johnny"}, nil).Times(1)
+						} else {
+							personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
+								Return(nil, tt.usernameError).Times(1)
+							break
+						}
+					}
+				}
+			}
+
+			req := httptest.NewRequest(tt.method, "/userlist", nil)
+			req = req.WithContext(ctx)
+			if tt.cookieValue != "" {
+				cookie := &http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: tt.cookieValue,
+				}
+				req.AddCookie(cookie)
+			}
 			w := httptest.NewRecorder()
+
 			handler.Handle(w, req)
 
 			if w.Code != tt.expectedStatus {
-				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
+				t.Errorf("%s: handler returned wrong status code: got %v want %v", tt.name, w.Code, tt.expectedStatus)
 			}
-
-			if w.Body.String() != tt.expectedMessage {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedMessage)
+			if tt.expectedResponseContains != "" && !contains(w.Body.String(), tt.expectedResponseContains) {
+				t.Errorf("%s: handler returned unexpected body: got %v want substring %v", tt.name, w.Body.String(), tt.expectedResponseContains)
 			}
 		})
 	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && s[0:len(substr)] == substr) ||
+		(len(s) > len(substr) && s[len(s)-len(substr):] == substr) ||
+		(len(substr) > 0 && len(s) > len(substr) && findInString(s, substr)))
+}
+
+func findInString(s, substr string) bool {
+	for i := 0; i+len(substr) <= len(s); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

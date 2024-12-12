@@ -34,6 +34,7 @@ type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=updateprofile_mocks . ImageService
 type ImageService interface {
 	UpdateOrdNumbers(ctx context.Context, numbers []models.Image) error
 }
