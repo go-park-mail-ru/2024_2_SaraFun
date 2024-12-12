@@ -31,7 +31,7 @@ func TestCreateProfile(t *testing.T) {
 	}{
 		{
 			name:                    "succesful create profile",
-			profile:                 models.Profile{Age: 20},
+			profile:                 models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
 			repoCreateProfileResult: 2,
 			repoCreateProfileError:  nil,
 			repoCreateProfileCount:  1,
@@ -40,7 +40,7 @@ func TestCreateProfile(t *testing.T) {
 		},
 		{
 			name:                    "bad create profile",
-			profile:                 models.Profile{Age: 15},
+			profile:                 models.Profile{Age: 14, BirthdayDate: "2010-01-01"},
 			repoCreateProfileResult: 0,
 			repoCreateProfileError:  errors.New("failed to create profile with age: 15"),
 			repoCreateProfileCount:  1,
@@ -86,7 +86,7 @@ func TestUpdateProfile(t *testing.T) {
 		{
 			name:               "succesful update profile",
 			id:                 1,
-			profile:            models.Profile{Age: 20},
+			profile:            models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
 			updateProfileErr:   nil,
 			updateProfileCount: 1,
 			logger:             logger,
@@ -94,7 +94,7 @@ func TestUpdateProfile(t *testing.T) {
 		{
 			name:               "bad update profile",
 			id:                 1,
-			profile:            models.Profile{Age: 15},
+			profile:            models.Profile{Age: 14, BirthdayDate: "2010-01-01"},
 			updateProfileErr:   errors.New("failed to update profile with age: 15"),
 			updateProfileCount: 1,
 			logger:             logger,
@@ -134,11 +134,11 @@ func TestGetProfile(t *testing.T) {
 		{
 			name:          "successfull get profile",
 			id:            1,
-			returnProfile: models.Profile{Age: 20},
+			returnProfile: models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
 			returnError:   nil,
 			callCount:     1,
 			logger:        logger,
-			wantProfile:   models.Profile{Age: 20},
+			wantProfile:   models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
 		},
 		{
 			name:          "bad get profile",

@@ -24,10 +24,11 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) SaveImage(ctx context.Context, file multipart.File, fileExt string, userId int, ordNumber int) (int, error) {
+	user := os.Getenv("OS_USER")
 	req_id := ctx.Value(consts.RequestIDKey).(string)
 	repo.logger.Info("repo request-id", zap.String("request_id", req_id))
 	repo.logger.Info("userId =", zap.Int("userid", userId))
-	fileName := "/home/ubuntu/imagedata/" + uuid.New().String() + fileExt
+	fileName := "/home/" + user + "/imagedata/" + uuid.New().String() + fileExt
 	out, err := os.Create(os.ExpandEnv(fileName))
 	if err != nil {
 		log.Printf("error creating file: %v", err)

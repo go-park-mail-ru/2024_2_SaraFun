@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"mime/multipart"
 	"os"
+	"os/user"
 	"testing"
 	"time"
 )
@@ -35,7 +36,11 @@ func TestSaveImage(t *testing.T) {
 		t.Fatalf("failed to open sqlmock: %v", err)
 	}
 	defer db.Close()
-
+	os_user, err := user.Current()
+	if err != nil {
+		t.Error(err)
+	}
+	os.Setenv("OS_USER", os_user.Username)
 	successRow := sqlmock.NewRows([]string{"id"}).
 		AddRow(1)
 	//badRows := sqlmock.NewRows([]string{"random"}).
@@ -105,9 +110,9 @@ func TestGetImageLinksByUserId(t *testing.T) {
 	}
 	defer db.Close()
 
-	good_rows := sqlmock.NewRows([]string{"id", "link"}).
-		AddRow(1, "link1").
-		AddRow(2, "link2")
+	good_rows := sqlmock.NewRows([]string{"id", "link", "number"}).
+		AddRow(1, "link1", 1).
+		AddRow(2, "link2", 2)
 
 	tests := []struct {
 		name        string
@@ -121,7 +126,7 @@ func TestGetImageLinksByUserId(t *testing.T) {
 			userId:      1,
 			queryErr:    nil,
 			queryResult: good_rows,
-			wantImages:  []models.Image{{Id: 1, Link: "link1"}, {Id: 2, Link: "link2"}},
+			wantImages:  []models.Image{{Id: 1, Link: "link1", Number: 1}, {Id: 2, Link: "link2", Number: 2}},
 		},
 		{
 			name:        "bad test",
