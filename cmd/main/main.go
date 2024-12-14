@@ -195,11 +195,7 @@ func main() {
 	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
 	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
-<<<<<<< HEAD
 	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, paymentsClient, imageUseCase, websocketUsecase, logger)
-=======
-	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, imageUseCase, websocketUsecase, logger)
->>>>>>> newtests3
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
 	sendReport := sendreport.NewHandler(authClient, messageClient, communicationsClient, logger)
 	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, personalitiesClient, logger)

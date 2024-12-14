@@ -39,11 +39,6 @@ type JsonNotification struct {
 	Imagelink string `json:"imagelink"`
 }
 
-type JsonNotification struct {
-	Username  string `json:"username"`
-	Imagelink string `json:"imagelink"`
-}
-
 func New(conns map[int]*ws.Conn, logger *zap.Logger) *Storage {
 	return &Storage{
 		wConns: conns,

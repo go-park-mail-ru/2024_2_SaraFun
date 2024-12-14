@@ -30,6 +30,7 @@ func TestHandler(t *testing.T) {
 
 	sessionClient := authmocks.NewMockAuthClient(mockCtrl)
 	reactionClient := communicationsmocks.NewMockCommunicationsClient(mockCtrl)
+	personalitiesClient :=
 
 	handler := NewHandler(reactionClient, sessionClient, logger)
 
