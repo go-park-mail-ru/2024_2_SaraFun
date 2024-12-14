@@ -28,6 +28,8 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/authcheck"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
 	metricsmiddleware "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/httpMetricsMiddleware"
+	grpcpayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getbalance"
 	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
@@ -157,6 +159,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	paymentsConn, err := grpc.NewClient(fmt.Sprintf("%s:%s", "sparkit-payments-service", "8086"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	_metrics, err := metrics.NewHttpMetrics("main")
 	if err != nil {
 		log.Fatal(err)
@@ -175,6 +182,7 @@ func main() {
 	communicationsClient := grpccommunications.NewCommunicationsClient(communicationsConn)
 	messageClient := grpcmessage.NewMessageClient(messageConn)
 	surveyClient := grpcsurvey.NewSurveyClient(surveyConn)
+	paymentsClient := grpcpayments.NewPaymentClient(paymentsConn)
 
 	cors := corsMiddleware.New(logger)
 	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
@@ -187,7 +195,7 @@ func main() {
 	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
 	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
-	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, imageUseCase, websocketUsecase, logger)
+	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, paymentsClient, imageUseCase, websocketUsecase, logger)
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
 	sendReport := sendreport.NewHandler(authClient, messageClient, communicationsClient, logger)
 	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, personalitiesClient, logger)
@@ -202,6 +210,7 @@ func main() {
 	deleteQuestion := deletequestion.NewHandler(authClient, surveyClient, logger)
 	updateQuestion := updatequestion.NewHandler(authClient, surveyClient, logger)
 	getQuestions := getquestions.NewHandler(authClient, surveyClient, logger)
+	getBalance := getbalance.NewHandler(authClient, paymentsClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
@@ -268,6 +277,12 @@ func main() {
 		survey.Handle("/question", http.HandlerFunc(addQuestion.Handle)).Methods("POST", http.MethodOptions)
 		survey.Handle("/question", http.HandlerFunc(updateQuestion.Handle)).Methods("PUT", http.MethodOptions)
 		survey.Handle("/getquestions", http.HandlerFunc(getQuestions.Handle)).Methods("GET", http.MethodOptions)
+	}
+
+	//payments
+	payments := router.PathPrefix("/payments").Subrouter()
+	{
+		payments.Handle("/balance", http.HandlerFunc(getBalance.Handle)).Methods("GET", http.MethodOptions)
 	}
 
 	// Создаем HTTP-сервер

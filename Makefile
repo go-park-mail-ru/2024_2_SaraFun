@@ -5,6 +5,7 @@ COMMUNICATIONS_BINARY=communications
 DOCKER_DIR=docker
 MESSAGE_BINARY=message
 SURVEY_BINARY=survey
+PAYMENTS_BINARY=payments
 
 build-sparkit:
 	go build -o ${SERVER_BINARY} ./cmd/main
@@ -37,6 +38,7 @@ sparkit-run:
 	make service-message-image
 	#make survey-builder-image
 	make service-survey-image
+	make service-payments-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 
 .PHONY: sparkit-down
@@ -154,3 +156,22 @@ sparkit-survey-run:
 	make survey-builder-image
 	make service-survey-image
 	docker run sparkit-survey-service
+
+# docker build for payments microservice
+
+build-payments-microservice:
+	go build -o ${PAYMENTS_BINARY} ./cmd/payments
+
+.PHONY: service-payments-image
+service-payments-image:
+	docker build -t sparkit-payments-service -f ${DOCKER_DIR}/payments.Dockerfile .
+
+.PHONY: payments-builder-image
+payments-builder-image:
+	docker build -t sparkit-payments-builder -f ${DOCKER_DIR}/paymentsBuilder.Dockerfile .
+
+.PHONY: sparkit-payments-run
+sparkit-survey-run:
+	make payments-builder-image
+	make service-payments-image
+	docker run sparkit-payments-service

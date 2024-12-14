@@ -112,7 +112,24 @@ services:
       - '8085:8085'
     networks:
       - SparkIt-network
-
+  service-sparkit-payments:
+    image: sparkit-payments-service
+    container_name: sparkit-payments-service
+    depends_on:
+      sparkit-postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PSQL_HOST: "sparkit-postgres:5432"
+      PSQL_USER: ${POSTGRES_USER}
+      PSQL_PASSWORD: ${POSTGRES_PASSWORD}
+      PSQL_DBNAME: "sparkitDB"
+    ports:
+      - '8086:8086'
+      - '8036:8036'
+    networks:
+      - SparkIt-network
   sparkit-postgres:
     image: postgres:latest
     container_name: sparkit-postgres

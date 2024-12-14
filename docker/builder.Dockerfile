@@ -14,3 +14,4 @@ RUN make build-personalities-microservice
 RUN make build-communications-microservice
 RUN make build-message-microservice
 RUN make build-survey-microservice
+RUN make build-payments-microservice

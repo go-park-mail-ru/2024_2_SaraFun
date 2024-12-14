@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_ReactionService.go -package=communications_mocks . ReactionUseCase
 type ReactionUseCase interface {
 	AddReaction(ctx context.Context, reaction models.Reaction) error
 	GetMatchList(ctx context.Context, userId int) ([]int, error)

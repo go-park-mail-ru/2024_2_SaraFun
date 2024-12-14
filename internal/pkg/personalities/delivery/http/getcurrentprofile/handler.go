@@ -106,13 +106,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	profileResponse := models.Profile{
-		ID:        int(profile.Profile.ID),
-		FirstName: profile.Profile.FirstName,
-		LastName:  profile.Profile.LastName,
-		Age:       int(profile.Profile.Age),
-		Gender:    profile.Profile.Gender,
-		Target:    profile.Profile.Target,
-		About:     profile.Profile.About,
+		ID:           int(profile.Profile.ID),
+		FirstName:    profile.Profile.FirstName,
+		LastName:     profile.Profile.LastName,
+		Age:          int(profile.Profile.Age),
+		Gender:       profile.Profile.Gender,
+		Target:       profile.Profile.Target,
+		About:        profile.Profile.About,
+		BirthdayDate: profile.Profile.BirthDate,
 	}
 	response := Response{
 		Profile: profileResponse,

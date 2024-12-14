@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
+	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/mailru/easyjson"
@@ -33,6 +34,7 @@ type Handler struct {
 	SessionClient        generatedAuth.AuthClient
 	personalitiesClient  generatedPersonalities.PersonalitiesClient
 	communicationsClient generatedCommunications.CommunicationsClient
+	paymentsClient       generatedPayments.PaymentClient
 	imageService         ImageService
 	wsService            WebSocketService
 	logger               *zap.Logger
@@ -40,13 +42,15 @@ type Handler struct {
 
 func NewHandler(reactionClient generatedCommunications.CommunicationsClient,
 	sessionClient generatedAuth.AuthClient, personalitiesClient generatedPersonalities.PersonalitiesClient,
-	communicationsClient generatedCommunications.CommunicationsClient, imageService ImageService,
+	communicationsClient generatedCommunications.CommunicationsClient,
+	paymentsClient generatedPayments.PaymentClient, imageService ImageService,
 	wsService WebSocketService, logger *zap.Logger) *Handler {
 	return &Handler{
 		reactionClient:       reactionClient,
 		SessionClient:        sessionClient,
 		personalitiesClient:  personalitiesClient,
 		communicationsClient: communicationsClient,
+		paymentsClient:       paymentsClient,
 		imageService:         imageService,
 		wsService:            wsService,
 		logger:               logger,
@@ -90,6 +94,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		Receiver: int32(reaction.Receiver),
 		Type:     reaction.Type,
 	}
+	checkAndSpendReq := &generatedPayments.CheckAndSpendLikeRequest{UserID: userId.UserId}
+	_, err = h.paymentsClient.CheckAndSpendLike(ctx, checkAndSpendReq)
+	if err != nil {
+		h.logger.Error("AddReaction Handler: bad checking and spend like", zap.Error(err))
+		http.Error(w, "у вас нет лайков", http.StatusBadRequest)
+		return
+	}
+
 	addReactionRequest := &generatedCommunications.AddReactionRequest{Reaction: react}
 	_, err = h.reactionClient.AddReaction(ctx, addReactionRequest)
 	if err != nil {

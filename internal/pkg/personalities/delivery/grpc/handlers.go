@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate mockgen -destination=./mocks/mock_userUsecase.go -package=mocks . UserUsecase
 type UserUsecase interface {
 	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
 	RegisterUser(ctx context.Context, user models.User) (int, error)
@@ -21,6 +22,7 @@ type UserUsecase interface {
 	ChangePassword(ctx context.Context, userId int, password string) error
 }
 
+//go:generate mockgen -destination=./mocks/mock_profileUsecase.go -package=mocks . ProfileUsecase
 type ProfileUsecase interface {
 	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
 	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
@@ -210,6 +212,7 @@ func (h *GrpcPersonalitiesHandler) GetProfile(ctx context.Context,
 		Gender:    profile.Gender,
 		Target:    profile.Target,
 		About:     profile.About,
+		BirthDate: profile.BirthdayDate,
 	}
 	res := &generatedPersonalities.GetProfileResponse{Profile: resProfile}
 	return res, nil
