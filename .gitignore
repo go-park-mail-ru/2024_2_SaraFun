@@ -1,1 +1,7 @@
 .idea/
+server.crt
+server.key
+coverage.out
+coverprofile.tmp
+.env
+docker/.env

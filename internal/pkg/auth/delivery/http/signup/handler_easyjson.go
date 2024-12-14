@@ -40,6 +40,18 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgAuthDeliv
 			(out.User).UnmarshalEasyJSON(in)
 		case "Profile":
 			(out.Profile).UnmarshalEasyJSON(in)
+		case "username":
+			out.Username = string(in.String())
+		case "password":
+			out.Password = string(in.String())
+		case "first_name":
+			out.FirstName = string(in.String())
+		case "last_name":
+			out.LastName = string(in.String())
+		case "age":
+			out.Age = int(in.Int())
+		case "gender":
+			out.Gender = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -63,6 +75,36 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgAuthDeliv
 		const prefix string = ",\"Profile\":"
 		out.RawString(prefix)
 		(in.Profile).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"username\":"
+		out.RawString(prefix)
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"password\":"
+		out.RawString(prefix)
+		out.String(string(in.Password))
+	}
+	{
+		const prefix string = ",\"first_name\":"
+		out.RawString(prefix)
+		out.String(string(in.FirstName))
+	}
+	{
+		const prefix string = ",\"last_name\":"
+		out.RawString(prefix)
+		out.String(string(in.LastName))
+	}
+	{
+		const prefix string = ",\"age\":"
+		out.RawString(prefix)
+		out.Int(int(in.Age))
+	}
+	{
+		const prefix string = ",\"gender\":"
+		out.RawString(prefix)
+		out.String(string(in.Gender))
 	}
 	out.RawByte('}')
 }

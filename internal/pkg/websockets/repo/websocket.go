@@ -20,6 +20,11 @@ type JsonMessage struct {
 	Message string `json:"message"`
 }
 
+type JsonNotification struct {
+	Username  string `json:"username"`
+	Imagelink string `json:"imagelink"`
+}
+
 func New(conns map[int]*ws.Conn, logger *zap.Logger) *Storage {
 	return &Storage{
 		wConns: conns,
@@ -56,6 +61,25 @@ func (s *Storage) WriteMessage(ctx context.Context, authorID int, receiverID int
 	err := conn.WriteJSON(&msg)
 	if err != nil {
 		return fmt.Errorf("cannot write message: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) SendNotification(ctx context.Context, receiverID int, authorImageLink string, authorUsername string) error {
+	s.logger.Info("Repo websocket sendNotification", zap.Int("receiverID", receiverID))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	conn, ok := s.wConns[receiverID]
+	if !ok {
+		return fmt.Errorf("user ws conn not found", receiverID)
+	}
+	notification := JsonNotification{
+		Username:  authorUsername,
+		Imagelink: authorImageLink,
+	}
+	err := conn.WriteJSON(&notification)
+	if err != nil {
+		return fmt.Errorf("cannot send notification: %w", err)
 	}
 	return nil
 }

@@ -25,6 +25,7 @@ const (
 	Communications_GetMatchTime_FullMethodName           = "/communications.Communications/GetMatchTime"
 	Communications_GetMatchesBySearch_FullMethodName     = "/communications.Communications/GetMatchesBySearch"
 	Communications_UpdateOrCreateReaction_FullMethodName = "/communications.Communications/UpdateOrCreateReaction"
+	Communications_CheckMatchExists_FullMethodName       = "/communications.Communications/CheckMatchExists"
 )
 
 // CommunicationsClient is the client API for Communications service.
@@ -37,6 +38,7 @@ type CommunicationsClient interface {
 	GetMatchTime(ctx context.Context, in *GetMatchTimeRequest, opts ...grpc.CallOption) (*GetMatchTimeResponse, error)
 	GetMatchesBySearch(ctx context.Context, in *GetMatchesBySearchRequest, opts ...grpc.CallOption) (*GetMatchesBySearchResponse, error)
 	UpdateOrCreateReaction(ctx context.Context, in *UpdateOrCreateReactionRequest, opts ...grpc.CallOption) (*UpdateOrCreateReactionResponse, error)
+	CheckMatchExists(ctx context.Context, in *CheckMatchExistsRequest, opts ...grpc.CallOption) (*CheckMatchExistsResponse, error)
 }
 
 type communicationsClient struct {
@@ -101,6 +103,16 @@ func (c *communicationsClient) UpdateOrCreateReaction(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *communicationsClient) CheckMatchExists(ctx context.Context, in *CheckMatchExistsRequest, opts ...grpc.CallOption) (*CheckMatchExistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckMatchExistsResponse)
+	err := c.cc.Invoke(ctx, Communications_CheckMatchExists_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommunicationsServer is the server API for Communications service.
 // All implementations must embed UnimplementedCommunicationsServer
 // for forward compatibility
@@ -111,6 +123,7 @@ type CommunicationsServer interface {
 	GetMatchTime(context.Context, *GetMatchTimeRequest) (*GetMatchTimeResponse, error)
 	GetMatchesBySearch(context.Context, *GetMatchesBySearchRequest) (*GetMatchesBySearchResponse, error)
 	UpdateOrCreateReaction(context.Context, *UpdateOrCreateReactionRequest) (*UpdateOrCreateReactionResponse, error)
+	CheckMatchExists(context.Context, *CheckMatchExistsRequest) (*CheckMatchExistsResponse, error)
 	mustEmbedUnimplementedCommunicationsServer()
 }
 
@@ -135,6 +148,9 @@ func (UnimplementedCommunicationsServer) GetMatchesBySearch(context.Context, *Ge
 }
 func (UnimplementedCommunicationsServer) UpdateOrCreateReaction(context.Context, *UpdateOrCreateReactionRequest) (*UpdateOrCreateReactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrCreateReaction not implemented")
+}
+func (UnimplementedCommunicationsServer) CheckMatchExists(context.Context, *CheckMatchExistsRequest) (*CheckMatchExistsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckMatchExists not implemented")
 }
 func (UnimplementedCommunicationsServer) mustEmbedUnimplementedCommunicationsServer() {}
 
@@ -257,6 +273,24 @@ func _Communications_UpdateOrCreateReaction_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Communications_CheckMatchExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckMatchExistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommunicationsServer).CheckMatchExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Communications_CheckMatchExists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommunicationsServer).CheckMatchExists(ctx, req.(*CheckMatchExistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Communications_ServiceDesc is the grpc.ServiceDesc for Communications service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -287,6 +321,10 @@ var Communications_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOrCreateReaction",
 			Handler:    _Communications_UpdateOrCreateReaction_Handler,
+		},
+		{
+			MethodName: "CheckMatchExists",
+			Handler:    _Communications_CheckMatchExists_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

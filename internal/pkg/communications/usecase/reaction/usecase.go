@@ -17,6 +17,7 @@ type Repository interface {
 	GetMatchesByFirstName(ctx context.Context, userID int, firstname string) ([]int, error)
 	GetMatchesByString(ctx context.Context, userID int, search string) ([]int, error)
 	UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error
+	CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error)
 }
 
 type UseCase struct {
@@ -87,4 +88,14 @@ func (u *UseCase) UpdateOrCreateReaction(ctx context.Context, reaction models.Re
 		return fmt.Errorf("failed to UpdateOrCreateReaction: %w", err)
 	}
 	return nil
+}
+
+func (u *UseCase) CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error) {
+	u.logger.Info("check match exists usecase start")
+	exists, err := u.repo.CheckMatchExists(ctx, firstUser, secondUser)
+	if err != nil {
+		u.logger.Error("UseCase CheckMatchExists: failed to CheckMatchExists", zap.Error(err))
+		return false, fmt.Errorf("failed to CheckMatchExists: %w", err)
+	}
+	return exists, nil
 }

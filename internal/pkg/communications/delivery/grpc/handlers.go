@@ -15,6 +15,7 @@ type ReactionUseCase interface {
 	GetMatchTime(ctx context.Context, firstUser int, secondUser int) (string, error)
 	GetMatchesBySearch(ctx context.Context, userID int, search string) ([]int, error)
 	UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error
+	CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error)
 }
 
 type GrpcCommunicationsHandler struct {
@@ -125,4 +126,16 @@ func (h *GrpcCommunicationsHandler) UpdateOrCreateReaction(ctx context.Context,
 		return nil, fmt.Errorf("grpc update reaction error: %w", err)
 	}
 	return &generatedCommunications.UpdateOrCreateReactionResponse{}, nil
+}
+
+func (h *GrpcCommunicationsHandler) CheckMatchExists(ctx context.Context,
+	in *generatedCommunications.CheckMatchExistsRequest) (*generatedCommunications.CheckMatchExistsResponse, error) {
+	firstUser := int(in.FirstUser)
+	secondUser := int(in.SecondUser)
+	h.logger.Info("check match exists grpc")
+	response, err := h.reactionUC.CheckMatchExists(ctx, firstUser, secondUser)
+	if err != nil {
+		return nil, fmt.Errorf("grpc check match exists error: %w", err)
+	}
+	return &generatedCommunications.CheckMatchExistsResponse{Exists: response}, nil
 }

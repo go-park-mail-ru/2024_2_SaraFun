@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/caarlos0/env/v11"
 	grpcauth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/changepassword"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/http/checkauth"
@@ -45,6 +44,7 @@ import (
 	websocketrepo "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/repo"
 	websocketusecase "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/config"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/connectDB"
 	"github.com/gorilla/mux"
 	ws "github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
@@ -63,9 +63,6 @@ import (
 )
 
 func main() {
-
-	var envCfg config.EnvConfig
-	err := env.Parse(&envCfg)
 	// Создаем логгер
 	cfg := zap.Config{
 		Encoding:         "json",
@@ -79,20 +76,35 @@ func main() {
 			EncodeTime: zapcore.ISO8601TimeEncoder,
 		},
 	}
+
 	logger, err := cfg.Build()
 	defer logger.Sync()
+
 	sugar := logger.Sugar()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	envCfg, err := config.NewConfig(logger)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
-	connStr := "host=sparkit-postgres port=5432 user=reufee password=sparkit dbname=sparkitDB sslmode=disable"
+	connStr, err := connectDB.GetConnectURL(envCfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	db.SetMaxOpenConns(16)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(0)
 
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
@@ -170,7 +182,7 @@ func main() {
 	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
 	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
 	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
-	addReaction := addreaction.NewHandler(communicationsClient, authClient, logger)
+	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, imageUseCase, websocketUsecase, logger)
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
 	sendReport := sendreport.NewHandler(authClient, messageClient, communicationsClient, logger)
 	sendMessage := sendmessage.NewHandler(messageClient, websocketUsecase, authClient, communicationsClient, logger)
@@ -190,8 +202,6 @@ func main() {
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
 
 	router := mux.NewRouter().PathPrefix("/api").Subrouter()
-
-	//router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	router.Use(
 		accessLogMiddleware.Handler,
@@ -263,7 +273,8 @@ func main() {
 
 	go func() {
 		fmt.Println("Starting the server")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServeTLS("/etc/ssl/certs/server.crt",
+			"/etc/ssl/private/server.key"); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("Error starting server: %v\n", err)
 		}
 	}()
