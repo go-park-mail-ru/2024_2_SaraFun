@@ -1,4 +1,4 @@
-package getmatches
+package getallchats
 
 import (
 	"bytes"
@@ -17,7 +17,9 @@ import (
 	authmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen/mocks"
 	generatedCommunications "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen"
 	communicationsmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/grpc/gen/mocks"
-	imageservicemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getmatches/mocks"
+	imageservicemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/communications/delivery/http/getallchats/mocks"
+	generatedMessage "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen"
+	messagemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/message/delivery/grpc/gen/mocks"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	personalitiesmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
@@ -36,11 +38,12 @@ func TestHandler(t *testing.T) {
 	sessionClient := authmocks.NewMockAuthClient(mockCtrl)
 	personalitiesClient := personalitiesmocks.NewMockPersonalitiesClient(mockCtrl)
 	imageService := imageservicemocks.NewMockImageService(mockCtrl)
+	messageClient := messagemocks.NewMockMessageClient(mockCtrl)
 
-	handler := NewHandler(communicationsClient, sessionClient, personalitiesClient, imageService, logger)
+	handler := NewHandler(communicationsClient, sessionClient, personalitiesClient, imageService, messageClient, logger)
 
-	validUserID := int32(10)
 	validAuthorID := int32(100)
+	validUserID := int32(10)
 	validImages := []models.Image{{Id: 1, Link: "http://example.com/img1.jpg"}}
 
 	tests := []struct {
@@ -51,12 +54,23 @@ func TestHandler(t *testing.T) {
 		matchListAuthors         []int32
 		matchListError           error
 		profileError             error
-		imageError               error
 		usernameError            error
+		imageError               error
+		lastMessageError         error
+		matchTimeError           error
+		noLastMessage            bool
 		expectedStatus           int
 		expectedResponseContains string
 	}{
-
+		{
+			name:                     "good test",
+			cookieValue:              "valid_session",
+			userID:                   validUserID,
+			matchListAuthors:         []int32{validAuthorID},
+			noLastMessage:            false,
+			expectedStatus:           http.StatusOK,
+			expectedResponseContains: `"responses"`,
+		},
 		{
 			name:                     "no cookie",
 			cookieValue:              "",
@@ -71,14 +85,31 @@ func TestHandler(t *testing.T) {
 			expectedResponseContains: "session not found",
 		},
 		{
-			name:                     "match list error",
+			name:                     "get match list error",
 			cookieValue:              "valid_session",
 			userID:                   validUserID,
 			matchListError:           errors.New("match error"),
 			expectedStatus:           http.StatusUnauthorized,
 			expectedResponseContains: "session not found",
 		},
-
+		{
+			name:                     "get profile error",
+			cookieValue:              "valid_session",
+			userID:                   validUserID,
+			matchListAuthors:         []int32{validAuthorID},
+			profileError:             errors.New("profile error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get profile",
+		},
+		{
+			name:                     "get username error",
+			cookieValue:              "valid_session",
+			userID:                   validUserID,
+			matchListAuthors:         []int32{validAuthorID},
+			usernameError:            errors.New("username error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get username",
+		},
 		{
 			name:                     "image error",
 			cookieValue:              "valid_session",
@@ -87,6 +118,16 @@ func TestHandler(t *testing.T) {
 			imageError:               errors.New("image error"),
 			expectedStatus:           http.StatusInternalServerError,
 			expectedResponseContains: "image error",
+		},
+		{
+			name:                     "match time error",
+			cookieValue:              "valid_session",
+			userID:                   validUserID,
+			matchListAuthors:         []int32{validAuthorID},
+			noLastMessage:            true,
+			matchTimeError:           errors.New("match time error"),
+			expectedStatus:           http.StatusInternalServerError,
+			expectedResponseContains: "bad get match time",
 		},
 	}
 
@@ -104,21 +145,21 @@ func TestHandler(t *testing.T) {
 				}
 			}
 
-			canProceed := (tt.userIDError == nil && tt.cookieValue != "")
-			if canProceed {
+			if tt.userIDError == nil && tt.cookieValue != "" {
 				getMatchListReq := &generatedCommunications.GetMatchListRequest{UserID: tt.userID}
 				if tt.matchListError == nil {
-					resp := &generatedCommunications.GetMatchListResponse{Authors: tt.matchListAuthors}
+					matchListResp := &generatedCommunications.GetMatchListResponse{Authors: tt.matchListAuthors}
 					communicationsClient.EXPECT().GetMatchList(gomock.Any(), getMatchListReq).
-						Return(resp, nil).Times(1)
+						Return(matchListResp, nil).Times(1)
 				} else {
 					communicationsClient.EXPECT().GetMatchList(gomock.Any(), getMatchListReq).
 						Return(nil, tt.matchListError).Times(1)
 				}
 			}
 
-			if canProceed && tt.matchListError == nil && len(tt.matchListAuthors) > 0 {
+			if tt.userIDError == nil && tt.matchListError == nil && tt.cookieValue != "" && len(tt.matchListAuthors) > 0 {
 				author := tt.matchListAuthors[0]
+
 				getProfileReq := &generatedPersonalities.GetProfileRequest{Id: author}
 				if tt.profileError == nil {
 					profileResp := &generatedPersonalities.GetProfileResponse{
@@ -129,44 +170,84 @@ func TestHandler(t *testing.T) {
 							Age:       25,
 							Gender:    "male",
 							Target:    "friendship",
-							About:     "Hello",
+							About:     "Hi",
 						},
 					}
 					personalitiesClient.EXPECT().GetProfile(gomock.Any(), getProfileReq).
 						Return(profileResp, nil).Times(1)
-
-					if tt.imageError == nil {
-						imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(author)).
-							Return(validImages, nil).Times(1)
-					} else {
-						imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(author)).
-							Return(nil, tt.imageError).Times(1)
-					}
-
-					if tt.imageError == nil {
-						getUsernameReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: author}
-						if tt.usernameError == nil {
-							userResp := &generatedPersonalities.GetUsernameByUserIDResponse{Username: "johndoe"}
-							personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
-								Return(userResp, nil).Times(1)
-						} else {
-							personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
-								Return(nil, tt.usernameError).Times(1)
-						}
-					}
 				} else {
 					personalitiesClient.EXPECT().GetProfile(gomock.Any(), getProfileReq).
 						Return(nil, tt.profileError).Times(1)
 				}
+
+				if tt.profileError == nil {
+					// GetUsername
+					getUsernameReq := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: author}
+					if tt.usernameError == nil {
+						usernameResp := &generatedPersonalities.GetUsernameByUserIDResponse{Username: "johndoe"}
+						personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
+							Return(usernameResp, nil).Times(1)
+					} else {
+						personalitiesClient.EXPECT().GetUsernameByUserID(gomock.Any(), getUsernameReq).
+							Return(nil, tt.usernameError).Times(1)
+					}
+
+					if tt.usernameError == nil {
+						if tt.imageError == nil {
+							imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(author)).
+								Return(validImages, nil).Times(1)
+						} else {
+							imageService.EXPECT().GetImageLinksByUserId(gomock.Any(), int(author)).
+								Return(nil, tt.imageError).Times(1)
+						}
+
+						if tt.imageError == nil {
+							getLastReq := &generatedMessage.GetLastMessageRequest{AuthorID: tt.userID, ReceiverID: author}
+							if tt.lastMessageError == nil {
+								if tt.noLastMessage {
+									messageClient.EXPECT().GetLastMessage(gomock.Any(), getLastReq).
+										Return(&generatedMessage.GetLastMessageResponse{Message: ""}, nil).Times(1)
+									getMatchTimeReq := &generatedCommunications.GetMatchTimeRequest{
+										FirstUser:  tt.userID,
+										SecondUser: author,
+									}
+									if tt.matchTimeError == nil {
+										timeResp := &generatedCommunications.GetMatchTimeResponse{Time: "2024-12-12T10:00:00Z"}
+										communicationsClient.EXPECT().GetMatchTime(gomock.Any(), getMatchTimeReq).
+											Return(timeResp, nil).Times(1)
+									} else {
+										communicationsClient.EXPECT().GetMatchTime(gomock.Any(), getMatchTimeReq).
+											Return(nil, tt.matchTimeError).Times(1)
+									}
+								} else {
+									messageClient.EXPECT().GetLastMessage(gomock.Any(), getLastReq).
+										Return(&generatedMessage.GetLastMessageResponse{
+											Message: "Hello!",
+											Self:    true,
+											Time:    "2024-12-12T10:00:00Z",
+										}, nil).Times(1)
+								}
+							} else {
+								messageClient.EXPECT().GetLastMessage(gomock.Any(), getLastReq).
+									Return(nil, tt.lastMessageError).Times(1)
+							}
+						}
+					}
+				}
 			}
 
-			req := httptest.NewRequest(http.MethodGet, "/matches", bytes.NewBuffer(nil))
+			req := httptest.NewRequest(http.MethodGet, "/chats", bytes.NewBuffer(nil))
+			req = req.WithContext(ctx)
 			if tt.cookieValue != "" {
-				req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
+				cookie := &http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: tt.cookieValue,
+				}
+				req.AddCookie(cookie)
 			}
 			w := httptest.NewRecorder()
 
-			handler.Handle(w, req.WithContext(ctx))
+			handler.Handle(w, req)
 
 			if w.Code != tt.expectedStatus {
 				t.Errorf("%s: handler returned wrong status code: got %v want %v", tt.name, w.Code, tt.expectedStatus)
