@@ -28,6 +28,9 @@ const (
 	Payment_ChangePurchasedLikesBalance_FullMethodName = "/payments.Payment/ChangePurchasedLikesBalance"
 	Payment_GetAllBalance_FullMethodName               = "/payments.Payment/GetAllBalance"
 	Payment_CreateBalances_FullMethodName              = "/payments.Payment/CreateBalances"
+	Payment_BuyLikes_FullMethodName                    = "/payments.Payment/BuyLikes"
+	Payment_CreateProduct_FullMethodName               = "/payments.Payment/CreateProduct"
+	Payment_GetProducts_FullMethodName                 = "/payments.Payment/GetProducts"
 )
 
 // PaymentClient is the client API for Payment service.
@@ -43,6 +46,9 @@ type PaymentClient interface {
 	ChangePurchasedLikesBalance(ctx context.Context, in *ChangePurchasedLikesBalanceRequest, opts ...grpc.CallOption) (*ChangePurchasedLikesBalanceResponse, error)
 	GetAllBalance(ctx context.Context, in *GetAllBalanceRequest, opts ...grpc.CallOption) (*GetAllBalanceResponse, error)
 	CreateBalances(ctx context.Context, in *CreateBalancesRequest, opts ...grpc.CallOption) (*CreateBalancesResponse, error)
+	BuyLikes(ctx context.Context, in *BuyLikesRequest, opts ...grpc.CallOption) (*BuyLikesResponse, error)
+	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
+	GetProducts(ctx context.Context, in *GetProductsRequest, opts ...grpc.CallOption) (*GetProductsResponse, error)
 }
 
 type paymentClient struct {
@@ -143,6 +149,36 @@ func (c *paymentClient) CreateBalances(ctx context.Context, in *CreateBalancesRe
 	return out, nil
 }
 
+func (c *paymentClient) BuyLikes(ctx context.Context, in *BuyLikesRequest, opts ...grpc.CallOption) (*BuyLikesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BuyLikesResponse)
+	err := c.cc.Invoke(ctx, Payment_BuyLikes_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateProductResponse)
+	err := c.cc.Invoke(ctx, Payment_CreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentClient) GetProducts(ctx context.Context, in *GetProductsRequest, opts ...grpc.CallOption) (*GetProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProductsResponse)
+	err := c.cc.Invoke(ctx, Payment_GetProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PaymentServer is the server API for Payment service.
 // All implementations must embed UnimplementedPaymentServer
 // for forward compatibility.
@@ -156,6 +192,9 @@ type PaymentServer interface {
 	ChangePurchasedLikesBalance(context.Context, *ChangePurchasedLikesBalanceRequest) (*ChangePurchasedLikesBalanceResponse, error)
 	GetAllBalance(context.Context, *GetAllBalanceRequest) (*GetAllBalanceResponse, error)
 	CreateBalances(context.Context, *CreateBalancesRequest) (*CreateBalancesResponse, error)
+	BuyLikes(context.Context, *BuyLikesRequest) (*BuyLikesResponse, error)
+	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
+	GetProducts(context.Context, *GetProductsRequest) (*GetProductsResponse, error)
 	mustEmbedUnimplementedPaymentServer()
 }
 
@@ -192,6 +231,15 @@ func (UnimplementedPaymentServer) GetAllBalance(context.Context, *GetAllBalanceR
 }
 func (UnimplementedPaymentServer) CreateBalances(context.Context, *CreateBalancesRequest) (*CreateBalancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBalances not implemented")
+}
+func (UnimplementedPaymentServer) BuyLikes(context.Context, *BuyLikesRequest) (*BuyLikesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BuyLikes not implemented")
+}
+func (UnimplementedPaymentServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
+}
+func (UnimplementedPaymentServer) GetProducts(context.Context, *GetProductsRequest) (*GetProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProducts not implemented")
 }
 func (UnimplementedPaymentServer) mustEmbedUnimplementedPaymentServer() {}
 func (UnimplementedPaymentServer) testEmbeddedByValue()                 {}
@@ -376,6 +424,60 @@ func _Payment_CreateBalances_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Payment_BuyLikes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BuyLikesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServer).BuyLikes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payment_BuyLikes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServer).BuyLikes(ctx, req.(*BuyLikesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Payment_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServer).CreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payment_CreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServer).CreateProduct(ctx, req.(*CreateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Payment_GetProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServer).GetProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payment_GetProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServer).GetProducts(ctx, req.(*GetProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Payment_ServiceDesc is the grpc.ServiceDesc for Payment service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +520,18 @@ var Payment_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBalances",
 			Handler:    _Payment_CreateBalances_Handler,
+		},
+		{
+			MethodName: "BuyLikes",
+			Handler:    _Payment_BuyLikes_Handler,
+		},
+		{
+			MethodName: "CreateProduct",
+			Handler:    _Payment_CreateProduct_Handler,
+		},
+		{
+			MethodName: "GetProducts",
+			Handler:    _Payment_GetProducts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

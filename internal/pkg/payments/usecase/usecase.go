@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ type Repository interface {
 	CreateProduct(ctx context.Context, product models.Product) (int, error)
 	GetProduct(ctx context.Context, title string) (models.Product, error)
 	UpdateProduct(ctx context.Context, title string, product models.Product) error
+	GetProducts(ctx context.Context) ([]models.Product, error)
 }
 
 type UseCase struct {
@@ -161,6 +163,7 @@ func (u *UseCase) CreateProduct(ctx context.Context, product models.Product) (in
 		u.logger.Error("usecase create product bad price", zap.Int("price", product.Price))
 		return -1, fmt.Errorf("invalid price")
 	}
+	product.ImageLink = ""
 	id, err := u.repo.CreateProduct(ctx, product)
 	if err != nil {
 		u.logger.Error("usecase create product error", zap.Error(err))
@@ -189,4 +192,26 @@ func (u *UseCase) UpdateProduct(ctx context.Context, title string, product model
 		return fmt.Errorf("failed to create product: %w", err)
 	}
 	return nil
+}
+
+func (u *UseCase) CheckBalance(ctx context.Context, userID int, needMoney int) error {
+	amount, err := u.repo.GetBalance(ctx, userID)
+	if err != nil {
+		u.logger.Error("usecase get balance error", zap.Error(err))
+		return fmt.Errorf("failed to get balance: %w", err)
+	}
+	if amount < needMoney {
+		u.logger.Error("usecase get balance error", zap.Int("amount", amount))
+		return errors.New("Недостаточно средств")
+	}
+	return err
+}
+
+func (u *UseCase) GetProducts(ctx context.Context) ([]models.Product, error) {
+	profiles, err := u.repo.GetProducts(ctx)
+	if err != nil {
+		u.logger.Error("usecase create product error", zap.Error(err))
+		return []models.Product{}, fmt.Errorf("failed to create product: %w", err)
+	}
+	return profiles, err
 }

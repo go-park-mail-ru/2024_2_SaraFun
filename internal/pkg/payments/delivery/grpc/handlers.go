@@ -3,9 +3,12 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UseCase interface {
@@ -19,6 +22,10 @@ type UseCase interface {
 	AddBalance(ctx context.Context, userID int, amount int) error
 	AddDailyLikesCount(ctx context.Context, userID int, amount int) error
 	AddPurchasedLikesCount(ctx context.Context, userID int, amount int) error
+	GetProduct(ctx context.Context, title string) (models.Product, error)
+	CheckBalance(ctx context.Context, userID int, amount int) error
+	CreateProduct(ctx context.Context, product models.Product) (int, error)
+	GetProducts(ctx context.Context) ([]models.Product, error)
 }
 
 type GRPCHandler struct {
@@ -185,4 +192,74 @@ func (h *GRPCHandler) CreateBalances(ctx context.Context,
 		return nil, fmt.Errorf("bad purchase count error: %w", err)
 	}
 	return &generatedPayments.CreateBalancesResponse{}, nil
+}
+
+func (h *GRPCHandler) BuyLikes(ctx context.Context,
+	in *generatedPayments.BuyLikesRequest) (*generatedPayments.BuyLikesResponse, error) {
+	title := in.Title
+	amount := int(in.Amount)
+	userID := int(in.UserID)
+	spend := amount * (-1)
+	product, err := h.uc.GetProduct(ctx, title)
+	if err != nil {
+		h.logger.Error("grpc get balance error", zap.Error(err))
+		return nil, fmt.Errorf("grpc get balance error: %w", err)
+	}
+	err = h.uc.CheckBalance(ctx, userID, amount)
+	if err != nil {
+		h.logger.Error("grpc check balance error", zap.Error(err))
+		return nil, status.Error(codes.InvalidArgument, "Недостаточно средств")
+	}
+
+	count := amount / product.Price
+	err = h.uc.ChangeBalance(ctx, userID, spend)
+	if err != nil {
+		h.logger.Error("grpc change balance error", zap.Error(err))
+		return nil, fmt.Errorf("grpc change balance error: %w", err)
+	}
+	err = h.uc.ChangePurchasedLikeCount(ctx, userID, count)
+	if err != nil {
+		h.logger.Error("grpc change balance error", zap.Error(err))
+		return nil, fmt.Errorf("grpc change balance error: %w", err)
+	}
+	response := &generatedPayments.BuyLikesResponse{}
+	return response, nil
+}
+
+func (h *GRPCHandler) CreateProduct(ctx context.Context,
+	in *generatedPayments.CreateProductRequest) (*generatedPayments.CreateProductResponse, error) {
+	product := models.Product{
+		Title:       in.Product.Title,
+		Description: in.Product.Description,
+		ImageLink:   in.Product.ImageLink,
+		Price:       int(in.Product.Price),
+	}
+	id, err := h.uc.CreateProduct(ctx, product)
+	if err != nil {
+		h.logger.Error("grpc create product error", zap.Error(err))
+		return nil, fmt.Errorf("grpc create product error: %w", err)
+	}
+	response := &generatedPayments.CreateProductResponse{ID: int32(id)}
+	return response, nil
+}
+
+func (h *GRPCHandler) GetProducts(ctx context.Context,
+	in *generatedPayments.GetProductsRequest) (*generatedPayments.GetProductsResponse, error) {
+	products, err := h.uc.GetProducts(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("grpc get products error: %w", err)
+	}
+	var grpcProducts []*generatedPayments.Product
+	for _, product := range products {
+		grpcProducts = append(grpcProducts, &generatedPayments.Product{
+			Title:       product.Title,
+			Description: product.Description,
+			ImageLink:   product.ImageLink,
+			Price:       int32(product.Price),
+		})
+	}
+	response := &generatedPayments.GetProductsResponse{
+		Products: grpcProducts,
+	}
+	return response, nil
 }

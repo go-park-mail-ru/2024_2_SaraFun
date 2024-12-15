@@ -12,6 +12,9 @@ service Payment {
   rpc ChangePurchasedLikesBalance(ChangePurchasedLikesBalanceRequest) returns (ChangePurchasedLikesBalanceResponse);
   rpc GetAllBalance(GetAllBalanceRequest) returns (GetAllBalanceResponse);
   rpc CreateBalances(CreateBalancesRequest) returns (CreateBalancesResponse);
+  rpc BuyLikes(BuyLikesRequest) returns (BuyLikesResponse);
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProducts(GetProductsRequest) returns (GetProductsResponse);
 }
 
 message GetDailyLikeBalanceRequest {
@@ -77,4 +80,34 @@ message CreateBalancesRequest {
 }
 
 message CreateBalancesResponse {
+}
+
+message BuyLikesRequest {
+  string Title = 1;
+  int32 Amount = 2;
+  int32 UserID = 3;
+}
+
+message BuyLikesResponse {}
+
+message Product {
+  string Title = 1;
+  string Description = 2;
+  string ImageLink = 3;
+  int32 Price = 4;
+}
+
+message CreateProductRequest {
+  Product Product = 1;
+}
+
+message CreateProductResponse {
+  int32 ID = 1;
+}
+
+message GetProductsRequest {
+}
+
+message GetProductsResponse {
+  repeated Product Products = 1;
 }

@@ -151,7 +151,7 @@ func (repo *Storage) GetPurchasedLikesCount(ctx context.Context, userID int) (in
 }
 
 func (repo *Storage) CreateProduct(ctx context.Context, product models.Product) (int, error) {
-	query := `INSERT INTO product (title, description, imagelink, price) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO product (title, description, imagelink, price) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id int
 	err := repo.DB.QueryRowContext(ctx, query, product.Title, product.Description, product.ImageLink, product.Price).Scan(&id)
 	if err != nil {
@@ -180,4 +180,25 @@ func (repo *Storage) UpdateProduct(ctx context.Context, title string, product mo
 		return fmt.Errorf("UpdateProduct db exec error: %w", err)
 	}
 	return nil
+}
+
+func (repo *Storage) GetProducts(ctx context.Context) ([]models.Product, error) {
+	query := `SELECT title, description, imagelink, price FROM product`
+	var products []models.Product
+	rows, err := repo.DB.QueryContext(ctx, query)
+	if err != nil {
+		repo.logger.Error("GetProducts db query error", zap.Error(err))
+		return products, fmt.Errorf("GetProducts db query error: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var product models.Product
+		err := rows.Scan(&product.Title, &product.Description, &product.ImageLink, &product.Price)
+		if err != nil {
+			repo.logger.Error("GetProducts row scan error", zap.Error(err))
+			return products, fmt.Errorf("GetProducts row scan error: %w", err)
+		}
+		products = append(products, product)
+	}
+	return products, nil
 }

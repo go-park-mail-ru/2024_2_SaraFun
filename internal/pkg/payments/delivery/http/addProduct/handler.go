@@ -1,22 +1,15 @@
-package buyproduct
+package addProduct
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/status"
 	"net/http"
 )
-
-//go:generate easyjson -all handler.go
-
-type Request struct {
-	Title string `json:"type"`
-	Price int    `json:"price"`
-}
 
 type Handler struct {
 	authClient     generatedAuth.AuthClient
@@ -24,7 +17,8 @@ type Handler struct {
 	logger         *zap.Logger
 }
 
-func NewHandler(authClient generatedAuth.AuthClient, paymentsClient generatedPayments.PaymentClient, logger *zap.Logger) *Handler {
+func NewHandler(authClient generatedAuth.AuthClient, paymentsClient generatedPayments.PaymentClient,
+	logger *zap.Logger) *Handler {
 	return &Handler{
 		authClient:     authClient,
 		paymentsClient: paymentsClient,
@@ -41,37 +35,33 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	getUserIDReq := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
-	userID, err := h.authClient.GetUserIDBySessionID(ctx, getUserIDReq)
+	_, err = h.authClient.GetUserIDBySessionID(ctx, getUserIDReq)
 	if err != nil {
 		h.logger.Error("get user id by session id", zap.Error(err))
 		http.Error(w, "get user id by session id", http.StatusUnauthorized)
 		return
 	}
-	var data Request
+	var data models.Product
 	err = easyjson.UnmarshalFromReader(r.Body, &data)
 	if err != nil {
-		h.logger.Error("json unmarshal", zap.Error(err))
-		http.Error(w, "json unmarshal error", http.StatusBadRequest)
+		h.logger.Error("unmarshal data", zap.Error(err))
+		http.Error(w, "unmarshal data", http.StatusBadRequest)
 		return
 	}
 
-	buyLikesReq := &generatedPayments.BuyLikesRequest{
-		Title:  data.Title,
-		Amount: int32(data.Price),
-		UserID: userID.UserId,
+	reqProduct := &generatedPayments.Product{
+		Title:       data.Title,
+		Description: data.Description,
+		ImageLink:   data.ImageLink,
+		Price:       int32(data.Price),
 	}
-	_, err = h.paymentsClient.BuyLikes(ctx, buyLikesReq)
+	createProductReq := &generatedPayments.CreateProductRequest{Product: reqProduct}
+	_, err = h.paymentsClient.CreateProduct(ctx, createProductReq)
 	if err != nil {
-		st, ok := status.FromError(err)
-		if ok && st.String() == "Недостаточно средств" {
-			h.logger.Error("buy likes failed", zap.Error(err))
-			http.Error(w, "У вас недостаточно средств. Срочно пополните его!", http.StatusBadRequest)
-			return
-		}
-		h.logger.Error("buy likes", zap.Error(err))
-		http.Error(w, "buy likes", http.StatusInternalServerError)
+		h.logger.Error("create product error", zap.Error(err))
+		http.Error(w, "create product", http.StatusInternalServerError)
 		return
 	}
-	h.logger.Info("buy product success")
+	h.logger.Info("add product success")
 	fmt.Fprintf(w, "ok")
 }

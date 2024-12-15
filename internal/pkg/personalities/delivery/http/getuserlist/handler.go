@@ -152,7 +152,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: error writing response", zap.Error(err))
-		http.Error(w, "error writing json response", http.StatusUnauthorized)
+		http.Error(w, "error writing json response", http.StatusInternalServerError)
 	}
 	h.logger.Info("GetMatches Handler: success")
 

@@ -17,205 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(in *jlexer.Lexer, out *Response) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "redirect_link":
-			out.RedirectLink = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(out *jwriter.Writer, in Response) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"redirect_link\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.RedirectLink))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v Response) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Response) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *Response) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Response) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(l, v)
-}
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(in *jlexer.Lexer, out *Request) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "title":
-			out.Title = string(in.String())
-		case "price":
-			out.Price = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(out *jwriter.Writer, in Request) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"title\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Title))
-	}
-	{
-		const prefix string = ",\"price\":"
-		out.RawString(prefix)
-		out.String(string(in.Price))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v Request) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Request) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *Request) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Request) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(l, v)
-}
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(in *jlexer.Lexer, out *Handler) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(out *jwriter.Writer, in Handler) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v Handler) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Handler) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *Handler) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Handler) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct2(l, v)
-}
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(in *jlexer.Lexer, out *Confirmation) {
+func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(in *jlexer.Lexer, out *Request) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -235,9 +37,9 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 		}
 		switch key {
 		case "type":
-			out.Type = string(in.String())
-		case "return_url":
-			out.ReturnUrl = string(in.String())
+			out.Title = string(in.String())
+		case "price":
+			out.Price = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -248,47 +50,47 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 		in.Consumed()
 	}
 }
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(out *jwriter.Writer, in Confirmation) {
+func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(out *jwriter.Writer, in Request) {
 	out.RawByte('{')
 	first := true
 	_ = first
 	{
 		const prefix string = ",\"type\":"
 		out.RawString(prefix[1:])
-		out.String(string(in.Type))
+		out.String(string(in.Title))
 	}
 	{
-		const prefix string = ",\"return_url\":"
+		const prefix string = ",\"price\":"
 		out.RawString(prefix)
-		out.String(string(in.ReturnUrl))
+		out.Int(int(in.Price))
 	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v Confirmation) MarshalJSON() ([]byte, error) {
+func (v Request) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(&w, v)
+	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Confirmation) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(w, v)
+func (v Request) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *Confirmation) UnmarshalJSON(data []byte) error {
+func (v *Request) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(&r, v)
+	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Confirmation) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct3(l, v)
+func (v *Request) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct(l, v)
 }
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(in *jlexer.Lexer, out *Amount) {
+func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(in *jlexer.Lexer, out *Handler) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -307,10 +109,6 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 			continue
 		}
 		switch key {
-		case "value":
-			out.Value = string(in.String())
-		case "currency":
-			out.Currency = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -321,130 +119,33 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 		in.Consumed()
 	}
 }
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(out *jwriter.Writer, in Amount) {
+func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(out *jwriter.Writer, in Handler) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
-		const prefix string = ",\"value\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Value))
-	}
-	{
-		const prefix string = ",\"currency\":"
-		out.RawString(prefix)
-		out.String(string(in.Currency))
-	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v Amount) MarshalJSON() ([]byte, error) {
+func (v Handler) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(&w, v)
+	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Amount) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(w, v)
+func (v Handler) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *Amount) UnmarshalJSON(data []byte) error {
+func (v *Handler) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(&r, v)
+	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Amount) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct4(l, v)
-}
-func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(in *jlexer.Lexer, out *APIRequest) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "amount":
-			(out.Amount).UnmarshalEasyJSON(in)
-		case "capture":
-			out.Capture = string(in.String())
-		case "confirmation":
-			(out.Confirmation).UnmarshalEasyJSON(in)
-		case "description":
-			out.Description = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(out *jwriter.Writer, in APIRequest) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"amount\":"
-		out.RawString(prefix[1:])
-		(in.Amount).MarshalEasyJSON(out)
-	}
-	{
-		const prefix string = ",\"capture\":"
-		out.RawString(prefix)
-		out.String(string(in.Capture))
-	}
-	{
-		const prefix string = ",\"confirmation\":"
-		out.RawString(prefix)
-		(in.Confirmation).MarshalEasyJSON(out)
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v APIRequest) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v APIRequest) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *APIRequest) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *APIRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct5(l, v)
+func (v *Handler) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsDeliveryHttpBuyproduct1(l, v)
 }

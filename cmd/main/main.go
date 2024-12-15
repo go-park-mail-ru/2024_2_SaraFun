@@ -30,8 +30,11 @@ import (
 	metricsmiddleware "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/httpMetricsMiddleware"
 	grpcpayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/acceptpayment"
+	addproduct "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/addProduct"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/buyproduct"
+	getproducts "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getProducts"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getbalance"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/topUpBalance"
 	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getprofile"
@@ -213,8 +216,11 @@ func main() {
 	updateQuestion := updatequestion.NewHandler(authClient, surveyClient, logger)
 	getQuestions := getquestions.NewHandler(authClient, surveyClient, logger)
 	getBalance := getbalance.NewHandler(authClient, paymentsClient, logger)
-	buyProduct := buyproduct.NewHandler(authClient, logger)
+	topupBalance := topUpBalance.NewHandler(authClient, logger)
+	buyProduct := buyproduct.NewHandler(authClient, paymentsClient, logger)
 	acceptPayment := acceptpayment.NewHandler(authClient, paymentsClient, logger)
+	addProduct := addproduct.NewHandler(authClient, paymentsClient, logger)
+	getProducts := getproducts.NewHandler(authClient, paymentsClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
@@ -287,8 +293,12 @@ func main() {
 	payments := router.PathPrefix("/payments").Subrouter()
 	{
 		payments.Handle("/balance", http.HandlerFunc(getBalance.Handle)).Methods("GET", http.MethodOptions)
-		payments.Handle("/buy", http.HandlerFunc(buyProduct.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/topup", http.HandlerFunc(topupBalance.Handle)).Methods("POST", http.MethodOptions)
 		payments.Handle("/check", http.HandlerFunc(acceptPayment.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/buy", http.HandlerFunc(buyProduct.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/product", http.HandlerFunc(addProduct.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/products", http.HandlerFunc(getProducts.Handle)).Methods("GET", http.MethodOptions)
+
 	}
 
 	// Создаем HTTP-сервер
