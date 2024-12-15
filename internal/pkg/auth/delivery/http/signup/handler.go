@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/hashing"
@@ -39,6 +40,7 @@ type PersonalitiesClient interface {
 type Handler struct {
 	personalitiesClient generatedPersonalities.PersonalitiesClient
 	sessionClient       generatedAuth.AuthClient
+	paymentsClient      generatedPayments.PaymentClient
 	logger              *zap.Logger
 }
 
@@ -54,10 +56,13 @@ type Request struct {
 	Gender    string `json:"gender"`
 }
 
-func NewHandler(personalitiesClient generatedPersonalities.PersonalitiesClient, sessionsClient generatedAuth.AuthClient, logger *zap.Logger) *Handler {
+func NewHandler(personalitiesClient generatedPersonalities.PersonalitiesClient,
+	sessionsClient generatedAuth.AuthClient, paymentsClient generatedPayments.PaymentClient,
+	logger *zap.Logger) *Handler {
 	return &Handler{
 		personalitiesClient: personalitiesClient,
 		sessionClient:       sessionsClient,
+		paymentsClient:      paymentsClient,
 		logger:              logger,
 	}
 }
@@ -153,6 +158,17 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.ID = int(id.UserId)
+
+	createBalancesRequest := &generatedPayments.CreateBalancesRequest{
+		UserID: id.UserId,
+		Amount: 3,
+	}
+	_, err = h.paymentsClient.CreateBalances(ctx, createBalancesRequest)
+	if err != nil {
+		h.logger.Error("failed to create balances", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	//auth grpc
 	sessUser := &generatedAuth.User{

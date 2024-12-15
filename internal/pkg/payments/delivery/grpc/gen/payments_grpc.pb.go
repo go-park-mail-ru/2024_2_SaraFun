@@ -27,6 +27,7 @@ const (
 	Payment_CheckAndSpendLike_FullMethodName           = "/payments.Payment/CheckAndSpendLike"
 	Payment_ChangePurchasedLikesBalance_FullMethodName = "/payments.Payment/ChangePurchasedLikesBalance"
 	Payment_GetAllBalance_FullMethodName               = "/payments.Payment/GetAllBalance"
+	Payment_CreateBalances_FullMethodName              = "/payments.Payment/CreateBalances"
 )
 
 // PaymentClient is the client API for Payment service.
@@ -41,6 +42,7 @@ type PaymentClient interface {
 	CheckAndSpendLike(ctx context.Context, in *CheckAndSpendLikeRequest, opts ...grpc.CallOption) (*CheckAndSpendLikeResponse, error)
 	ChangePurchasedLikesBalance(ctx context.Context, in *ChangePurchasedLikesBalanceRequest, opts ...grpc.CallOption) (*ChangePurchasedLikesBalanceResponse, error)
 	GetAllBalance(ctx context.Context, in *GetAllBalanceRequest, opts ...grpc.CallOption) (*GetAllBalanceResponse, error)
+	CreateBalances(ctx context.Context, in *CreateBalancesRequest, opts ...grpc.CallOption) (*CreateBalancesResponse, error)
 }
 
 type paymentClient struct {
@@ -131,6 +133,16 @@ func (c *paymentClient) GetAllBalance(ctx context.Context, in *GetAllBalanceRequ
 	return out, nil
 }
 
+func (c *paymentClient) CreateBalances(ctx context.Context, in *CreateBalancesRequest, opts ...grpc.CallOption) (*CreateBalancesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateBalancesResponse)
+	err := c.cc.Invoke(ctx, Payment_CreateBalances_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PaymentServer is the server API for Payment service.
 // All implementations must embed UnimplementedPaymentServer
 // for forward compatibility.
@@ -143,6 +155,7 @@ type PaymentServer interface {
 	CheckAndSpendLike(context.Context, *CheckAndSpendLikeRequest) (*CheckAndSpendLikeResponse, error)
 	ChangePurchasedLikesBalance(context.Context, *ChangePurchasedLikesBalanceRequest) (*ChangePurchasedLikesBalanceResponse, error)
 	GetAllBalance(context.Context, *GetAllBalanceRequest) (*GetAllBalanceResponse, error)
+	CreateBalances(context.Context, *CreateBalancesRequest) (*CreateBalancesResponse, error)
 	mustEmbedUnimplementedPaymentServer()
 }
 
@@ -176,6 +189,9 @@ func (UnimplementedPaymentServer) ChangePurchasedLikesBalance(context.Context, *
 }
 func (UnimplementedPaymentServer) GetAllBalance(context.Context, *GetAllBalanceRequest) (*GetAllBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllBalance not implemented")
+}
+func (UnimplementedPaymentServer) CreateBalances(context.Context, *CreateBalancesRequest) (*CreateBalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBalances not implemented")
 }
 func (UnimplementedPaymentServer) mustEmbedUnimplementedPaymentServer() {}
 func (UnimplementedPaymentServer) testEmbeddedByValue()                 {}
@@ -342,6 +358,24 @@ func _Payment_GetAllBalance_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Payment_CreateBalances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateBalancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServer).CreateBalances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Payment_CreateBalances_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServer).CreateBalances(ctx, req.(*CreateBalancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Payment_ServiceDesc is the grpc.ServiceDesc for Payment service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +414,10 @@ var Payment_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllBalance",
 			Handler:    _Payment_GetAllBalance_Handler,
+		},
+		{
+			MethodName: "CreateBalances",
+			Handler:    _Payment_CreateBalances_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

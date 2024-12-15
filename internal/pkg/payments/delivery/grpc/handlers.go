@@ -16,6 +16,9 @@ type UseCase interface {
 	ChangeBalance(ctx context.Context, userID int, amount int) error
 	ChangeDailyLikeCount(ctx context.Context, userID int, amount int) error
 	ChangePurchasedLikeCount(ctx context.Context, userID int, amount int) error
+	AddBalance(ctx context.Context, userID int, amount int) error
+	AddDailyLikesCount(ctx context.Context, userID int, amount int) error
+	AddPurchasedLikesCount(ctx context.Context, userID int, amount int) error
 }
 
 type GRPCHandler struct {
@@ -162,4 +165,24 @@ func (h *GRPCHandler) GetAllBalance(ctx context.Context,
 		MoneyBalance:         int32(moneyBalance),
 	}
 	return response, nil
+}
+
+func (h *GRPCHandler) CreateBalances(ctx context.Context,
+	in *generatedPayments.CreateBalancesRequest) (*generatedPayments.CreateBalancesResponse, error) {
+	userID := int(in.UserID)
+	amount := int(in.Amount)
+
+	err := h.uc.AddBalance(ctx, userID, amount)
+	if err != nil {
+		return nil, fmt.Errorf("bad add balance error: %w", err)
+	}
+	err = h.uc.AddDailyLikesCount(ctx, userID, amount)
+	if err != nil {
+		return nil, fmt.Errorf("bad daily likes count error: %w", err)
+	}
+	err = h.uc.AddPurchasedLikesCount(ctx, userID, amount)
+	if err != nil {
+		return nil, fmt.Errorf("bad purchase count error: %w", err)
+	}
+	return &generatedPayments.CreateBalancesResponse{}, nil
 }

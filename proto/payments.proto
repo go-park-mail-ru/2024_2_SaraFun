@@ -11,6 +11,7 @@ service Payment {
   rpc CheckAndSpendLike(CheckAndSpendLikeRequest) returns (CheckAndSpendLikeResponse);
   rpc ChangePurchasedLikesBalance(ChangePurchasedLikesBalanceRequest) returns (ChangePurchasedLikesBalanceResponse);
   rpc GetAllBalance(GetAllBalanceRequest) returns (GetAllBalanceResponse);
+  rpc CreateBalances(CreateBalancesRequest) returns (CreateBalancesResponse);
 }
 
 message GetDailyLikeBalanceRequest {
@@ -68,4 +69,12 @@ message GetAllBalanceResponse {
   int32 DailyLikeBalance = 1;
   int32 PurchasedLikeBalance = 2;
   int32 MoneyBalance = 3;
+}
+
+message CreateBalancesRequest {
+  int32 UserID = 1;
+  int32 Amount = 2;
+}
+
+message CreateBalancesResponse {
 }

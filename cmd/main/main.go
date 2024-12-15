@@ -187,7 +187,7 @@ func main() {
 	paymentsClient := grpcpayments.NewPaymentClient(paymentsConn)
 
 	cors := corsMiddleware.New(logger)
-	signUp := signup.NewHandler(personalitiesClient, authClient, logger)
+	signUp := signup.NewHandler(personalitiesClient, authClient, paymentsClient, logger)
 	signIn := signin.NewHandler(personalitiesClient, authClient, logger)
 	getUsers := getuserlist.NewHandler(authClient, personalitiesClient, imageUseCase, communicationsClient, logger)
 	checkAuth := checkauth.NewHandler(authClient, logger)
