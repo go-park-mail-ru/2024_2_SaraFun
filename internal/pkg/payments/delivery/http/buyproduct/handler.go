@@ -99,7 +99,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(apiData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(apiData))
 	if err != nil {
 		h.logger.Error("bad create api request", zap.Error(err))
 		http.Error(w, "bad create api request", http.StatusInternalServerError)
