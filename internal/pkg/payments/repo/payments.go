@@ -21,7 +21,7 @@ func New(db *sql.DB, logger *zap.Logger) *Storage {
 }
 
 func (repo *Storage) AddBalance(ctx context.Context, userID int, amount int) error {
-	query := `INSERT INTO balance (user_id, balance) VALUES ($1, $2)`
+	query := `INSERT INTO balance (userID, balance) VALUES ($1, $2)`
 	_, err := repo.DB.ExecContext(ctx, query, userID, amount)
 	if err != nil {
 		return fmt.Errorf("failed to add balance: %w", err)
@@ -30,7 +30,7 @@ func (repo *Storage) AddBalance(ctx context.Context, userID int, amount int) err
 }
 
 func (repo *Storage) AddDailyLikeCount(ctx context.Context, userID int, amount int) error {
-	query := `INSERT INTO daily_likes (user_id, likes_count) VALUES ($1, $2)`
+	query := `INSERT INTO daily_likes (userID, likes_count) VALUES ($1, $2)`
 	_, err := repo.DB.ExecContext(ctx, query, userID, amount)
 	if err != nil {
 		return fmt.Errorf("failed to add balance: %w", err)
@@ -39,7 +39,7 @@ func (repo *Storage) AddDailyLikeCount(ctx context.Context, userID int, amount i
 }
 
 func (repo *Storage) AddPurchasedLikeCount(ctx context.Context, userID int, amount int) error {
-	query := `INSERT INTO purchased_likes (user_id, likes_count) VALUES ($1, $2)`
+	query := `INSERT INTO purchased_likes (userID, likes_count) VALUES ($1, $2)`
 	_, err := repo.DB.ExecContext(ctx, query, userID, amount)
 	if err != nil {
 		return fmt.Errorf("failed to add balance: %w", err)
