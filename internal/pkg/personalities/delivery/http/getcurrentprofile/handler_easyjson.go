@@ -62,6 +62,12 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 				}
 				in.Delim(']')
 			}
+		case "money_balance":
+			out.MoneyBalance = int(in.Int())
+		case "daily_likes_balance":
+			out.DailyLikesBalance = int(in.Int())
+		case "purchased_likes_balance":
+			out.PurchasedLikesBalance = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -96,6 +102,21 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 			}
 			out.RawByte(']')
 		}
+	}
+	{
+		const prefix string = ",\"money_balance\":"
+		out.RawString(prefix)
+		out.Int(int(in.MoneyBalance))
+	}
+	{
+		const prefix string = ",\"daily_likes_balance\":"
+		out.RawString(prefix)
+		out.Int(int(in.DailyLikesBalance))
+	}
+	{
+		const prefix string = ",\"purchased_likes_balance\":"
+		out.RawString(prefix)
+		out.Int(int(in.PurchasedLikesBalance))
 	}
 	out.RawByte('}')
 }

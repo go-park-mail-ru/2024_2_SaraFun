@@ -305,7 +305,7 @@ func main() {
 		}
 	}()
 	stopRefresh := make(chan bool)
-	refreshTicker := time.NewTicker(15 * time.Second)
+	refreshTicker := time.NewTicker(30 * time.Second)
 	defer refreshTicker.Stop()
 
 	go RefreshDailyLikes(ctx, paymentsClient, refreshTicker, stopRefresh)
