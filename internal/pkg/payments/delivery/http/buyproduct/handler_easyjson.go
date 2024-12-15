@@ -36,7 +36,7 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 			continue
 		}
 		switch key {
-		case "type":
+		case "title":
 			out.Title = string(in.String())
 		case "price":
 			out.Price = int(in.Int())
@@ -55,7 +55,7 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPaymentsD
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"type\":"
+		const prefix string = ",\"title\":"
 		out.RawString(prefix[1:])
 		out.String(string(in.Title))
 	}

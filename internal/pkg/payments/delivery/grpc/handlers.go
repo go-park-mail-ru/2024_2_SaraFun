@@ -205,6 +205,7 @@ func (h *GRPCHandler) BuyLikes(ctx context.Context,
 		h.logger.Error("grpc get balance error", zap.Error(err))
 		return nil, fmt.Errorf("grpc get balance error: %w", err)
 	}
+	h.logger.Info("product", zap.Any("product", product))
 	err = h.uc.CheckBalance(ctx, userID, amount)
 	if err != nil {
 		h.logger.Error("grpc check balance error", zap.Error(err))
@@ -212,6 +213,10 @@ func (h *GRPCHandler) BuyLikes(ctx context.Context,
 	}
 
 	count := amount / product.Price
+	if count < 1 {
+		h.logger.Info("grpc count < 1")
+		return nil, status.Error(codes.InvalidArgument, "Суммы не хватает даже на один лайк")
+	}
 	err = h.uc.ChangeBalance(ctx, userID, spend)
 	if err != nil {
 		h.logger.Error("grpc change balance error", zap.Error(err))

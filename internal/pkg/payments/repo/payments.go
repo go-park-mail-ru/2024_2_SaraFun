@@ -120,6 +120,7 @@ func (repo *Storage) SetPurchasedLikesCount(ctx context.Context, userID int, bal
 func (repo *Storage) GetBalance(ctx context.Context, userID int) (int, error) {
 	query := `SELECT balance FROM balance WHERE userID = $1`
 	var amount int
+	repo.logger.Info("userID", zap.Int("userID", userID))
 	err := repo.DB.QueryRowContext(ctx, query, userID).Scan(&amount)
 	if err != nil {
 		repo.logger.Error("GetBalance db query error", zap.Error(err))
@@ -164,6 +165,7 @@ func (repo *Storage) CreateProduct(ctx context.Context, product models.Product) 
 func (repo *Storage) GetProduct(ctx context.Context, title string) (models.Product, error) {
 	query := `SELECT title, description, imagelink, price FROM product WHERE title = $1`
 	var product models.Product
+	repo.logger.Info("title", zap.String("title", title))
 	err := repo.DB.QueryRowContext(ctx, query, title).Scan(&product.Title, &product.Description, &product.ImageLink, &product.Price)
 	if err != nil {
 		repo.logger.Error("GetProduct db query error", zap.Error(err))

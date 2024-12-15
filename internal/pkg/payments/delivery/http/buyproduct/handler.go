@@ -14,7 +14,7 @@ import (
 //go:generate easyjson -all handler.go
 
 type Request struct {
-	Title string `json:"type"`
+	Title string `json:"title"`
 	Price int    `json:"price"`
 }
 
@@ -63,9 +63,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	_, err = h.paymentsClient.BuyLikes(ctx, buyLikesReq)
 	if err != nil {
 		st, ok := status.FromError(err)
-		if ok && st.String() == "Недостаточно средств" {
+		h.logger.Info("status code", zap.String("code", st.String()))
+		if ok && st.Message() == "Недостаточно средств" {
 			h.logger.Error("buy likes failed", zap.Error(err))
 			http.Error(w, "У вас недостаточно средств. Срочно пополните его!", http.StatusBadRequest)
+			return
+		} else if ok && st.Message() == "Суммы не хватает даже на один лайк" {
+			h.logger.Error("buy likes failed", zap.Error(err))
+			http.Error(w, "Суммы не хватает даже на один лайк! Потратьте больше денег!", http.StatusBadRequest)
 			return
 		}
 		h.logger.Error("buy likes", zap.Error(err))

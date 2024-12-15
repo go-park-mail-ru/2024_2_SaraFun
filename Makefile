@@ -171,7 +171,7 @@ payments-builder-image:
 	docker build -t sparkit-payments-builder -f ${DOCKER_DIR}/paymentsBuilder.Dockerfile .
 
 .PHONY: sparkit-payments-run
-sparkit-survey-run:
+sparkit-payments-run:
 	make payments-builder-image
 	make service-payments-image
 	docker run sparkit-payments-service
