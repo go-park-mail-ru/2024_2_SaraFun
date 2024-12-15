@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +22,9 @@ type Repository interface {
 	GetBalance(ctx context.Context, userID int) (int, error)
 	GetDailyLikesCount(ctx context.Context, userID int) (int, error)
 	GetPurchasedLikesCount(ctx context.Context, userID int) (int, error)
+	CreateProduct(ctx context.Context, product models.Product) (int, error)
+	GetProduct(ctx context.Context, title string) (models.Product, error)
+	UpdateProduct(ctx context.Context, title string, product models.Product) error
 }
 
 type UseCase struct {
@@ -150,4 +154,39 @@ func (u *UseCase) GetPurchasedLikesCount(ctx context.Context, userID int) (int, 
 		return -1, fmt.Errorf("failed to get balance: %w", err)
 	}
 	return amount, err
+}
+
+func (u *UseCase) CreateProduct(ctx context.Context, product models.Product) (int, error) {
+	if product.Price < 0 {
+		u.logger.Error("usecase create product bad price", zap.Int("price", product.Price))
+		return -1, fmt.Errorf("invalid price")
+	}
+	id, err := u.repo.CreateProduct(ctx, product)
+	if err != nil {
+		u.logger.Error("usecase create product error", zap.Error(err))
+		return -1, fmt.Errorf("failed to create product: %w", err)
+	}
+	return id, err
+}
+
+func (u *UseCase) GetProduct(ctx context.Context, title string) (models.Product, error) {
+	profile, err := u.repo.GetProduct(ctx, title)
+	if err != nil {
+		u.logger.Error("usecase create product error", zap.Error(err))
+		return models.Product{}, fmt.Errorf("failed to create product: %w", err)
+	}
+	return profile, err
+}
+
+func (u *UseCase) UpdateProduct(ctx context.Context, title string, product models.Product) error {
+	if product.Price < 0 {
+		u.logger.Error("usecase create product bad price", zap.Int("price", product.Price))
+		return fmt.Errorf("invalid price: %v", product.Price)
+	}
+	err := u.repo.UpdateProduct(ctx, title, product)
+	if err != nil {
+		u.logger.Error("usecase create product error", zap.Error(err))
+		return fmt.Errorf("failed to create product: %w", err)
+	}
+	return nil
 }

@@ -127,3 +127,16 @@ type AdminQuestion struct {
 	Content string `json:"content"`
 	Grade   int    `json:"grade"`
 }
+
+type Product struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ImageLink   string `json:"image_link"`
+	Price       int    `json:"price"`
+}
+
+func (product *Product) Sanitize() {
+	product.Description = html.EscapeString(product.Description)
+	product.ImageLink = html.EscapeString(product.ImageLink)
+	product.Title = html.EscapeString(product.Title)
+}

@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS profile (
                                        firstname text NOT NULL,
                                        lastname text NOT NULL,
                                        gender text NOT NULL,
+                                       birthday_date text NOT NULL,
                                        target text NOT NULL,
                                        about text NOT NULL,
                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -141,7 +142,7 @@ CREATE TABLE IF NOT EXISTS purchased_likes (
 
     CONSTRAINT fk_user FOREIGN KEY (userID)
     REFERENCES users (id)
-    ON DELETE CASCADE,
+    ON DELETE CASCADE
     ON UPDATE CASCADE
 );
 
@@ -154,6 +155,16 @@ CREATE TABLE IF NOT EXISTS balance (
 
     CONSTRAINT fk_user FOREIGN KEY (userID)
     REFERENCES users (id)
-    ON DELETE CASCADE,
+    ON DELETE CASCADE
     ON UPDATE CASCADE
-)
+);
+
+CREATE TABLE IF NOT EXISTS product (
+    id SERIAL PRIMARY KEY,
+    title text NOT NULL UNIQUE,
+    description text NOT NULL,
+    imagelink text NOT NULL,
+    price INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

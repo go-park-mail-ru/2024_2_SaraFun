@@ -29,6 +29,8 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/corsMiddleware"
 	metricsmiddleware "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/middleware/httpMetricsMiddleware"
 	grpcpayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/acceptpayment"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/buyproduct"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getbalance"
 	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/getcurrentprofile"
@@ -211,6 +213,8 @@ func main() {
 	updateQuestion := updatequestion.NewHandler(authClient, surveyClient, logger)
 	getQuestions := getquestions.NewHandler(authClient, surveyClient, logger)
 	getBalance := getbalance.NewHandler(authClient, paymentsClient, logger)
+	buyProduct := buyproduct.NewHandler(authClient, logger)
+	acceptPayment := acceptpayment.NewHandler(authClient, paymentsClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
@@ -283,6 +287,8 @@ func main() {
 	payments := router.PathPrefix("/payments").Subrouter()
 	{
 		payments.Handle("/balance", http.HandlerFunc(getBalance.Handle)).Methods("GET", http.MethodOptions)
+		payments.Handle("/buy", http.HandlerFunc(buyProduct.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/check", http.HandlerFunc(acceptPayment.Handle)).Methods("POST", http.MethodOptions)
 	}
 
 	// Создаем HTTP-сервер

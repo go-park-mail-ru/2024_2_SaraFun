@@ -109,7 +109,7 @@ func GetAge(birthdayDate string) (int, error) {
 }
 
 func checkAge(age int) error {
-	if age < 0 {
+	if age < 18 {
 		return sparkiterrors.ErrSmallAge
 	}
 	if age > 100 {
