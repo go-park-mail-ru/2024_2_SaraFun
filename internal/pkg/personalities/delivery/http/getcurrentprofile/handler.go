@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/mailru/easyjson"
@@ -36,8 +37,11 @@ type SessionClient interface {
 }
 
 type Response struct {
-	Profile models.Profile `json:"profile"`
-	Images  []models.Image `json:"images"`
+	Profile               models.Profile `json:"profile"`
+	Images                []models.Image `json:"images"`
+	MoneyBalance          int            `json:"money_balance"`
+	DailyLikesBalance     int            `json:"daily_likes_balance"`
+	PurchasedLikesBalance int            `json:"purchased_likes_balance"`
 }
 
 //easyjson:skip
@@ -45,14 +49,17 @@ type Handler struct {
 	imageService        ImageService
 	personalitiesClient generatedPersonalities.PersonalitiesClient
 	sessionClient       generatedAuth.AuthClient
+	paymentsClient      generatedPayments.PaymentClient
 	logger              *zap.Logger
 }
 
-func NewHandler(imageService ImageService, personalitiesClient generatedPersonalities.PersonalitiesClient, sessionClient generatedAuth.AuthClient, logger *zap.Logger) *Handler {
+func NewHandler(imageService ImageService, personalitiesClient generatedPersonalities.PersonalitiesClient,
+	sessionClient generatedAuth.AuthClient, paymentsClient generatedPayments.PaymentClient, logger *zap.Logger) *Handler {
 	return &Handler{
 		imageService:        imageService,
 		personalitiesClient: personalitiesClient,
 		sessionClient:       sessionClient,
+		paymentsClient:      paymentsClient,
 		logger:              logger}
 }
 
@@ -105,6 +112,15 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	getBalancesReq := &generatedPayments.GetAllBalanceRequest{UserID: userId.UserId}
+	balance, err := h.paymentsClient.GetAllBalance(ctx, getBalancesReq)
+	if err != nil {
+		h.logger.Error("getbalanceserror", zap.Error(err))
+		http.Error(w, "не удалось получить баланс", http.StatusInternalServerError)
+		return
+	}
+
 	profileResponse := models.Profile{
 		ID:           int(profile.Profile.ID),
 		FirstName:    profile.Profile.FirstName,
@@ -116,8 +132,11 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		BirthdayDate: profile.Profile.BirthDate,
 	}
 	response := Response{
-		Profile: profileResponse,
-		Images:  links,
+		Profile:               profileResponse,
+		Images:                links,
+		MoneyBalance:          int(balance.MoneyBalance),
+		DailyLikesBalance:     int(balance.DailyLikeBalance),
+		PurchasedLikesBalance: int(balance.PurchasedLikeBalance),
 	}
 	jsonData, err := easyjson.Marshal(response)
 	if err != nil {

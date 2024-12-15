@@ -195,7 +195,7 @@ func main() {
 	uploadImage := uploadimage.NewHandler(imageUseCase, authClient, logger)
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
 	getProfile := getprofile.NewHandler(imageUseCase, personalitiesClient, logger)
-	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, logger)
+	getCurrentProfile := getcurrentprofile.NewHandler(imageUseCase, personalitiesClient, authClient, paymentsClient, logger)
 	updateProfile := updateprofile.NewHandler(personalitiesClient, authClient, imageUseCase, logger)
 	addReaction := addreaction.NewHandler(communicationsClient, authClient, personalitiesClient, communicationsClient, paymentsClient, imageUseCase, websocketUsecase, logger)
 	getMatches := getmatches.NewHandler(communicationsClient, authClient, personalitiesClient, imageUseCase, logger)
@@ -304,6 +304,11 @@ func main() {
 			fmt.Printf("Error starting server: %v\n", err)
 		}
 	}()
+	stopRefresh := make(chan bool)
+	refreshTicker := time.NewTicker(15 * time.Second)
+	defer refreshTicker.Stop()
+
+	go RefreshDailyLikes(ctx, paymentsClient, refreshTicker, stopRefresh)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -317,4 +322,21 @@ func main() {
 	}
 
 	fmt.Println("Сервер завершил работу.")
+}
+
+func RefreshDailyLikes(ctx context.Context, client grpcpayments.PaymentClient, ticker *time.Ticker, done chan bool) {
+	for {
+		select {
+		case <-done:
+			fmt.Println("stop refresh")
+			return
+		case <-ticker.C:
+			req := &grpcpayments.RefreshDailyLikeBalanceRequest{}
+			_, err := client.RefreshDailyLikeBalance(ctx, req)
+			if err != nil {
+				fmt.Printf("Error stop refreshing daily likes: %v\n", err)
+				return
+			}
+		}
+	}
 }
