@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -26,22 +25,8 @@ func NewHandler(authClient generatedAuth.AuthClient, paymentsClient generatedPay
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	cookie, err := r.Cookie(consts.SessionCookie)
-	if err != nil {
-		h.logger.Error("bad cookie", zap.Error(err))
-		http.Error(w, "bad cookie", http.StatusUnauthorized)
-		return
-	}
-	getUserIDReq := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
-	_, err = h.authClient.GetUserIDBySessionID(ctx, getUserIDReq)
-	if err != nil {
-		h.logger.Error("get user id by session id", zap.Error(err))
-		http.Error(w, "get user id by session id", http.StatusUnauthorized)
-		return
-	}
-
 	var jsonData map[string]interface{}
-	err = json.NewDecoder(r.Body).Decode(&jsonData)
+	err := json.NewDecoder(r.Body).Decode(&jsonData)
 	if err != nil {
 		h.logger.Error("decode json", zap.Error(err))
 		http.Error(w, "decode json error", http.StatusBadRequest)
