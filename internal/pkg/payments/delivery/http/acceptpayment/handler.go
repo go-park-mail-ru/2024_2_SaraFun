@@ -43,7 +43,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.logger.Info("price", zap.Any("price", price))
-	payerID, err := strconv.Atoi(jsonData["description"].(string))
+	payerID, err := strconv.Atoi(object["description"].(string))
 	if err != nil {
 		h.logger.Error("parse json payer id", zap.Error(err))
 		http.Error(w, "parse json error", http.StatusBadRequest)
