@@ -177,17 +177,19 @@ func (h *GRPCHandler) GetAllBalance(ctx context.Context,
 func (h *GRPCHandler) CreateBalances(ctx context.Context,
 	in *generatedPayments.CreateBalancesRequest) (*generatedPayments.CreateBalancesResponse, error) {
 	userID := int(in.UserID)
-	amount := int(in.Amount)
+	moneyAmount := int(in.MoneyAmount)
+	dailyAmount := int(in.DailyAmount)
+	purchasedAmount := int(in.PurchasedAmount)
 
-	err := h.uc.AddBalance(ctx, userID, amount)
+	err := h.uc.AddBalance(ctx, userID, moneyAmount)
 	if err != nil {
 		return nil, fmt.Errorf("bad add balance error: %w", err)
 	}
-	err = h.uc.AddDailyLikesCount(ctx, userID, amount)
+	err = h.uc.AddDailyLikesCount(ctx, userID, dailyAmount)
 	if err != nil {
 		return nil, fmt.Errorf("bad daily likes count error: %w", err)
 	}
-	err = h.uc.AddPurchasedLikesCount(ctx, userID, amount)
+	err = h.uc.AddPurchasedLikesCount(ctx, userID, purchasedAmount)
 	if err != nil {
 		return nil, fmt.Errorf("bad purchase count error: %w", err)
 	}

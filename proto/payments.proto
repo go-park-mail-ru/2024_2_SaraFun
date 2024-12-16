@@ -76,7 +76,9 @@ message GetAllBalanceResponse {
 
 message CreateBalancesRequest {
   int32 UserID = 1;
-  int32 Amount = 2;
+  int32 MoneyAmount = 2;
+  int32 DailyAmount = 3;
+  int32 PurchasedAmount = 4;
 }
 
 message CreateBalancesResponse {

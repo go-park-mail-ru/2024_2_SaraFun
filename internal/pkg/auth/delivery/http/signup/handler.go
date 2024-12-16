@@ -160,8 +160,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	user.ID = int(id.UserId)
 
 	createBalancesRequest := &generatedPayments.CreateBalancesRequest{
-		UserID: id.UserId,
-		Amount: 3,
+		UserID:          id.UserId,
+		MoneyAmount:     0,
+		DailyAmount:     10,
+		PurchasedAmount: 5,
 	}
 	_, err = h.paymentsClient.CreateBalances(ctx, createBalancesRequest)
 	if err != nil {

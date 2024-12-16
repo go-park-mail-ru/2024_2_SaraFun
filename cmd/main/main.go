@@ -314,11 +314,11 @@ func main() {
 			fmt.Printf("Error starting server: %v\n", err)
 		}
 	}()
-	stopRefresh := make(chan bool)
-	refreshTicker := time.NewTicker(30 * time.Second)
-	defer refreshTicker.Stop()
+	//stopRefresh := make(chan bool)
+	//refreshTicker := time.NewTicker(30 * time.Second)
+	//defer refreshTicker.Stop()
 
-	go RefreshDailyLikes(ctx, paymentsClient, refreshTicker, stopRefresh)
+	go RefreshDailyLikes(ctx, paymentsClient)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -334,19 +334,32 @@ func main() {
 	fmt.Println("Сервер завершил работу.")
 }
 
-func RefreshDailyLikes(ctx context.Context, client grpcpayments.PaymentClient, ticker *time.Ticker, done chan bool) {
+func RefreshDailyLikes(ctx context.Context, client grpcpayments.PaymentClient) {
+	//for {
+	//	select {
+	//	case <-done:
+	//		fmt.Println("stop refresh")
+	//		return
+	//	case <-ticker.C:
+	//		req := &grpcpayments.RefreshDailyLikeBalanceRequest{}
+	//		_, err := client.RefreshDailyLikeBalance(ctx, req)
+	//		if err != nil {
+	//			fmt.Printf("Error stop refreshing daily likes: %v\n", err)
+	//			return
+	//		}
+	//	}
+	//}
 	for {
-		select {
-		case <-done:
-			fmt.Println("stop refresh")
+		now := time.Now()
+		nextUpdate := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
+
+		time.Sleep(time.Until(nextUpdate))
+
+		req := &grpcpayments.RefreshDailyLikeBalanceRequest{}
+		_, err := client.RefreshDailyLikeBalance(ctx, req)
+		if err != nil {
+			fmt.Printf("Error stop refreshing daily likes: %v\n", err)
 			return
-		case <-ticker.C:
-			req := &grpcpayments.RefreshDailyLikeBalanceRequest{}
-			_, err := client.RefreshDailyLikeBalance(ctx, req)
-			if err != nil {
-				fmt.Printf("Error stop refreshing daily likes: %v\n", err)
-				return
-			}
 		}
 	}
 }
