@@ -33,7 +33,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.logger.Info("handle request", zap.Any("jsonData", jsonData))
-	amount := jsonData["amount"].(map[string]interface{})
+	object := jsonData["object"].(map[string]interface{})
+	amount := object["amount"].(map[string]interface{})
 	h.logger.Info("amount", zap.Any("amount", amount))
 	price, err := strconv.Atoi(amount["value"].(string))
 	if err != nil {
