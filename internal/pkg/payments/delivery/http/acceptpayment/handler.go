@@ -36,7 +36,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	object := jsonData["object"].(map[string]interface{})
 	amount := object["amount"].(map[string]interface{})
 	h.logger.Info("amount", zap.Any("amount", amount))
-	price, err := strconv.Atoi(amount["value"].(string))
+	price, err := strconv.ParseFloat(amount["value"].(string), 32)
 	if err != nil {
 		h.logger.Error("parse json price", zap.Error(err))
 		http.Error(w, "parse json error", http.StatusBadRequest)
