@@ -162,7 +162,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	createBalancesRequest := &generatedPayments.CreateBalancesRequest{
 		UserID:          id.UserId,
 		MoneyAmount:     0,
-		DailyAmount:     10,
+		DailyAmount:     consts.DailyLikeLimit,
 		PurchasedAmount: 5,
 	}
 	_, err = h.paymentsClient.CreateBalances(ctx, createBalancesRequest)

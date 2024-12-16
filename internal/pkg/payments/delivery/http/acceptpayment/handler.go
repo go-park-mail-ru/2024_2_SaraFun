@@ -32,21 +32,23 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "decode json error", http.StatusBadRequest)
 		return
 	}
+	h.logger.Info("handle request", zap.Any("jsonData", jsonData))
 	amount := jsonData["amount"].(map[string]interface{})
-
+	h.logger.Info("amount", zap.Any("amount", amount))
 	price, err := strconv.Atoi(amount["value"].(string))
 	if err != nil {
 		h.logger.Error("parse json price", zap.Error(err))
 		http.Error(w, "parse json error", http.StatusBadRequest)
 		return
 	}
+	h.logger.Info("price", zap.Any("price", price))
 	payerID, err := strconv.Atoi(jsonData["description"].(string))
 	if err != nil {
 		h.logger.Error("parse json payer id", zap.Error(err))
 		http.Error(w, "parse json error", http.StatusBadRequest)
 		return
 	}
-
+	h.logger.Info("payer", zap.Any("payerID", payerID))
 	changeBalanceReq := generatedPayments.ChangeBalanceRequest{
 		UserID: int32(payerID),
 		Amount: int32(price),
