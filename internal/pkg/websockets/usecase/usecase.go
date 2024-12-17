@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase Repository
+
 type Repository interface {
 	AddConnection(ctx context.Context, conn *ws.Conn, userId int) error
 	DeleteConnection(ctx context.Context, userId int) error
