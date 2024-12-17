@@ -64,7 +64,9 @@ func TestMiddleware(t *testing.T) {
 
 func checkCommonHeaders(t *testing.T, rr *httptest.ResponseRecorder) {
 	t.Helper()
-	headers := rr.Result().Header
+	resp := rr.Result()
+	defer resp.Body.Close()
+	headers := resp.Header
 	if got, want := headers.Get("Access-Control-Allow-Methods"), "POST,PUT,DELETE,GET"; got != want {
 		t.Errorf("unexpected Access-Control-Allow-Methods: got %s, want %s", got, want)
 	}

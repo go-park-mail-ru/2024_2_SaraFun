@@ -36,7 +36,8 @@ func TestStorage(t *testing.T) {
 	defer server.Close()
 
 	url := "ws" + server.URL[len("http"):]
-	clientConn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	clientConn, resp, err := websocket.DefaultDialer.Dial(url, nil)
+	defer resp.Body.Close()
 	if err != nil {
 		t.Fatalf("failed to dial websocket: %v", err)
 	}
@@ -64,7 +65,10 @@ func TestStorage(t *testing.T) {
 		t.Errorf("WriteMessage error: %v", err)
 	}
 
-	clientConn.SetReadDeadline(time.Now().Add(time.Second))
+	setErr := clientConn.SetReadDeadline(time.Now().Add(time.Second))
+	if setErr != nil {
+		t.Errorf("SetReadDeadline error")
+	}
 	mt, msgData, err := clientConn.ReadMessage()
 	if err != nil {
 		t.Errorf("failed to read message: %v", err)
@@ -87,7 +91,10 @@ func TestStorage(t *testing.T) {
 		t.Errorf("SendNotification error: %v", err)
 	}
 
-	clientConn.SetReadDeadline(time.Now().Add(time.Second))
+	setErr = clientConn.SetReadDeadline(time.Now().Add(time.Second))
+	if setErr != nil {
+		t.Errorf("SetReadDeadline error")
+	}
 	mt, notifData, err := clientConn.ReadMessage()
 	if err != nil {
 		t.Errorf("failed to read notification: %v", err)

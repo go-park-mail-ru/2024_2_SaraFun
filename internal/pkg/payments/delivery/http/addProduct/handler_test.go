@@ -22,6 +22,7 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 )
 
+//nolint:all
 func TestHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name                string

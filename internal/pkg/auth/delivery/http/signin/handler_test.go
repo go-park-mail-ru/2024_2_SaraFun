@@ -21,6 +21,7 @@ import (
 	"github.com/mailru/easyjson"
 )
 
+//nolint:all
 func TestHandler(t *testing.T) {
 	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
@@ -152,7 +153,9 @@ func TestHandler(t *testing.T) {
 			}
 
 			if tt.expectedStatus == http.StatusOK && tt.createSessionError == nil && tt.checkPasswordError == nil && tt.method == http.MethodPost && isEasyJSONValidUser(tt.body) {
-				cookies := w.Result().Cookies()
+				resp := w.Result()
+				defer resp.Body.Close()
+				cookies := resp.Cookies()
 				found := false
 				for _, c := range cookies {
 					if c.Name == consts.SessionCookie && c.Value == "valid_session_id" {

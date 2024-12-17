@@ -77,7 +77,8 @@ func TestHandler_Handle(t *testing.T) {
 
 		u := "ws" + server.URL[len("http"):]
 		dialer := websocket.Dialer{}
-		conn, _, err := dialer.Dial(u, nil)
+		conn, resp, err := dialer.Dial(u, nil)
+		defer resp.Body.Close()
 		if err != nil {
 			t.Fatalf("failed to dial websocket: %v", err)
 		}

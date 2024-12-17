@@ -1,3 +1,4 @@
+//nolint:golint
 package acceptpayment
 
 import (
@@ -22,6 +23,7 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 )
 
+//nolint:all
 func TestHandler_Handle(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

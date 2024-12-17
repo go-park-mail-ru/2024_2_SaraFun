@@ -22,6 +22,7 @@ import (
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 )
 
+//nolint:all
 func TestHandler(t *testing.T) {
 	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
@@ -50,7 +51,10 @@ func TestHandler(t *testing.T) {
 			}
 		}
 		if number != "" {
-			writer.WriteField("number", number)
+			err := writer.WriteField("number", number)
+			if err != nil {
+				return nil, err
+			}
 		}
 		writer.Close()
 

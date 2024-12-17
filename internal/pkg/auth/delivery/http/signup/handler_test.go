@@ -1,3 +1,4 @@
+//nolint:golint
 package signup
 
 import (
@@ -22,6 +23,7 @@ import (
 	"github.com/mailru/easyjson"
 )
 
+//nolint:all
 func TestHandler(t *testing.T) {
 	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
@@ -216,7 +218,9 @@ func TestHandler(t *testing.T) {
 				!tt.passwordIsBad && tt.registerUserError == nil &&
 				tt.createBalancesError == nil && tt.method == http.MethodPost &&
 				isEasyJSONValidRequest(tt.body) && tt.checkUsernameError == nil && !tt.usernameExists && tt.createProfileError == nil {
-				cookies := w.Result().Cookies()
+				resp := w.Result()
+				defer resp.Body.Close()
+				cookies := resp.Cookies()
 				found := false
 				for _, c := range cookies {
 					if c.Name == consts.SessionCookie && c.Value == "valid_session_id" {
