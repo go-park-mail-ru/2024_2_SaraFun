@@ -300,7 +300,7 @@ func TestUseCase(t *testing.T) {
 			args:   args{ctx: ctx, product: models.Product{Title: "prod", Price: 100}},
 			mockSetup: func(repo *mocks.MockRepository) {
 				repo.EXPECT().CreateProduct(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, p models.Product) (int, error) {
-					if p.Title != "prod" || p.Price != 100 || p.ImageLink != "" {
+					if p.Title != "prod" || p.Price != 100 || p.ImageLink != p.Title+".png" {
 						return -1, fmt.Errorf("unexpected product")
 					}
 					return 1, nil

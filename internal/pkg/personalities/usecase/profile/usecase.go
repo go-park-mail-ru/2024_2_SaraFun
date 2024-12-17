@@ -112,7 +112,7 @@ func checkAge(age int) error {
 	if age < 18 {
 		return sparkiterrors.ErrSmallAge
 	}
-	if age > 100 {
+	if age > 120 {
 		return sparkiterrors.ErrBigAge
 	}
 	return nil

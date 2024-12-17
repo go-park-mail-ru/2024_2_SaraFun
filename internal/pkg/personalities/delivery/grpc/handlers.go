@@ -229,7 +229,8 @@ func (h *GrpcPersonalitiesHandler) DeleteProfile(ctx context.Context,
 	return res, nil
 }
 
-func (h *GrpcPersonalitiesHandler) ChangePassword(ctx context.Context, in *generatedPersonalities.ChangePasswordRequest) (*generatedPersonalities.ChangePasswordResponse, error) {
+func (h *GrpcPersonalitiesHandler) ChangePassword(ctx context.Context,
+	in *generatedPersonalities.ChangePasswordRequest) (*generatedPersonalities.ChangePasswordResponse, error) {
 	err := h.userUC.ChangePassword(ctx, int(in.UserID), in.Password)
 	if err != nil {
 		return nil, fmt.Errorf("Grpc change password error : %w", err)

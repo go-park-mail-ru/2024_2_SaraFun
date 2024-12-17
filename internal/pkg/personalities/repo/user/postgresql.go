@@ -96,7 +96,14 @@ func (repo *Storage) GetUsernameByUserId(ctx context.Context, userId int) (strin
 }
 
 func (repo *Storage) GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error) {
-	rows, err := repo.DB.Query("SELECT id, username FROM users WHERE id != $1 AND id NOT IN (SELECT receiver FROM reaction WHERE author = $2)", userId, userId)
+
+	query := `SELECT u.id, u.username
+              FROM users u 
+              JOIN profile p ON p.id = u.profile
+              WHERE u.id != $1 AND
+              u.id NOT IN (SELECT receiver FROM reaction WHERE author = $1) AND
+              p.gender != (SELECT gender FROM profile WHERE id = (SELECT profile FROM users WHERE id = $1))`
+	rows, err := repo.DB.Query(query, userId)
 	if err != nil {
 		return []models.User{}, fmt.Errorf("GetFeedList err: %w", err)
 	}

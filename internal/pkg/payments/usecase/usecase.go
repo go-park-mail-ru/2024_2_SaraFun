@@ -163,7 +163,7 @@ func (u *UseCase) CreateProduct(ctx context.Context, product models.Product) (in
 		u.logger.Error("usecase create product bad price", zap.Int("price", product.Price))
 		return -1, fmt.Errorf("invalid price")
 	}
-	product.ImageLink = ""
+	product.ImageLink = product.Title + ".png"
 	id, err := u.repo.CreateProduct(ctx, product)
 	if err != nil {
 		u.logger.Error("usecase create product error", zap.Error(err))

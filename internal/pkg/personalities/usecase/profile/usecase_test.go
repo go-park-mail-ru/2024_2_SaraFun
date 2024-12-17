@@ -352,7 +352,7 @@ func TestCheckAge(t *testing.T) {
 		},
 		{
 			name:    "big age",
-			age:     101,
+			age:     121,
 			wantErr: sparkiterrors.ErrBigAge,
 		},
 	}

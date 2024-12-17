@@ -48,7 +48,7 @@ sparkit-down:
 .PHONY: sparkit-test
 sparkit-test:
 	go test -json ./... -coverprofile coverprofile_.tmp -coverpkg=./... ; \
-        grep -v -e '/mocks' -e 'mock_repository.go' -e 'mock.go' -e 'docs.go' -e '_easyjson.go' -e '.pb.go' -e 'gen.go' coverprofile_.tmp > coverprofile.tmp ; \
+        grep -v -e '/mocks' -e 'mock_repository.go' -e 'mock.go' -e 'docs.go' -e '_easyjson.go' -e '.pb.go' -e 'gen.go' -e 'main.go' coverprofile_.tmp > coverprofile.tmp ; \
         rm coverprofile_.tmp ; \
         go tool cover -html coverprofile.tmp -o ../heatmap.html; \
         go tool cover -func coverprofile.tmp

@@ -419,12 +419,12 @@ func TestGetFeedList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.queryError == nil {
-				mock.ExpectQuery("SELECT id, username FROM users").
-					WithArgs(tt.userID, tt.userID).
+				mock.ExpectQuery(`SELECT`).
+					WithArgs(tt.userID).
 					WillReturnRows(tt.queryRows)
 			} else {
-				mock.ExpectQuery("SELECT id, username FROM users").
-					WithArgs(tt.userID, tt.userID).
+				mock.ExpectQuery(`SELECT`).
+					WithArgs(tt.userID).
 					WillReturnError(tt.queryError)
 			}
 			list, err := repo.GetFeedList(ctx, tt.userID, tt.receivers)
