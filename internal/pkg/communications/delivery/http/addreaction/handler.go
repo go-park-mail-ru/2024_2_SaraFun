@@ -20,6 +20,7 @@ import (
 
 //go:generate easyjson -all handler.go
 
+//go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
 	GetFirstImage(ctx context.Context, userID int) (models.Image, error)
 }
