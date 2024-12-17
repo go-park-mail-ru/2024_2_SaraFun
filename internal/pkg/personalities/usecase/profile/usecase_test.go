@@ -1,219 +1,381 @@
 package profile
 
-//
-//import (
-//	"context"
-//	"errors"
-//	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-//	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile/mocks"
-//	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
-//	"github.com/golang/mock/gomock"
-//	"github.com/stretchr/testify/require"
-//	"go.uber.org/zap"
-//	"testing"
-//	"time"
-//)
-//
-//func TestCreateProfile(t *testing.T) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel() // Отменяем контекст после завершения работы
-//	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-//	logger := zap.NewNop()
-//	//defer logger.Sync()
-//
-//	tests := []struct {
-//		name                    string
-//		profile                 models.Profile
-//		repoCreateProfileResult int
-//		repoCreateProfileError  error
-//		repoCreateProfileCount  int
-//		logger                  *zap.Logger
-//		wantId                  int
-//	}{
-//		{
-//			name:                    "succesful create profile",
-//			profile:                 models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
-//			repoCreateProfileResult: 2,
-//			repoCreateProfileError:  nil,
-//			repoCreateProfileCount:  1,
-//			logger:                  logger,
-//			wantId:                  2,
-//		},
-//		{
-//			name:                    "bad create profile",
-//			profile:                 models.Profile{Age: 14, BirthdayDate: "2010-01-01"},
-//			repoCreateProfileResult: 0,
-//			repoCreateProfileError:  errors.New("failed to create profile with age: 15"),
-//			repoCreateProfileCount:  1,
-//			logger:                  logger,
-//			wantId:                  0,
-//		},
-//	}
-//
-//	mockCtrl := gomock.NewController(t)
-//	defer mockCtrl.Finish()
-//
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			repo := mocks.NewMockRepository(mockCtrl)
-//			repo.EXPECT().CreateProfile(ctx, tt.profile).Return(tt.repoCreateProfileResult, tt.repoCreateProfileError).
-//				Times(tt.repoCreateProfileCount)
-//			s := New(repo, logger)
-//			id, err := s.CreateProfile(ctx, tt.profile)
-//			require.ErrorIs(t, err, tt.repoCreateProfileError)
-//			if id != tt.wantId {
-//				t.Errorf("CreateProfile() id = %v, want %v", id, tt.wantId)
-//			}
-//		})
-//	}
-//
-//}
-//
-//func TestUpdateProfile(t *testing.T) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel() // Отменяем контекст после завершения работы
-//	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-//	logger := zap.NewNop()
-//	//defer logger.Sync()
-//
-//	tests := []struct {
-//		name               string
-//		id                 int
-//		profile            models.Profile
-//		updateProfileErr   error
-//		updateProfileCount int
-//		logger             *zap.Logger
-//	}{
-//		{
-//			name:               "succesful update profile",
-//			id:                 1,
-//			profile:            models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
-//			updateProfileErr:   nil,
-//			updateProfileCount: 1,
-//			logger:             logger,
-//		},
-//		{
-//			name:               "bad update profile",
-//			id:                 1,
-//			profile:            models.Profile{Age: 14, BirthdayDate: "2010-01-01"},
-//			updateProfileErr:   errors.New("failed to update profile with age: 15"),
-//			updateProfileCount: 1,
-//			logger:             logger,
-//		},
-//	}
-//	mockCtrl := gomock.NewController(t)
-//	defer mockCtrl.Finish()
-//
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			repo := mocks.NewMockRepository(mockCtrl)
-//			repo.EXPECT().UpdateProfile(ctx, tt.id, tt.profile).Return(tt.updateProfileErr).
-//				Times(tt.updateProfileCount)
-//			s := New(repo, logger)
-//			err := s.UpdateProfile(ctx, tt.id, tt.profile)
-//			require.ErrorIs(t, err, tt.updateProfileErr)
-//		})
-//	}
-//}
-//
-//func TestGetProfile(t *testing.T) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel() // Отменяем контекст после завершения работы
-//	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-//	logger := zap.NewNop()
-//	//defer logger.Sync()
-//
-//	tests := []struct {
-//		name          string
-//		id            int
-//		returnProfile models.Profile
-//		returnError   error
-//		callCount     int
-//		logger        *zap.Logger
-//		wantProfile   models.Profile
-//	}{
-//		{
-//			name:          "successfull get profile",
-//			id:            1,
-//			returnProfile: models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
-//			returnError:   nil,
-//			callCount:     1,
-//			logger:        logger,
-//			wantProfile:   models.Profile{Age: 24, BirthdayDate: "2000-01-01"},
-//		},
-//		{
-//			name:          "bad get profile",
-//			id:            2,
-//			returnProfile: models.Profile{},
-//			returnError:   errors.New("failed to get profile"),
-//			callCount:     1,
-//			logger:        logger,
-//			wantProfile:   models.Profile{},
-//		},
-//	}
-//
-//	mockCtrl := gomock.NewController(t)
-//	defer mockCtrl.Finish()
-//
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			repo := mocks.NewMockRepository(mockCtrl)
-//			repo.EXPECT().GetProfile(ctx, tt.id).Return(tt.returnProfile, tt.returnError).
-//				Times(tt.callCount)
-//			s := New(repo, logger)
-//
-//			profile, err := s.GetProfile(ctx, tt.id)
-//
-//			require.ErrorIs(t, err, tt.returnError)
-//			if profile != tt.wantProfile {
-//				t.Errorf("GetProfile() profile = %v, want %v", profile, tt.wantProfile)
-//			}
-//		})
-//	}
-//}
-//
-//func TestDeleteProfile(t *testing.T) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel() // Отменяем контекст после завершения работы
-//	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
-//	logger := zap.NewNop()
-//	//defer logger.Sync()
-//
-//	tests := []struct {
-//		name        string
-//		id          int
-//		returnError error
-//		callCount   int
-//		logger      *zap.Logger
-//	}{
-//		{
-//			name:        "good delete profile",
-//			id:          1,
-//			returnError: nil,
-//			callCount:   1,
-//			logger:      logger,
-//		},
-//		{
-//			name:        "bad delete profile",
-//			id:          2,
-//			returnError: errors.New("failed to delete profile"),
-//			callCount:   1,
-//			logger:      logger,
-//		},
-//	}
-//
-//	mockCtrl := gomock.NewController(t)
-//	defer mockCtrl.Finish()
-//
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			repo := mocks.NewMockRepository(mockCtrl)
-//			repo.EXPECT().DeleteProfile(ctx, tt.id).Return(tt.returnError).
-//				Times(tt.callCount)
-//
-//			s := New(repo, logger)
-//			err := s.DeleteProfile(ctx, tt.id)
-//			require.ErrorIs(t, err, tt.returnError)
-//		})
-//	}
-//}
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
+	"time"
+
+	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/profile/mocks"
+	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+)
+
+func TestUseCase_CreateProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repo := mocks.NewMockRepository(ctrl)
+	logger := zap.NewNop()
+	uc := New(repo, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name          string
+		profile       models.Profile
+		mockSetup     func()
+		wantErr       bool
+		wantErrMsg    string
+		wantProfileID int
+	}{
+		{
+			name:    "success",
+			profile: models.Profile{BirthdayDate: "2000-01-01"},
+			mockSetup: func() {
+				repo.EXPECT().CreateProfile(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, p models.Profile) (int, error) {
+					if p.Age != time.Now().Year()-2000 {
+						return 0, fmt.Errorf("age not calculated correctly")
+					}
+					return 1, nil
+				})
+			},
+			wantErr:       false,
+			wantProfileID: 1,
+		},
+		{
+			name:       "birth date format error",
+			profile:    models.Profile{BirthdayDate: "invalid-date"},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: "get age error:",
+		},
+		{
+			name:       "small age error",
+			profile:    models.Profile{BirthdayDate: time.Now().AddDate(-17, 0, 0).Format("2006-01-02")},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: sparkiterrors.ErrSmallAge.Error(),
+		},
+		{
+			name:       "big age error",
+			profile:    models.Profile{BirthdayDate: "1900-01-01"},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: sparkiterrors.ErrBigAge.Error(),
+		},
+		{
+			name:    "repo error",
+			profile: models.Profile{BirthdayDate: "1990-01-01"},
+			mockSetup: func() {
+				repo.EXPECT().CreateProfile(ctx, gomock.Any()).Return(0, errors.New("db error"))
+			},
+			wantErr:    true,
+			wantErrMsg: "create profile err: db error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			id, err := uc.CreateProfile(ctx, tt.profile)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error mismatch: got err=%v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && tt.wantErrMsg != "" {
+				if err.Error() == tt.wantErrMsg {
+					// exact match
+				} else if !contains(err.Error(), tt.wantErrMsg) {
+					t.Errorf("error message mismatch: got %v, want contains %v", err.Error(), tt.wantErrMsg)
+				}
+			}
+			if !tt.wantErr && id != tt.wantProfileID {
+				t.Errorf("id mismatch: got %v, want %v", id, tt.wantProfileID)
+			}
+		})
+	}
+}
+
+func TestUseCase_UpdateProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repo := mocks.NewMockRepository(ctrl)
+	logger := zap.NewNop()
+	uc := New(repo, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		id         int
+		profile    models.Profile
+		mockSetup  func()
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:    "success",
+			id:      1,
+			profile: models.Profile{BirthdayDate: "2000-01-01"},
+			mockSetup: func() {
+				repo.EXPECT().UpdateProfile(ctx, 1, gomock.Any()).Return(nil)
+			},
+		},
+		{
+			name:       "birth date format error",
+			id:         1,
+			profile:    models.Profile{BirthdayDate: "invalid"},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: "get age error:",
+		},
+		{
+			name: "small age error",
+			id:   1,
+			profile: models.Profile{
+				BirthdayDate: time.Now().AddDate(-17, 0, 0).Format("2006-01-02"),
+			},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: sparkiterrors.ErrSmallAge.Error(),
+		},
+		{
+			name: "big age error",
+			id:   1,
+			profile: models.Profile{
+				BirthdayDate: "1900-01-01",
+			},
+			mockSetup:  func() {},
+			wantErr:    true,
+			wantErrMsg: sparkiterrors.ErrBigAge.Error(),
+		},
+		{
+			name:    "repo error",
+			id:      1,
+			profile: models.Profile{BirthdayDate: "1990-01-01"},
+			mockSetup: func() {
+				repo.EXPECT().UpdateProfile(ctx, 1, gomock.Any()).Return(errors.New("db error"))
+			},
+			wantErr:    true,
+			wantErrMsg: "update profile err: db error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			err := uc.UpdateProfile(ctx, tt.id, tt.profile)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error mismatch: got err=%v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && !contains(err.Error(), tt.wantErrMsg) {
+				t.Errorf("error message mismatch: got %v, want contains %v", err.Error(), tt.wantErrMsg)
+			}
+		})
+	}
+}
+
+func TestUseCase_GetProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repo := mocks.NewMockRepository(ctrl)
+	logger := zap.NewNop()
+	uc := New(repo, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		id         int
+		mockSetup  func()
+		wantErr    bool
+		wantErrMsg string
+		wantAge    int
+	}{
+		{
+			name: "success",
+			id:   1,
+			mockSetup: func() {
+				repo.EXPECT().GetProfile(ctx, 1).Return(models.Profile{BirthdayDate: "1990-01-01"}, nil)
+			},
+			wantAge: time.Now().Year() - 1990,
+		},
+		{
+			name: "repo error",
+			id:   1,
+			mockSetup: func() {
+				repo.EXPECT().GetProfile(ctx, 1).Return(models.Profile{}, errors.New("db error"))
+			},
+			wantErr:    true,
+			wantErrMsg: "get profile err: db error",
+		},
+		{
+			name: "birth date format error",
+			id:   1,
+			mockSetup: func() {
+				repo.EXPECT().GetProfile(ctx, 1).Return(models.Profile{BirthdayDate: "invalid"}, nil)
+			},
+			wantErr:    true,
+			wantErrMsg: "get profile err:",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			res, err := uc.GetProfile(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error mismatch: got err=%v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && !contains(err.Error(), tt.wantErrMsg) {
+				t.Errorf("error message mismatch: got %v, want contains %v", err.Error(), tt.wantErrMsg)
+			}
+			if !tt.wantErr {
+				if res.Age != tt.wantAge {
+					t.Errorf("age mismatch: got %v, want %v", res.Age, tt.wantAge)
+				}
+			}
+		})
+	}
+}
+
+func TestUseCase_DeleteProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repo := mocks.NewMockRepository(ctrl)
+	logger := zap.NewNop()
+	uc := New(repo, logger)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		id         int
+		mockSetup  func()
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name: "success",
+			id:   1,
+			mockSetup: func() {
+				repo.EXPECT().DeleteProfile(ctx, 1).Return(nil)
+			},
+		},
+		{
+			name: "error",
+			id:   1,
+			mockSetup: func() {
+				repo.EXPECT().DeleteProfile(ctx, 1).Return(errors.New("db error"))
+			},
+			wantErr:    true,
+			wantErrMsg: "delete profile err: db error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+			err := uc.DeleteProfile(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error mismatch: got err=%v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && err.Error() != tt.wantErrMsg {
+				t.Errorf("error message mismatch: got %v, want %v", err.Error(), tt.wantErrMsg)
+			}
+		})
+	}
+}
+
+func TestGetAge(t *testing.T) {
+	tests := []struct {
+		name       string
+		birthday   string
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name:     "valid date",
+			birthday: "2000-01-01",
+		},
+		{
+			name:       "invalid format",
+			birthday:   "invalid",
+			wantErr:    true,
+			wantErrMsg: "birth date format error:",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			age, err := GetAge(tt.birthday)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error mismatch: got err=%v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr && err != nil && !contains(err.Error(), tt.wantErrMsg) {
+				t.Errorf("error message mismatch: got %v, want contains %v", err.Error(), tt.wantErrMsg)
+			}
+			if !tt.wantErr {
+				expectedAge := time.Now().Year() - 2000
+				if time.Now().YearDay() < time.Date(time.Now().Year(), 1, 1, 0, 0, 0, 0, time.UTC).YearDay() {
+					expectedAge--
+				}
+				if age != expectedAge {
+					t.Errorf("age mismatch: got %v, want %v", age, expectedAge)
+				}
+			}
+		})
+	}
+}
+
+func TestCheckAge(t *testing.T) {
+	tests := []struct {
+		name    string
+		age     int
+		wantErr error
+	}{
+		{
+			name:    "age ok",
+			age:     30,
+			wantErr: nil,
+		},
+		{
+			name:    "small age",
+			age:     17,
+			wantErr: sparkiterrors.ErrSmallAge,
+		},
+		{
+			name:    "big age",
+			age:     101,
+			wantErr: sparkiterrors.ErrBigAge,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := checkAge(tt.age)
+			if err != tt.wantErr {
+				t.Errorf("error mismatch: got %v, want %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func contains(str, substr string) bool {
+	return len(str) >= len(substr) && (str == substr || (len(str) > len(substr) && (searchSubstring(str, substr))))
+}
+
+func searchSubstring(s, sub string) bool {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}

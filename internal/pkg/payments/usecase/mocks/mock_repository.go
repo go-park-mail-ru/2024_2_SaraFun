@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	models "github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -118,6 +119,21 @@ func (mr *MockRepositoryMockRecorder) ChangePurchasedLikeCount(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePurchasedLikeCount", reflect.TypeOf((*MockRepository)(nil).ChangePurchasedLikeCount), arg0, arg1, arg2)
 }
 
+// CreateProduct mocks base method.
+func (m *MockRepository) CreateProduct(arg0 context.Context, arg1 models.Product) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateProduct", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateProduct indicates an expected call of CreateProduct.
+func (mr *MockRepositoryMockRecorder) CreateProduct(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockRepository)(nil).CreateProduct), arg0, arg1)
+}
+
 // GetBalance mocks base method.
 func (m *MockRepository) GetBalance(arg0 context.Context, arg1 int) (int, error) {
 	m.ctrl.T.Helper()
@@ -146,6 +162,36 @@ func (m *MockRepository) GetDailyLikesCount(arg0 context.Context, arg1 int) (int
 func (mr *MockRepositoryMockRecorder) GetDailyLikesCount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDailyLikesCount", reflect.TypeOf((*MockRepository)(nil).GetDailyLikesCount), arg0, arg1)
+}
+
+// GetProduct mocks base method.
+func (m *MockRepository) GetProduct(arg0 context.Context, arg1 string) (models.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProduct", arg0, arg1)
+	ret0, _ := ret[0].(models.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProduct indicates an expected call of GetProduct.
+func (mr *MockRepositoryMockRecorder) GetProduct(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProduct", reflect.TypeOf((*MockRepository)(nil).GetProduct), arg0, arg1)
+}
+
+// GetProducts mocks base method.
+func (m *MockRepository) GetProducts(arg0 context.Context) ([]models.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProducts", arg0)
+	ret0, _ := ret[0].([]models.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProducts indicates an expected call of GetProducts.
+func (mr *MockRepositoryMockRecorder) GetProducts(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProducts", reflect.TypeOf((*MockRepository)(nil).GetProducts), arg0)
 }
 
 // GetPurchasedLikesCount mocks base method.
@@ -217,4 +263,18 @@ func (m *MockRepository) SetPurchasedLikesCount(arg0 context.Context, arg1, arg2
 func (mr *MockRepositoryMockRecorder) SetPurchasedLikesCount(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPurchasedLikesCount", reflect.TypeOf((*MockRepository)(nil).SetPurchasedLikesCount), arg0, arg1, arg2)
+}
+
+// UpdateProduct mocks base method.
+func (m *MockRepository) UpdateProduct(arg0 context.Context, arg1 string, arg2 models.Product) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateProduct", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateProduct indicates an expected call of UpdateProduct.
+func (mr *MockRepositoryMockRecorder) UpdateProduct(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProduct", reflect.TypeOf((*MockRepository)(nil).UpdateProduct), arg0, arg1, arg2)
 }
