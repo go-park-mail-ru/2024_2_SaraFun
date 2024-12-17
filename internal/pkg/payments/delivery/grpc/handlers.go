@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate mockgen -destination=./mocks/mock_usecase.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc UseCase
+
 type UseCase interface {
 	GetBalance(ctx context.Context, userID int) (int, error)
 	GetDailyLikesCount(ctx context.Context, userID int) (int, error)
