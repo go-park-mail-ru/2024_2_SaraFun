@@ -8,6 +8,9 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_surveyusecase.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc SurveyUsecase
+
+
 type SurveyUsecase interface {
 	AddSurvey(ctx context.Context, survey models.Survey) (int, error)
 	GetSurveyInfo(ctx context.Context) (map[string]models.SurveyStat, error)
