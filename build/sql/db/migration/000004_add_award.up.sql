@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS user_activity (
     ON UPDATE CASCADE
 );
 
+INSERT INTO user_activity (user_id, last_login, consecutive_days)
+    SELECT id, NOW(), 0 FROM users;
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE award TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE user_activity TO app_user;
 GRANT USAGE, SELECT ON SEQUENCE award_id_seq TO app_user;
