@@ -44,6 +44,7 @@ func (u *UseCase) GetMatchList(ctx context.Context, userId int) ([]int, error) {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	authors, err := u.repo.GetMatchList(ctx, userId)
+	u.logger.Info("matches", zap.Any("authors", authors))
 	if err != nil {
 		u.logger.Error("UseCase GetMatchList: failed to GetMatchList", zap.Error(err))
 		return nil, fmt.Errorf("failed to GetMatchList: %w", err)

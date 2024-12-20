@@ -60,6 +60,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			Description: product.Description,
 			ImageLink:   product.ImageLink,
 			Price:       int(product.Price),
+			Count:       int(product.Count),
 		}
 		prs = append(prs, pr)
 	}
@@ -70,11 +71,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error("GetProducts Handler: bad marshalling json", zap.Error(err))
 		http.Error(w, "bad marshalling json", http.StatusInternalServerError)
+		return
 	}
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("GetProducts Handler: error writing response", zap.Error(err))
 		http.Error(w, "error writing json response", http.StatusInternalServerError)
+		return
 	}
 	h.logger.Info("GetProducts Handler: success")
 }

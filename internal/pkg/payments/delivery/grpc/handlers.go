@@ -28,6 +28,10 @@ type UseCase interface {
 	CheckBalance(ctx context.Context, userID int, amount int) error
 	CreateProduct(ctx context.Context, product models.Product) (int, error)
 	GetProducts(ctx context.Context) ([]models.Product, error)
+	AddAward(ctx context.Context, award models.Award) error
+	GetAwards(ctx context.Context) ([]models.Award, error)
+	UpdateActivity(ctx context.Context, userID int) (string, error)
+	AddActivity(ctx context.Context, userID int) error
 }
 
 type GRPCHandler struct {
@@ -201,23 +205,21 @@ func (h *GRPCHandler) CreateBalances(ctx context.Context,
 func (h *GRPCHandler) BuyLikes(ctx context.Context,
 	in *generatedPayments.BuyLikesRequest) (*generatedPayments.BuyLikesResponse, error) {
 	title := in.Title
-	amount := int(in.Amount)
 	userID := int(in.UserID)
-	spend := amount * (-1)
+
 	product, err := h.uc.GetProduct(ctx, title)
 	if err != nil {
 		h.logger.Error("grpc get balance error", zap.Error(err))
 		return nil, fmt.Errorf("grpc get balance error: %w", err)
 	}
 	h.logger.Info("product", zap.Any("product", product))
-	err = h.uc.CheckBalance(ctx, userID, amount)
+	err = h.uc.CheckBalance(ctx, userID, product.Price)
 	if err != nil {
 		h.logger.Error("grpc check balance error", zap.Error(err))
 		return nil, status.Error(codes.InvalidArgument, "Недостаточно средств")
 	}
-
-	count := amount / product.Price
-	if count < 1 {
+	spend := product.Count * (-1)
+	if product.Count < 1 {
 		h.logger.Info("grpc count < 1")
 		return nil, status.Error(codes.InvalidArgument, "Суммы не хватает даже на один лайк")
 	}
@@ -226,7 +228,7 @@ func (h *GRPCHandler) BuyLikes(ctx context.Context,
 		h.logger.Error("grpc change balance error", zap.Error(err))
 		return nil, fmt.Errorf("grpc change balance error: %w", err)
 	}
-	err = h.uc.ChangePurchasedLikeCount(ctx, userID, count)
+	err = h.uc.ChangePurchasedLikeCount(ctx, userID, product.Count)
 	if err != nil {
 		h.logger.Error("grpc change balance error", zap.Error(err))
 		return nil, fmt.Errorf("grpc change balance error: %w", err)
@@ -242,6 +244,7 @@ func (h *GRPCHandler) CreateProduct(ctx context.Context,
 		Description: in.Product.Description,
 		ImageLink:   in.Product.ImageLink,
 		Price:       int(in.Product.Price),
+		Count:       int(in.Product.Count),
 	}
 	id, err := h.uc.CreateProduct(ctx, product)
 	if err != nil {
@@ -265,10 +268,70 @@ func (h *GRPCHandler) GetProducts(ctx context.Context,
 			Description: product.Description,
 			ImageLink:   product.ImageLink,
 			Price:       int32(product.Price),
+			Count:       int32(product.Count),
 		})
 	}
 	response := &generatedPayments.GetProductsResponse{
 		Products: grpcProducts,
 	}
 	return response, nil
+}
+
+func (h *GRPCHandler) AddAward(ctx context.Context, in *generatedPayments.AddAwardRequest) (*generatedPayments.AddAwardResponse, error) {
+	award := models.Award{
+		DayNumber: int(in.Award.DayNumber),
+		Type:      in.Award.Type,
+		Count:     int(in.Award.Count),
+	}
+	err := h.uc.AddAward(ctx, award)
+	if err != nil {
+		return nil, fmt.Errorf("grpc add award error: %w", err)
+	}
+	return &generatedPayments.AddAwardResponse{}, nil
+}
+
+func (h *GRPCHandler) GetAwards(ctx context.Context,
+	in *generatedPayments.GetAwardsRequest) (*generatedPayments.GetAwardsResponse, error) {
+	awards, err := h.uc.GetAwards(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("grpc get awards error: %w", err)
+	}
+	var grpcAwards []*generatedPayments.Award
+	for _, award := range awards {
+		grpcAwards = append(grpcAwards, &generatedPayments.Award{
+			DayNumber: int32(award.DayNumber),
+			Type:      award.Type,
+			Count:     int32(award.Count),
+		})
+	}
+	response := &generatedPayments.GetAwardsResponse{
+		Awards: grpcAwards,
+	}
+	return response, nil
+}
+
+func (h *GRPCHandler) UpdateActivity(ctx context.Context,
+	in *generatedPayments.UpdateActivityRequest) (*generatedPayments.UpdateActivityResponse, error) {
+	userID := int(in.UserID)
+
+	answer, err := h.uc.UpdateActivity(ctx, userID)
+	if err != nil {
+		h.logger.Error("grpc update activity error", zap.Error(err))
+		return nil, fmt.Errorf("grpc update activity error: %w", err)
+	}
+	response := &generatedPayments.UpdateActivityResponse{
+		Answer: answer,
+	}
+	return response, nil
+}
+
+func (h *GRPCHandler) CreateActivity(ctx context.Context,
+	in *generatedPayments.CreateActivityRequest) (*generatedPayments.CreateActivityResponse, error) {
+	userID := int(in.UserID)
+	err := h.uc.AddActivity(ctx, userID)
+	if err != nil {
+		h.logger.Error("grpc add activity error", zap.Error(err))
+		return nil, fmt.Errorf("grpc add activity error: %w", err)
+	}
+	return &generatedPayments.CreateActivityResponse{}, nil
 }

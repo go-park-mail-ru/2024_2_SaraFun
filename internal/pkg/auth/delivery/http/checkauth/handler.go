@@ -2,8 +2,9 @@ package checkauth
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"go.uber.org/zap"
 	"net/http"
@@ -16,12 +17,14 @@ type SessionClient interface {
 }
 
 type Handler struct {
-	sessionClient generatedAuth.AuthClient
-	logger        *zap.Logger
+	sessionClient  generatedAuth.AuthClient
+	paymentsClient generatedPayments.PaymentClient
+	logger         *zap.Logger
 }
 
-func NewHandler(service generatedAuth.AuthClient, logger *zap.Logger) *Handler {
-	return &Handler{sessionClient: service, logger: logger}
+func NewHandler(service generatedAuth.AuthClient,
+	paymentsClient generatedPayments.PaymentClient, logger *zap.Logger) *Handler {
+	return &Handler{sessionClient: service, paymentsClient: paymentsClient, logger: logger}
 }
 
 func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +48,36 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad session", http.StatusUnauthorized)
 	}
 
-	h.logger.Info("good session check", zap.String("session", cookie.Value))
-	fmt.Fprintf(w, "ok")
+	cookie, err = r.Cookie(consts.SessionCookie)
+	if err != nil {
+		h.logger.Error("cookie error", zap.Error(err))
+		http.Error(w, "Вы не авторизованы!", http.StatusUnauthorized)
+		return
+	}
+	getIDRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
+	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getIDRequest)
+
+	updateActivityReq := &generatedPayments.UpdateActivityRequest{UserID: userId.UserId}
+	ans, err := h.paymentsClient.UpdateActivity(ctx, updateActivityReq)
+	if err != nil {
+		h.logger.Error("checkauth paymentsClient update activity error", zap.Error(err))
+		http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+		return
+	}
+	jsonData, err := json.Marshal(ans.Answer)
+	if err != nil {
+		h.logger.Error("json marshal error", zap.Error(err))
+		http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonData)
+	if err != nil {
+		h.logger.Error("write response error", zap.Error(err))
+		http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+		return
+	}
+
+	h.logger.Info("good update activity", zap.String("session", cookie.Value))
 }

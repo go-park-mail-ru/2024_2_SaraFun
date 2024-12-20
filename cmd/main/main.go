@@ -31,8 +31,10 @@ import (
 	grpcpayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/acceptpayment"
 	addproduct "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/addProduct"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/addaward"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/buyproduct"
 	getproducts "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getProducts"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getawards"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/getbalance"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/http/topUpBalance"
 	grpcpersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
@@ -193,7 +195,7 @@ func main() {
 	signUp := signup.NewHandler(personalitiesClient, authClient, paymentsClient, logger)
 	signIn := signin.NewHandler(personalitiesClient, authClient, logger)
 	getUsers := getuserlist.NewHandler(authClient, personalitiesClient, imageUseCase, communicationsClient, logger)
-	checkAuth := checkauth.NewHandler(authClient, logger)
+	checkAuth := checkauth.NewHandler(authClient, paymentsClient, logger)
 	logOut := logout.NewHandler(authClient, logger)
 	uploadImage := uploadimage.NewHandler(imageUseCase, authClient, logger)
 	deleteImage := deleteimage.NewHandler(imageUseCase, logger)
@@ -221,6 +223,8 @@ func main() {
 	acceptPayment := acceptpayment.NewHandler(authClient, paymentsClient, logger)
 	addProduct := addproduct.NewHandler(authClient, paymentsClient, logger)
 	getProducts := getproducts.NewHandler(authClient, paymentsClient, logger)
+	addAward := addaward.NewHandler(paymentsClient, logger)
+	getAwards := getawards.NewHandler(authClient, paymentsClient, logger)
 	authMiddleware := authcheck.New(authClient, logger)
 	accessLogMiddleware := middleware.NewAccessLogMiddleware(sugar)
 	metricsMiddleware := metricsmiddleware.NewMiddleware(_metrics, logger)
@@ -298,6 +302,8 @@ func main() {
 		payments.Handle("/buy", http.HandlerFunc(buyProduct.Handle)).Methods("POST", http.MethodOptions)
 		payments.Handle("/product", http.HandlerFunc(addProduct.Handle)).Methods("POST", http.MethodOptions)
 		payments.Handle("/products", http.HandlerFunc(getProducts.Handle)).Methods("GET", http.MethodOptions)
+		payments.Handle("/award", http.HandlerFunc(addAward.Handle)).Methods("POST", http.MethodOptions)
+		payments.Handle("/awards", http.HandlerFunc(getAwards.Handle)).Methods("GET", http.MethodOptions)
 
 	}
 

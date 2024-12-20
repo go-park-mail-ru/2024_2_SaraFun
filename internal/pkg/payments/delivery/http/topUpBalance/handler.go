@@ -78,7 +78,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := "https://api.yookassa.ru/v3/payments"
-	returnUrl := "https://spark-it.site/feed"
+	returnUrl := "https://spark-it.site/shop"
 
 	apiRequest := &APIRequest{
 		Amount: Amount{

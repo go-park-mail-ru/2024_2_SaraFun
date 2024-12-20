@@ -133,10 +133,31 @@ type Product struct {
 	Description string `json:"description"`
 	ImageLink   string `json:"image_link"`
 	Price       int    `json:"price"`
+	Count       int    `json:"count"`
 }
 
 func (product *Product) Sanitize() {
 	product.Description = html.EscapeString(product.Description)
 	product.ImageLink = html.EscapeString(product.ImageLink)
 	product.Title = html.EscapeString(product.Title)
+}
+
+type Award struct {
+	DayNumber int    `json:"day_number"`
+	Type      string `json:"type"`
+	Count     int    `json:"count"`
+}
+
+func (award *Award) Sanitize() {
+	award.Type = html.EscapeString(award.Type)
+}
+
+type Activity struct {
+	Last_Login       string `json:"last_login"`
+	Consecutive_days int    `json:"consecutive_days"`
+	UserID           int    `json:"user_id"`
+}
+
+func (activity *Activity) Sanitize() {
+	activity.Last_Login = html.EscapeString(activity.Last_Login)
 }

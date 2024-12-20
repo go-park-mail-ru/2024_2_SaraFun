@@ -54,13 +54,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	msg.Sanitize()
 	if err := easyjson.UnmarshalFromReader(r.Body, msg); err != nil {
 		h.logger.Info("Error decoding message", zap.Error(err))
-		http.Error(w, "bad request", http.StatusBadRequest)
+		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Info("Error getting session cookie", zap.Error(err))
-		http.Error(w, "bad request", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getUserIDRequest)
 	if err != nil {
 		h.logger.Info("Error getting user ID", zap.Error(err))
-		http.Error(w, "bad request", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("status", zap.Any("status", status))
 	if err != nil {
 		h.logger.Info("Error checking users block exists", zap.Error(err))
-		http.Error(w, "bad request", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	if status.Status != "" {
@@ -108,7 +108,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	_, err = h.messageClient.AddMessage(ctx, addMessageRequest)
 	if err != nil {
 		h.logger.Info("Error adding message", zap.Error(err))
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: userId.UserId}
@@ -120,7 +120,6 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	err = h.ws.WriteMessage(ctx, msg.Author, msg.Receiver, msg.Body, username.Username)
 	if err != nil {
 		h.logger.Info("Error writing message", zap.Error(err))
-		//http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 }

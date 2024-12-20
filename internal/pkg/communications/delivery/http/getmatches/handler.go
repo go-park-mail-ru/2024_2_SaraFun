@@ -74,14 +74,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting cookie ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	getUserIdRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
 	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getUserIdRequest)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting user id ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	authors, err := h.communicationsClient.GetMatchList(ctx, getMatchListRequest)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting authors ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 
@@ -109,14 +109,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		if err != nil {
 			h.logger.Error("GetMatches Handler: bad getting profile ", zap.Error(err))
-			http.Error(w, "bad get profile", http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		var links []models.Image
 		links, err = h.imageService.GetImageLinksByUserId(ctx, int(author))
 		if err != nil {
 			h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		matchedUser.Images = links
@@ -126,7 +126,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		matchedUser.Username = username.Username
 		if err != nil {
 			h.logger.Error("GetMatches Handler: bad getting username", zap.Error(err))
-			http.Error(w, "bad get username", http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		matches = append(matches, matchedUser)
@@ -136,12 +136,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad marshalling json", zap.Error(err))
-		http.Error(w, "bad marshalling json", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
 	}
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: error writing response", zap.Error(err))
-		http.Error(w, "error writing json response", http.StatusUnauthorized)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
 	}
 	h.logger.Info("GetMatches Handler: success")
 

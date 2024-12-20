@@ -36,21 +36,22 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	err := easyjson.UnmarshalFromReader(r.Body, &report)
 	if err != nil {
 		h.logger.Error("bad json decode", zap.Error(err))
-		http.Error(w, "bad json decode", http.StatusBadRequest)
+		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
 
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("bad cookie", zap.Error(err))
-		http.Error(w, "bad cookie", http.StatusBadRequest)
+		http.Error(w, "Вы не авторизованы", http.StatusBadRequest)
 		return
 	}
 	getUserIDRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
 	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getUserIDRequest)
 	if err != nil {
 		h.logger.Error("bad get user id", zap.Error(err))
-		http.Error(w, "bad get user id", http.StatusBadRequest)
+		http.Error(w, "Вы не авторизованы", http.StatusBadRequest)
+		return
 	}
 	report.Author = int(userId.UserId)
 	h.logger.Info("report", zap.Any("report", report))
@@ -65,7 +66,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	_, err = h.messageClient.AddReport(ctx, addReportRequest)
 	if err != nil {
 		h.logger.Error("bad add report", zap.Error(err))
-		http.Error(w, "bad add report", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 

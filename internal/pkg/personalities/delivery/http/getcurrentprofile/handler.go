@@ -37,6 +37,7 @@ type SessionClient interface {
 }
 
 type Response struct {
+	Username              string         `json:"username"`
 	Profile               models.Profile `json:"profile"`
 	Images                []models.Image `json:"images"`
 	MoneyBalance          int            `json:"money_balance"`
@@ -87,6 +88,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user not found", http.StatusUnauthorized)
 		return
 	}
+	getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: userId.UserId}
+
+	username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
+	if err != nil {
+		h.logger.Error("error getting username", zap.Error(err))
+		http.Error(w, "user username not found", http.StatusUnauthorized)
+		return
+	}
 
 	getProfileByUserRequest := &generatedPersonalities.GetProfileIDByUserIDRequest{UserID: userId.UserId}
 	profileId, err := h.personalitiesClient.GetProfileIDByUserID(ctx, getProfileByUserRequest)
@@ -132,6 +141,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		BirthdayDate: profile.Profile.BirthDate,
 	}
 	response := Response{
+		Username:              username.Username,
 		Profile:               profileResponse,
 		Images:                links,
 		MoneyBalance:          int(balance.MoneyBalance),

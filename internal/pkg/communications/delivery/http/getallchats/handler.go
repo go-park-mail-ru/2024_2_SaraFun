@@ -90,21 +90,21 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting cookie ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	getUserIdRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
 	userId, err := h.sessionClient.GetUserIDBySessionID(ctx, getUserIdRequest)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting user id ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	getMatchListRequest := &generatedCommunications.GetMatchListRequest{UserID: userId.UserId}
 	authors, err := h.communicationsClient.GetMatchList(ctx, getMatchListRequest)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: bad getting authors ", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 
@@ -113,18 +113,9 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		var chatter Response
 		getProfileRequest := &generatedPersonalities.GetProfileRequest{Id: author}
 		profile, err := h.personalitiesClient.GetProfile(ctx, getProfileRequest)
-		//chatter.Profile = models.Profile{
-		//	ID:        int(profile.Profile.ID),
-		//	FirstName: profile.Profile.FirstName,
-		//	LastName:  profile.Profile.LastName,
-		//	Age:       int(profile.Profile.Age),
-		//	Gender:    profile.Profile.Gender,
-		//	Target:    profile.Profile.Target,
-		//	About:     profile.Profile.About,
-		//}
 		if err != nil {
 			h.logger.Error("GetMatches Handler: bad getting profile ", zap.Error(err))
-			http.Error(w, "bad get profile", http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		chatter.FirstName = profile.Profile.FirstName
@@ -133,7 +124,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
 		if err != nil {
 			h.logger.Error("GetMatches Handler: bad getting username ", zap.Error(err))
-			http.Error(w, "bad get username", http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		chatter.Username = username.Username
@@ -141,26 +132,18 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		links, err = h.imageService.GetImageLinksByUserId(ctx, int(author))
 		if err != nil {
 			h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 			return
 		}
 		chatter.Images = links
 		chatter.ID = int(author)
-		//matchedUser.Images = links
-		//matchedUser.UserId = int(author)
-		//getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: author}
-		//username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
-		//ch.Username = username.Username
-		//if err != nil {
-		//	h.logger.Error("GetMatches Handler: bad getting username", zap.Error(err))
-		//	http.Error(w, "bad get username", http.StatusInternalServerError)
-		//	return
-		//}
+
 		getLastRequest := &generatedMessage.GetLastMessageRequest{AuthorID: userId.UserId, ReceiverID: author}
 		msg, err := h.messageClient.GetLastMessage(ctx, getLastRequest)
 		if err != nil {
 			h.logger.Error("getlastmessage error", zap.Error(err))
-			http.Error(w, "bad getting last message", http.StatusInternalServerError)
+			http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+			return
 		}
 		if msg.Message == "" {
 			getMatchRequest := &generatedCommunications.GetMatchTimeRequest{
@@ -170,7 +153,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 			time, err := h.communicationsClient.GetMatchTime(ctx, getMatchRequest)
 			if err != nil {
 				h.logger.Error("getmatchtime error", zap.Error(err))
-				http.Error(w, "bad get match time", http.StatusInternalServerError)
+				http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 				return
 			}
 			chatter.Time = time.Time
@@ -195,11 +178,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	})
 	responses := Responses{Responses: chats}
 	w.Header().Set("Content-Type", "application/json")
-	//jsonData, err := json.Marshal(chats)
-	//if err != nil {
-	//	h.logger.Error("GetMatches Handler: bad marshalling json", zap.Error(err))
-	//	http.Error(w, "bad marshalling json", http.StatusInternalServerError)
-	//}
+
 	jsonData, err := easyjson.Marshal(responses)
 	if err != nil {
 		h.logger.Error("json marshal error", zap.Error(err))
@@ -209,7 +188,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("GetMatches Handler: error writing response", zap.Error(err))
-		http.Error(w, "error writing json response", http.StatusUnauthorized)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
 	}
 	h.logger.Info("GetMatches Handler: success")
 

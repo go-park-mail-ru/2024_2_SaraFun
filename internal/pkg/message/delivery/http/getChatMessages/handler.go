@@ -62,21 +62,22 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("bad cookie", zap.Error(err))
-		http.Error(w, "bad cookie", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	getUserIDRequest := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: cookie.Value}
 	userId, err := h.authClient.GetUserIDBySessionID(ctx, getUserIDRequest)
 	if err != nil {
 		h.logger.Error("dont get user by session id", zap.Error(err))
-		http.Error(w, "dont get user by session id", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
+		return
 	}
 
 	firstUserID := userId.UserId
 	secondUserID, err := strconv.Atoi(r.URL.Query().Get("userID"))
 	if err != nil {
 		h.logger.Error("dont get user id", zap.Error(err))
-		http.Error(w, "dont get user id", http.StatusBadRequest)
+		http.Error(w, "Некорректный запрос", http.StatusBadRequest)
 		return
 	}
 
@@ -84,7 +85,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
 	if err != nil {
 		h.logger.Error("dont get username by userID", zap.Error(err))
-		http.Error(w, "dont get username by user id", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	resp.Username = username.Username
@@ -93,14 +94,15 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	secondProfileID, err := h.personalitiesClient.GetProfileIDByUserID(ctx, getProfileRequestID)
 	if err != nil {
 		h.logger.Error("dont get user profile", zap.Error(err))
-		http.Error(w, "dont get user profile", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	getProfileRequest := &generatedPersonalities.GetProfileRequest{Id: secondProfileID.ProfileID}
 	secondProfile, err := h.personalitiesClient.GetProfile(ctx, getProfileRequest)
 	if err != nil {
 		h.logger.Error("dont get user profile", zap.Error(err))
-		http.Error(w, "dont get user profile", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
 	}
 	respProfile := models.Profile{
 		ID:        int(secondProfileID.ProfileID),
@@ -121,7 +123,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	msgs, err := h.messageClient.GetChatMessages(ctx, getChatMessagesRequest)
 	if err != nil {
 		h.logger.Error("dont get chat messages", zap.Error(err))
-		http.Error(w, "dont get chat messages", http.StatusBadRequest)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	var responseMessages []ResponseMessage
@@ -144,7 +146,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	links, err = h.imageService.GetImageLinksByUserId(ctx, secondUserID)
 	if err != nil {
 		h.logger.Error("getimagelinkbyuserid error", zap.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 
@@ -154,13 +156,13 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := easyjson.Marshal(resp)
 	if err != nil {
 		h.logger.Error("dont marshal response", zap.Error(err))
-		http.Error(w, "dont marshal response", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("dont write response", zap.Error(err))
-		http.Error(w, "dont write response", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	h.logger.Info("getChatMessages success")

@@ -64,7 +64,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	if user, err := h.userClient.CheckPassword(ctx,
 		&generatedPersonalities.CheckPasswordRequest{Username: userData.Username, Password: userData.Password}); err != nil {
 		h.logger.Error("invalid credentials", zap.Error(err))
-		http.Error(w, "wrong credentials", http.StatusPreconditionFailed)
+		http.Error(w, "Неверные данные!", http.StatusPreconditionFailed)
 		return
 
 	} else {

@@ -134,6 +134,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	user.Profile = int(profileId.ProfileId)
 	hashedPass, err := hashing.HashPassword(user.Password)
 	if err != nil {
@@ -158,6 +159,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.ID = int(id.UserId)
+
+	createActivityReq := &generatedPayments.CreateActivityRequest{UserID: id.UserId}
+	_, err = h.paymentsClient.CreateActivity(ctx, createActivityReq)
+	if err != nil {
+		h.logger.Error("failed to create Activity", zap.Error(err))
+		http.Error(w, "что-то пошло не так :(", http.StatusInternalServerError)
+		return
+	}
 
 	createBalancesRequest := &generatedPayments.CreateBalancesRequest{
 		UserID:          id.UserId,

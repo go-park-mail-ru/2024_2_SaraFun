@@ -15,6 +15,10 @@ service Payment {
   rpc BuyLikes(BuyLikesRequest) returns (BuyLikesResponse);
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
   rpc GetProducts(GetProductsRequest) returns (GetProductsResponse);
+  rpc AddAward(AddAwardRequest) returns (AddAwardResponse);
+  rpc GetAwards(GetAwardsRequest) returns (GetAwardsResponse);
+  rpc UpdateActivity(UpdateActivityRequest) returns (UpdateActivityResponse);
+  rpc CreateActivity(CreateActivityRequest) returns (CreateActivityResponse);
 }
 
 message GetDailyLikeBalanceRequest {
@@ -88,6 +92,7 @@ message BuyLikesRequest {
   string Title = 1;
   int32 Amount = 2;
   int32 UserID = 3;
+  int32 Count = 4;
 }
 
 message BuyLikesResponse {}
@@ -97,6 +102,7 @@ message Product {
   string Description = 2;
   string ImageLink = 3;
   int32 Price = 4;
+  int32 Count = 5;
 }
 
 message CreateProductRequest {
@@ -113,3 +119,37 @@ message GetProductsRequest {
 message GetProductsResponse {
   repeated Product Products = 1;
 }
+
+message Award {
+  int32 DayNumber = 1;
+  string Type = 2;
+  int32 Count = 3;
+}
+
+message AddAwardRequest {
+  Award Award = 1;
+}
+
+message AddAwardResponse {
+}
+
+message GetAwardsRequest {
+}
+
+message GetAwardsResponse {
+  repeated Award Awards = 1;
+}
+
+message UpdateActivityRequest {
+  int32 UserID = 1;
+}
+
+message UpdateActivityResponse {
+  string Answer = 1;
+}
+
+message CreateActivityRequest {
+  int32 UserID = 1;
+}
+
+message CreateActivityResponse {}

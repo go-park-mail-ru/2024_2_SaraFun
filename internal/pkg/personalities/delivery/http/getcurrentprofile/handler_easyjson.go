@@ -37,6 +37,8 @@ func easyjson888c126aDecodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 			continue
 		}
 		switch key {
+		case "username":
+			out.Username = string(in.String())
 		case "profile":
 			(out.Profile).UnmarshalEasyJSON(in)
 		case "images":
@@ -83,8 +85,13 @@ func easyjson888c126aEncodeGithubComGoParkMailRu20242SaraFunInternalPkgPersonali
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"profile\":"
+		const prefix string = ",\"username\":"
 		out.RawString(prefix[1:])
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"profile\":"
+		out.RawString(prefix)
 		(in.Profile).MarshalEasyJSON(out)
 	}
 	{
