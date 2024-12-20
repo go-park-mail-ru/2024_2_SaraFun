@@ -36,6 +36,26 @@ func (m *MockPaymentClient) EXPECT() *MockPaymentClientMockRecorder {
 	return m.recorder
 }
 
+// AddAward mocks base method.
+func (m *MockPaymentClient) AddAward(ctx context.Context, in *gen.AddAwardRequest, opts ...grpc.CallOption) (*gen.AddAwardResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AddAward", varargs...)
+	ret0, _ := ret[0].(*gen.AddAwardResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddAward indicates an expected call of AddAward.
+func (mr *MockPaymentClientMockRecorder) AddAward(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAward", reflect.TypeOf((*MockPaymentClient)(nil).AddAward), varargs...)
+}
+
 // BuyLikes mocks base method.
 func (m *MockPaymentClient) BuyLikes(ctx context.Context, in *gen.BuyLikesRequest, opts ...grpc.CallOption) (*gen.BuyLikesResponse, error) {
 	m.ctrl.T.Helper()
@@ -116,6 +136,26 @@ func (mr *MockPaymentClientMockRecorder) CheckAndSpendLike(ctx, in interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAndSpendLike", reflect.TypeOf((*MockPaymentClient)(nil).CheckAndSpendLike), varargs...)
 }
 
+// CreateActivity mocks base method.
+func (m *MockPaymentClient) CreateActivity(ctx context.Context, in *gen.CreateActivityRequest, opts ...grpc.CallOption) (*gen.CreateActivityResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateActivity", varargs...)
+	ret0, _ := ret[0].(*gen.CreateActivityResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateActivity indicates an expected call of CreateActivity.
+func (mr *MockPaymentClientMockRecorder) CreateActivity(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateActivity", reflect.TypeOf((*MockPaymentClient)(nil).CreateActivity), varargs...)
+}
+
 // CreateBalances mocks base method.
 func (m *MockPaymentClient) CreateBalances(ctx context.Context, in *gen.CreateBalancesRequest, opts ...grpc.CallOption) (*gen.CreateBalancesResponse, error) {
 	m.ctrl.T.Helper()
@@ -174,6 +214,26 @@ func (mr *MockPaymentClientMockRecorder) GetAllBalance(ctx, in interface{}, opts
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalance", reflect.TypeOf((*MockPaymentClient)(nil).GetAllBalance), varargs...)
+}
+
+// GetAwards mocks base method.
+func (m *MockPaymentClient) GetAwards(ctx context.Context, in *gen.GetAwardsRequest, opts ...grpc.CallOption) (*gen.GetAwardsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAwards", varargs...)
+	ret0, _ := ret[0].(*gen.GetAwardsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAwards indicates an expected call of GetAwards.
+func (mr *MockPaymentClientMockRecorder) GetAwards(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAwards", reflect.TypeOf((*MockPaymentClient)(nil).GetAwards), varargs...)
 }
 
 // GetBalance mocks base method.
@@ -276,6 +336,26 @@ func (mr *MockPaymentClientMockRecorder) RefreshDailyLikeBalance(ctx, in interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshDailyLikeBalance", reflect.TypeOf((*MockPaymentClient)(nil).RefreshDailyLikeBalance), varargs...)
 }
 
+// UpdateActivity mocks base method.
+func (m *MockPaymentClient) UpdateActivity(ctx context.Context, in *gen.UpdateActivityRequest, opts ...grpc.CallOption) (*gen.UpdateActivityResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateActivity", varargs...)
+	ret0, _ := ret[0].(*gen.UpdateActivityResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateActivity indicates an expected call of UpdateActivity.
+func (mr *MockPaymentClientMockRecorder) UpdateActivity(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateActivity", reflect.TypeOf((*MockPaymentClient)(nil).UpdateActivity), varargs...)
+}
+
 // MockPaymentServer is a mock of PaymentServer interface.
 type MockPaymentServer struct {
 	ctrl     *gomock.Controller
@@ -297,6 +377,21 @@ func NewMockPaymentServer(ctrl *gomock.Controller) *MockPaymentServer {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPaymentServer) EXPECT() *MockPaymentServerMockRecorder {
 	return m.recorder
+}
+
+// AddAward mocks base method.
+func (m *MockPaymentServer) AddAward(arg0 context.Context, arg1 *gen.AddAwardRequest) (*gen.AddAwardResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddAward", arg0, arg1)
+	ret0, _ := ret[0].(*gen.AddAwardResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddAward indicates an expected call of AddAward.
+func (mr *MockPaymentServerMockRecorder) AddAward(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAward", reflect.TypeOf((*MockPaymentServer)(nil).AddAward), arg0, arg1)
 }
 
 // BuyLikes mocks base method.
@@ -359,6 +454,21 @@ func (mr *MockPaymentServerMockRecorder) CheckAndSpendLike(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAndSpendLike", reflect.TypeOf((*MockPaymentServer)(nil).CheckAndSpendLike), arg0, arg1)
 }
 
+// CreateActivity mocks base method.
+func (m *MockPaymentServer) CreateActivity(arg0 context.Context, arg1 *gen.CreateActivityRequest) (*gen.CreateActivityResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateActivity", arg0, arg1)
+	ret0, _ := ret[0].(*gen.CreateActivityResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateActivity indicates an expected call of CreateActivity.
+func (mr *MockPaymentServerMockRecorder) CreateActivity(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateActivity", reflect.TypeOf((*MockPaymentServer)(nil).CreateActivity), arg0, arg1)
+}
+
 // CreateBalances mocks base method.
 func (m *MockPaymentServer) CreateBalances(arg0 context.Context, arg1 *gen.CreateBalancesRequest) (*gen.CreateBalancesResponse, error) {
 	m.ctrl.T.Helper()
@@ -402,6 +512,21 @@ func (m *MockPaymentServer) GetAllBalance(arg0 context.Context, arg1 *gen.GetAll
 func (mr *MockPaymentServerMockRecorder) GetAllBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalance", reflect.TypeOf((*MockPaymentServer)(nil).GetAllBalance), arg0, arg1)
+}
+
+// GetAwards mocks base method.
+func (m *MockPaymentServer) GetAwards(arg0 context.Context, arg1 *gen.GetAwardsRequest) (*gen.GetAwardsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAwards", arg0, arg1)
+	ret0, _ := ret[0].(*gen.GetAwardsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAwards indicates an expected call of GetAwards.
+func (mr *MockPaymentServerMockRecorder) GetAwards(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAwards", reflect.TypeOf((*MockPaymentServer)(nil).GetAwards), arg0, arg1)
 }
 
 // GetBalance mocks base method.
@@ -477,6 +602,21 @@ func (m *MockPaymentServer) RefreshDailyLikeBalance(arg0 context.Context, arg1 *
 func (mr *MockPaymentServerMockRecorder) RefreshDailyLikeBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshDailyLikeBalance", reflect.TypeOf((*MockPaymentServer)(nil).RefreshDailyLikeBalance), arg0, arg1)
+}
+
+// UpdateActivity mocks base method.
+func (m *MockPaymentServer) UpdateActivity(arg0 context.Context, arg1 *gen.UpdateActivityRequest) (*gen.UpdateActivityResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateActivity", arg0, arg1)
+	ret0, _ := ret[0].(*gen.UpdateActivityResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateActivity indicates an expected call of UpdateActivity.
+func (mr *MockPaymentServerMockRecorder) UpdateActivity(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateActivity", reflect.TypeOf((*MockPaymentServer)(nil).UpdateActivity), arg0, arg1)
 }
 
 // mustEmbedUnimplementedPaymentServer mocks base method.

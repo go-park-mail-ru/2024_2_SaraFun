@@ -35,6 +35,34 @@ func (m *MockUseCase) EXPECT() *MockUseCaseMockRecorder {
 	return m.recorder
 }
 
+// AddActivity mocks base method.
+func (m *MockUseCase) AddActivity(arg0 context.Context, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddActivity", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddActivity indicates an expected call of AddActivity.
+func (mr *MockUseCaseMockRecorder) AddActivity(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddActivity", reflect.TypeOf((*MockUseCase)(nil).AddActivity), arg0, arg1)
+}
+
+// AddAward mocks base method.
+func (m *MockUseCase) AddAward(arg0 context.Context, arg1 models.Award) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddAward", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddAward indicates an expected call of AddAward.
+func (mr *MockUseCaseMockRecorder) AddAward(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAward", reflect.TypeOf((*MockUseCase)(nil).AddAward), arg0, arg1)
+}
+
 // AddBalance mocks base method.
 func (m *MockUseCase) AddBalance(arg0 context.Context, arg1, arg2 int) error {
 	m.ctrl.T.Helper()
@@ -148,6 +176,21 @@ func (mr *MockUseCaseMockRecorder) CreateProduct(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockUseCase)(nil).CreateProduct), arg0, arg1)
 }
 
+// GetAwards mocks base method.
+func (m *MockUseCase) GetAwards(arg0 context.Context) ([]models.Award, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAwards", arg0)
+	ret0, _ := ret[0].([]models.Award)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAwards indicates an expected call of GetAwards.
+func (mr *MockUseCaseMockRecorder) GetAwards(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAwards", reflect.TypeOf((*MockUseCase)(nil).GetAwards), arg0)
+}
+
 // GetBalance mocks base method.
 func (m *MockUseCase) GetBalance(arg0 context.Context, arg1 int) (int, error) {
 	m.ctrl.T.Helper()
@@ -235,4 +278,19 @@ func (m *MockUseCase) SetDailyLikeCountToAll(arg0 context.Context, arg1 int) err
 func (mr *MockUseCaseMockRecorder) SetDailyLikeCountToAll(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDailyLikeCountToAll", reflect.TypeOf((*MockUseCase)(nil).SetDailyLikeCountToAll), arg0, arg1)
+}
+
+// UpdateActivity mocks base method.
+func (m *MockUseCase) UpdateActivity(arg0 context.Context, arg1 int) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateActivity", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateActivity indicates an expected call of UpdateActivity.
+func (mr *MockUseCaseMockRecorder) UpdateActivity(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateActivity", reflect.TypeOf((*MockUseCase)(nil).UpdateActivity), arg0, arg1)
 }

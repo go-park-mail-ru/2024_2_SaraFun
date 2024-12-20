@@ -287,7 +287,7 @@ func (repo *Storage) UpdateActivity(ctx context.Context, userID int, activity mo
 	_, err := repo.DB.ExecContext(ctx, query, activity.Last_Login, activity.Consecutive_days, userID)
 	if err != nil {
 		repo.logger.Error("UpdateActivity db query error", zap.Error(err))
-		return fmt.Errorf("UpdateActivity db query error", zap.Error(err))
+		return fmt.Errorf("UpdateActivity db query error: %w", err)
 	}
 	return nil
 }
