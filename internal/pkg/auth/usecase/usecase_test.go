@@ -16,7 +16,6 @@ func TestGetUserIDBySessionID(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
 	tests := []struct {
 		name             string
 		sessionID        string
@@ -71,7 +70,6 @@ func TestCheckSession(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
 	tests := []struct {
 		name                  string
 		sessionID             string
@@ -119,7 +117,6 @@ func TestDeleteSession(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
 	tests := []struct {
 		name                   string
 		sessionID              string

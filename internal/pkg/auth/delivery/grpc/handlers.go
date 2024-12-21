@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+//go:generate mockgen -destination=./mocks/mock_usecase.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc UseCase
+
 type UseCase interface {
 	CreateSession(ctx context.Context, user models.User) (models.Session, error)
 	DeleteSession(ctx context.Context, sessionID string) error

@@ -31,14 +31,14 @@ func TestCreateProfile(t *testing.T) {
 	}{
 		{
 			name:     "successful create",
-			profile:  models.Profile{FirstName: "John", LastName: "Doe", Age: 30, Gender: "male", Target: "friends", About: "Hello!"},
+			profile:  models.Profile{FirstName: "John", LastName: "Doe", BirthdayDate: "2000-01-01", Gender: "male", Target: "friends", About: "Hello!"},
 			queryErr: nil,
 			wantID:   1,
 			wantErr:  nil,
 		},
 		{
 			name:     "error on create",
-			profile:  models.Profile{FirstName: "Jane", LastName: "Doe", Age: 25, Gender: "female", Target: "friends", About: "Hi!"},
+			profile:  models.Profile{FirstName: "Jane", LastName: "Doe", BirthdayDate: "1995-01-01", Gender: "female", Target: "friends", About: "Hi!"},
 			queryErr: errors.New("some insert error"),
 			wantID:   -1,
 			wantErr:  fmt.Errorf("CreateProfile err: %v", errors.New("some insert error")),
@@ -53,7 +53,7 @@ func TestCreateProfile(t *testing.T) {
 				mock.ExpectQuery("INSERT INTO profile").WillReturnError(tt.queryErr)
 			} else {
 				mock.ExpectQuery("INSERT INTO profile").
-					WithArgs(tt.profile.FirstName, tt.profile.LastName, tt.profile.Age, tt.profile.Gender, tt.profile.Target, tt.profile.About).
+					WithArgs(tt.profile.FirstName, tt.profile.LastName, tt.profile.BirthdayDate, tt.profile.Gender, tt.profile.Target, tt.profile.About).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(tt.wantID))
 			}
 
@@ -90,14 +90,14 @@ func TestUpdateProfile(t *testing.T) {
 		{
 			name:     "successful update",
 			id:       1,
-			profile:  models.Profile{FirstName: "John", LastName: "Doe", Age: 31, Gender: "male", Target: "friends", About: "Updated!"},
+			profile:  models.Profile{FirstName: "John", LastName: "Doe", BirthdayDate: "2000-01-01", Gender: "male", Target: "friends", About: "Updated!"},
 			queryErr: nil,
 			wantErr:  nil,
 		},
 		{
 			name:     "error on update",
 			id:       1,
-			profile:  models.Profile{FirstName: "Jane", LastName: "Doe", Age: 26, Gender: "female", Target: "friends", About: "Updated again!"},
+			profile:  models.Profile{FirstName: "Jane", LastName: "Doe", BirthdayDate: "1990-01-01", Gender: "female", Target: "friends", About: "Updated again!"},
 			queryErr: errors.New("some update error"),
 			wantErr:  fmt.Errorf("UpdateProfile err: %v", errors.New("some update error")),
 		},
@@ -111,7 +111,7 @@ func TestUpdateProfile(t *testing.T) {
 				mock.ExpectExec("UPDATE profile").WillReturnError(tt.queryErr)
 			} else {
 				mock.ExpectExec("UPDATE profile").
-					WithArgs(tt.profile.FirstName, tt.profile.LastName, tt.profile.Age, tt.profile.Gender, tt.profile.Target, tt.profile.About, tt.id).
+					WithArgs(tt.profile.FirstName, tt.profile.LastName, tt.profile.BirthdayDate, tt.profile.Gender, tt.profile.Target, tt.profile.About, tt.id).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			}
 
@@ -147,9 +147,9 @@ func TestGetProfile(t *testing.T) {
 		{
 			name:        "successful get",
 			id:          1,
-			mockRow:     sqlmock.NewRows([]string{"id", "firstname", "lastname", "age", "gender", "target", "about"}).AddRow(1, "John", "Doe", 30, "male", "friends", "Hello!"),
+			mockRow:     sqlmock.NewRows([]string{"id", "firstname", "lastname", "birthday_date", "gender", "target", "about"}).AddRow(1, "John", "Doe", "2000-01-01", "male", "friends", "Hello!"),
 			queryErr:    nil,
-			wantProfile: models.Profile{ID: 1, FirstName: "John", LastName: "Doe", Age: 30, Gender: "male", Target: "friends", About: "Hello!"},
+			wantProfile: models.Profile{ID: 1, FirstName: "John", LastName: "Doe", BirthdayDate: "2000-01-01", Gender: "male", Target: "friends", About: "Hello!"},
 			wantErr:     nil,
 		},
 		{
@@ -167,9 +167,9 @@ func TestGetProfile(t *testing.T) {
 			storage := Storage{DB: db, logger: logger}
 
 			if tt.queryErr != nil {
-				mock.ExpectQuery("SELECT id, firstname, lastname, age, gender, target, about FROM profile WHERE").WillReturnError(tt.queryErr)
+				mock.ExpectQuery("SELECT id, firstname, lastname, birthday_date, gender, target, about FROM profile WHERE").WillReturnError(tt.queryErr)
 			} else {
-				mock.ExpectQuery("SELECT id, firstname, lastname, age, gender, target, about FROM profile WHERE").
+				mock.ExpectQuery("SELECT id, firstname, lastname, birthday_date, gender, target, about FROM profile WHERE").
 					WithArgs(tt.id).
 					WillReturnRows(tt.mockRow)
 			}

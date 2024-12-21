@@ -6,6 +6,7 @@ import (
 )
 
 //go:generate mockgen -source=*.go -destination=*_mock.go -package=*
+//go:generate easyjson -all user.go
 
 type User struct {
 	ID       int    `json:"id" validate:"required"`
@@ -22,13 +23,14 @@ func (user *User) Sanitize() {
 }
 
 type Profile struct {
-	ID        int    `json:"id" validate:"required"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	Age       int    `json:"age,omitempty"`
-	Gender    string `json:"gender,omitempty"`
-	Target    string `json:"target,omitempty"`
-	About     string `json:"about,omitempty"`
+	ID           int    `json:"id" validate:"required"`
+	FirstName    string `json:"first_name,omitempty"`
+	LastName     string `json:"last_name,omitempty"`
+	Age          int    `json:"age,omitempty"`
+	BirthdayDate string `json:"birthday_date,omitempty"`
+	Gender       string `json:"gender,omitempty"`
+	Target       string `json:"target,omitempty"`
+	About        string `json:"about,omitempty"`
 }
 
 func (profile *Profile) Sanitize() {
@@ -37,7 +39,7 @@ func (profile *Profile) Sanitize() {
 	profile.Gender = html.EscapeString(profile.Gender)
 	profile.Target = html.EscapeString(profile.Target)
 	profile.About = html.EscapeString(profile.About)
-
+	profile.BirthdayDate = html.EscapeString(profile.BirthdayDate)
 }
 
 type Image struct {
@@ -124,4 +126,38 @@ type SurveyStat struct {
 type AdminQuestion struct {
 	Content string `json:"content"`
 	Grade   int    `json:"grade"`
+}
+
+type Product struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ImageLink   string `json:"image_link"`
+	Price       int    `json:"price"`
+	Count       int    `json:"count"`
+}
+
+func (product *Product) Sanitize() {
+	product.Description = html.EscapeString(product.Description)
+	product.ImageLink = html.EscapeString(product.ImageLink)
+	product.Title = html.EscapeString(product.Title)
+}
+
+type Award struct {
+	DayNumber int    `json:"day_number"`
+	Type      string `json:"type"`
+	Count     int    `json:"count"`
+}
+
+func (award *Award) Sanitize() {
+	award.Type = html.EscapeString(award.Type)
+}
+
+type Activity struct {
+	Last_Login       string `json:"last_login"`
+	Consecutive_days int    `json:"consecutive_days"`
+	UserID           int    `json:"user_id"`
+}
+
+func (activity *Activity) Sanitize() {
+	activity.Last_Login = html.EscapeString(activity.Last_Login)
 }

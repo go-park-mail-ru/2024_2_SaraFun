@@ -5,7 +5,7 @@ import (
 	"errors"
 	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/user/usecase/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/usecase/user/mocks"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/hashing"
 	"github.com/golang/mock/gomock"
@@ -20,7 +20,7 @@ func TestRegisterUser(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 	user1 := models.User{ID: 1}
 	user2 := models.User{ID: 2}
 	tests := []struct {
@@ -63,7 +63,7 @@ func TestCheckPassword(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 	password1, _ := hashing.HashPassword("123456")
 	password2, _ := hashing.HashPassword("222222")
 	user1 := models.User{ID: 1, Username: "Kirill", Password: password1}
@@ -138,7 +138,7 @@ func TestGetFeed(t *testing.T) {
 	defer cancel() // Отменяем контекст после завершения работы
 	ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
 	logger := zap.NewNop()
-	defer logger.Sync()
+	//defer logger.Sync()
 
 	tests := []struct {
 		name        string
@@ -191,6 +191,275 @@ func TestGetFeed(t *testing.T) {
 					t.Errorf("GetFeedList() test error got = %v, want %v", list, tt.wantUsers[i])
 				}
 			}
+		})
+	}
+}
+
+func TestGetUserList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name          string
+		userId        int
+		repoReturns   []models.User
+		repoError     error
+		repoCount     int
+		expectedUsers []models.User
+	}{
+		{
+			name:          "successfull test",
+			userId:        1,
+			repoReturns:   []models.User{{ID: 1, Username: "Kirill", Password: "123456"}},
+			repoError:     nil,
+			repoCount:     1,
+			expectedUsers: []models.User{{ID: 1, Username: "Kirill", Password: "123456"}},
+		},
+		{
+			name:          "bad test",
+			userId:        1,
+			repoReturns:   nil,
+			repoError:     errors.New("test error"),
+			repoCount:     1,
+			expectedUsers: []models.User{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetUserList(ctx, tt.userId).Return(tt.repoReturns, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			list, err := s.GetUserList(ctx, tt.userId)
+			require.ErrorIs(t, err, tt.repoError)
+			require.Equal(t, tt.expectedUsers, list)
+		})
+	}
+}
+
+func TestGetProfileIdBYUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name       string
+		userId     int
+		repoReturn int
+		repoError  error
+		repoCount  int
+		expectedID int
+	}{
+		{
+			name:       "successfull test",
+			userId:     1,
+			repoReturn: 1,
+			repoError:  nil,
+			repoCount:  1,
+			expectedID: 1,
+		},
+		{
+			name:       "bad test",
+			userId:     1,
+			repoReturn: -1,
+			repoError:  errors.New("test error"),
+			repoCount:  1,
+			expectedID: -1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetProfileIdByUserId(ctx, tt.userId).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			id, err := s.GetProfileIdByUserId(ctx, tt.userId)
+			require.ErrorIs(t, err, tt.repoError)
+			require.Equal(t, tt.expectedID, id)
+		})
+	}
+}
+
+func TestGetUsernameBYUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name             string
+		userId           int
+		repoReturn       string
+		repoError        error
+		repoCount        int
+		expectedUsername string
+		expectedError    error
+	}{
+		{
+			name:             "successfull test",
+			userId:           1,
+			repoReturn:       "Kirill",
+			repoError:        nil,
+			repoCount:        1,
+			expectedUsername: "Kirill",
+			expectedError:    nil,
+		},
+		{
+			name:             "bad test",
+			userId:           1,
+			repoReturn:       "",
+			repoError:        errors.New("test error"),
+			repoCount:        1,
+			expectedUsername: "",
+			expectedError:    sparkiterrors.ErrWrongCredentials,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetUsernameByUserId(ctx, tt.userId).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			username, err := s.GetUsernameByUserId(ctx, tt.userId)
+			require.ErrorIs(t, err, tt.expectedError)
+			require.Equal(t, tt.expectedUsername, username)
+		})
+	}
+}
+
+func TestGetUserIDByUsername(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name           string
+		username       string
+		repoReturn     int
+		repoError      error
+		repoCount      int
+		expectedUserID int
+		expectedError  error
+	}{
+		{
+			name:           "successfull test",
+			username:       "Kirill",
+			repoReturn:     1,
+			repoError:      nil,
+			repoCount:      1,
+			expectedUserID: 1,
+			expectedError:  nil,
+		},
+		{
+			name:           "bad test",
+			username:       "",
+			repoReturn:     -1,
+			repoError:      errors.New("test error"),
+			repoCount:      1,
+			expectedUserID: -1,
+			expectedError:  sparkiterrors.ErrWrongCredentials,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().GetUserIdByUsername(ctx, tt.username).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			id, err := s.GetUserIdByUsername(ctx, tt.username)
+			require.ErrorIs(t, err, tt.expectedError)
+			require.Equal(t, tt.expectedUserID, id)
+		})
+	}
+}
+
+func TestCheckUsernameExist(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name           string
+		username       string
+		repoReturn     bool
+		repoError      error
+		repoCount      int
+		expectedExists bool
+		expectedError  error
+	}{
+		{
+			name:           "successfull test",
+			username:       "Kirill",
+			repoReturn:     true,
+			repoError:      nil,
+			repoCount:      1,
+			expectedExists: true,
+			expectedError:  nil,
+		},
+		{
+			name:           "bad test",
+			username:       "",
+			repoReturn:     true,
+			repoError:      errors.New("test error"),
+			repoCount:      1,
+			expectedExists: false,
+			expectedError:  sparkiterrors.ErrWrongCredentials,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().CheckUsernameExists(ctx, tt.username).Return(tt.repoReturn, tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			exists, err := s.CheckUsernameExists(ctx, tt.username)
+			require.ErrorIs(t, err, tt.expectedError)
+			require.Equal(t, tt.expectedExists, exists)
+		})
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	repo := mocks.NewMockRepository(mockCtrl)
+	tests := []struct {
+		name      string
+		userId    int
+		password  string
+		repoError error
+		repoCount int
+	}{
+		{
+			name:      "successfull test",
+			userId:    1,
+			password:  "123456",
+			repoError: nil,
+			repoCount: 1,
+		},
+		{
+			name:      "bad test",
+			userId:    1,
+			password:  "",
+			repoError: errors.New("test error"),
+			repoCount: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo.EXPECT().ChangePassword(ctx, tt.userId, gomock.Any()).Return(tt.repoError).Times(tt.repoCount)
+			s := New(repo, logger)
+			err := s.ChangePassword(ctx, tt.userId, tt.password)
+			require.ErrorIs(t, err, tt.repoError)
 		})
 	}
 }

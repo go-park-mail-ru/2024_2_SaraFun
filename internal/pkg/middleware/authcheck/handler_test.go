@@ -1,1 +1,1 @@
-package authcheck
+package authcheck_test

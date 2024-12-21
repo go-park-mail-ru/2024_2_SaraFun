@@ -17,6 +17,7 @@ type Repository interface {
 	GetMatchesByFirstName(ctx context.Context, userID int, firstname string) ([]int, error)
 	GetMatchesByString(ctx context.Context, userID int, search string) ([]int, error)
 	UpdateOrCreateReaction(ctx context.Context, reaction models.Reaction) error
+	CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error)
 }
 
 type UseCase struct {
@@ -43,6 +44,7 @@ func (u *UseCase) GetMatchList(ctx context.Context, userId int) ([]int, error) {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	authors, err := u.repo.GetMatchList(ctx, userId)
+	u.logger.Info("matches", zap.Any("authors", authors))
 	if err != nil {
 		u.logger.Error("UseCase GetMatchList: failed to GetMatchList", zap.Error(err))
 		return nil, fmt.Errorf("failed to GetMatchList: %w", err)
@@ -70,20 +72,6 @@ func (u *UseCase) GetMatchTime(ctx context.Context, firstUser int, secondUser in
 func (u *UseCase) GetMatchesBySearch(ctx context.Context, userID int, search string) ([]int, error) {
 	var authors []int
 	var err error
-	//if firstname == "" {
-	//	authors, err = u.repo.GetMatchesByUsername(ctx, userID, username)
-	//	if err != nil {
-	//		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByUsername", zap.Error(err))
-	//		return nil, fmt.Errorf("failed to GetMatchesByUsername: %w", err)
-	//	}
-	//} else {
-	//	authors, err = u.repo.GetMatchesByFirstName(ctx, userID, firstname)
-	//	if err != nil {
-	//		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesByFirstName", zap.Error(err))
-	//		return nil, fmt.Errorf("failed to GetMatchesByFirstName: %w", err)
-	//	}
-	//
-	//}
 	authors, err = u.repo.GetMatchesByString(ctx, userID, search)
 	if err != nil {
 		u.logger.Error("UseCase GetMatchesBySearch: failed to GetMatchesBySearch", zap.Error(err))
@@ -101,4 +89,14 @@ func (u *UseCase) UpdateOrCreateReaction(ctx context.Context, reaction models.Re
 		return fmt.Errorf("failed to UpdateOrCreateReaction: %w", err)
 	}
 	return nil
+}
+
+func (u *UseCase) CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error) {
+	u.logger.Info("check match exists usecase start")
+	exists, err := u.repo.CheckMatchExists(ctx, firstUser, secondUser)
+	if err != nil {
+		u.logger.Error("UseCase CheckMatchExists: failed to CheckMatchExists", zap.Error(err))
+		return false, fmt.Errorf("failed to CheckMatchExists: %w", err)
+	}
+	return exists, nil
 }

@@ -2,8 +2,8 @@ CREATE TABLE IF NOT EXISTS profile (
                                        id SERIAL PRIMARY KEY,
                                        firstname text NOT NULL,
                                        lastname text NOT NULL,
-                                       age bigint NOT NULL,
                                        gender text NOT NULL,
+                                       birthday_date text NOT NULL,
                                        target text NOT NULL,
                                        about text NOT NULL,
                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -116,6 +116,55 @@ CREATE TABLE IF NOT EXISTS question (
     id SERIAL PRIMARY KEY,
     content text NOT NULL UNIQUE,
     grade INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS daily_likes (
+    id SERIAL PRIMARY KEY,
+    userID INT NOT NULL,
+    likes_count INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user FOREIGN KEY (userID)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS purchased_likes (
+    id SERIAL PRIMARY KEY,
+    userID INT NOT NULL,
+    likes_count INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user FOREIGN KEY (userID)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS balance (
+    id SERIAL PRIMARY KEY,
+    userID INT NOT NULL,
+    balance INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user FOREIGN KEY (userID)
+    REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS product (
+    id SERIAL PRIMARY KEY,
+    title text NOT NULL UNIQUE,
+    description text NOT NULL,
+    imagelink text NOT NULL,
+    price INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

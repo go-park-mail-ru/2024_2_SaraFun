@@ -9,6 +9,7 @@ service Communications {
   rpc GetMatchTime(GetMatchTimeRequest) returns (GetMatchTimeResponse);
   rpc GetMatchesBySearch(GetMatchesBySearchRequest) returns (GetMatchesBySearchResponse);
   rpc UpdateOrCreateReaction(UpdateOrCreateReactionRequest) returns (UpdateOrCreateReactionResponse);
+  rpc CheckMatchExists(CheckMatchExistsRequest) returns (CheckMatchExistsResponse);
 }
 
 message AddReactionRequest {
@@ -60,6 +61,15 @@ message UpdateOrCreateReactionRequest {
 
 message UpdateOrCreateReactionResponse {
 
+}
+
+message CheckMatchExistsRequest {
+  int32 FirstUser = 1;
+  int32 SecondUser = 2;
+}
+
+message CheckMatchExistsResponse {
+  bool Exists = 1;
 }
 
 message Reaction {

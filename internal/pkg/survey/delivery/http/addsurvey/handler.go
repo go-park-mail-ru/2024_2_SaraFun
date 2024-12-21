@@ -1,12 +1,12 @@
 package addsurvey
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
 	generatedSurvey "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/survey/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -47,7 +47,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var survey models.Survey
-	err = json.NewDecoder(r.Body).Decode(&survey)
+	err = easyjson.UnmarshalFromReader(r.Body, &survey)
 	if err != nil {
 		h.logger.Error("error decoding survey", zap.Error(err))
 		http.Error(w, "error decoding survey", http.StatusBadRequest)

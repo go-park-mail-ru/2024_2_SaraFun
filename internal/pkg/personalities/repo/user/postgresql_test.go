@@ -2,12 +2,13 @@ package user
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/repo/profile"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"testing"
 	"time"
@@ -42,11 +43,10 @@ func TestAddUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := profile.Storage{db, logger}
+			storage := Storage{db, logger}
 			mock.ExpectExec("INSERT INTO users").
 				WithArgs(tt.user.Username, tt.user.Password, tt.user.Profile).
 				WillReturnError(tt.queryErr)
-			//WillReturnResult(sqlmock.NewResult(1, 1))
 			_, err := storage.AddUser(ctx, tt.user)
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 
@@ -94,12 +94,9 @@ func TestDeleteUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := profile.Storage{db, logger}
+			storage := Storage{db, logger}
 			mock.ExpectExec("DELETE FROM users").WithArgs(tt.username).WillReturnError(tt.execResult)
 			err := storage.DeleteUser(ctx, tt.username)
-			//if err != tt.wantErr {
-			//	t.Errorf("DeleteUser() error = %v, wantErr %v", err, tt.wantErr)
-			//}
 			if err != nil && tt.wantErr != nil && (err.Error() != tt.wantErr.Error()) {
 				t.Errorf("DeleteUser() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
@@ -174,7 +171,7 @@ func TestGetUserList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := profile.Storage{db, logger}
+			storage := Storage{db, logger}
 			if tt.resultQueryList != nil {
 				mock.ExpectQuery("SELECT id, username FROM users").WillReturnRows(tt.resultQueryList)
 			} else {
@@ -240,7 +237,7 @@ func TestGetUserByUsername(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := profile.Storage{db, logger}
+			storage := Storage{db, logger}
 			if tt.queryResult != nil {
 				mock.ExpectQuery("SELECT id, username, password FROM users").WillReturnRows(tt.queryResult)
 			} else {
@@ -260,6 +257,333 @@ func TestGetUserByUsername(t *testing.T) {
 			if user != tt.wantUser {
 				t.Errorf("GetUserByUsername() got = %v, want %v", user, tt.wantUser)
 			}
+		})
+	}
+}
+
+func TestProfileIdByUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	repo := New(db, logger)
+
+	tests := []struct {
+		name              string
+		userId            int
+		queryRows         *sqlmock.Rows
+		queryError        error
+		expectedProfileID int
+	}{
+		{
+			name:              "successfull test",
+			userId:            1,
+			queryRows:         sqlmock.NewRows([]string{"id"}).AddRow(1),
+			queryError:        nil,
+			expectedProfileID: 1,
+		},
+		{
+			name:              "bad test",
+			userId:            2,
+			queryRows:         nil,
+			queryError:        errors.New("test"),
+			expectedProfileID: -1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectQuery("SELECT profile FROM users").
+					WithArgs(tt.userId).
+					WillReturnRows(tt.queryRows)
+			} else {
+				mock.ExpectQuery("SELECT profile FROM users").
+					WithArgs(tt.userId).
+					WillReturnError(tt.queryError)
+			}
+
+			id, err := repo.GetProfileIdByUserId(ctx, tt.userId)
+			require.ErrorIs(t, err, tt.queryError)
+			require.Equal(t, tt.expectedProfileID, id)
+		})
+	}
+}
+
+func TestGetUsernameByUserId(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	repo := New(db, logger)
+	tests := []struct {
+		name             string
+		userId           int
+		queryRows        *sqlmock.Rows
+		queryError       error
+		expectedUsername string
+	}{
+		{
+			name:             "successfull test",
+			userId:           1,
+			queryRows:        sqlmock.NewRows([]string{"username"}).AddRow("Kirill"),
+			queryError:       nil,
+			expectedUsername: "Kirill",
+		},
+		{
+			name:             "bad test",
+			userId:           2,
+			queryRows:        nil,
+			queryError:       errors.New("test"),
+			expectedUsername: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectQuery("SELECT username FROM users").
+					WithArgs(tt.userId).
+					WillReturnRows(tt.queryRows)
+			} else {
+				mock.ExpectQuery("SELECT username FROM users").
+					WithArgs(tt.userId).
+					WillReturnError(tt.queryError)
+			}
+			username, err := repo.GetUsernameByUserId(ctx, tt.userId)
+			require.ErrorIs(t, err, tt.queryError)
+			require.Equal(t, tt.expectedUsername, username)
+		})
+	}
+}
+
+func TestGetFeedList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	repo := New(db, logger)
+	tests := []struct {
+		name         string
+		userID       int
+		receivers    []int
+		queryRows    *sqlmock.Rows
+		queryError   error
+		expectedList []models.User
+	}{
+		{
+			name:      "successfull test",
+			userID:    1,
+			receivers: []int{1, 2, 3},
+			queryRows: sqlmock.NewRows([]string{"id", "username"}).
+				AddRow(1, "Король").
+				AddRow(2, "Кирилл").
+				AddRow(3, "Крепыш"),
+			queryError: nil,
+			expectedList: []models.User{
+				{
+					ID:       1,
+					Username: "Король",
+				},
+				{
+					ID:       2,
+					Username: "Кирилл",
+				},
+				{
+					ID:       3,
+					Username: "Крепыш",
+				},
+			},
+		},
+		{
+			name:         "bad test",
+			userID:       2,
+			receivers:    []int{1, 2, 3},
+			queryRows:    nil,
+			queryError:   errors.New("error"),
+			expectedList: []models.User{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectQuery(`SELECT`).
+					WithArgs(tt.userID).
+					WillReturnRows(tt.queryRows)
+			} else {
+				mock.ExpectQuery(`SELECT`).
+					WithArgs(tt.userID).
+					WillReturnError(tt.queryError)
+			}
+			list, err := repo.GetFeedList(ctx, tt.userID, tt.receivers)
+			require.ErrorIs(t, err, tt.queryError)
+			require.Equal(t, tt.expectedList, list)
+		})
+	}
+}
+
+func TestGetUserIdByUsername(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	repo := New(db, logger)
+	tests := []struct {
+		name       string
+		username   string
+		queryRows  *sqlmock.Rows
+		queryError error
+		expectedID int
+	}{
+		{
+			name:       "successfull test",
+			username:   "Kirill",
+			queryRows:  sqlmock.NewRows([]string{"id"}).AddRow(1),
+			queryError: nil,
+			expectedID: 1,
+		},
+		{
+			name:       "bad test",
+			username:   "",
+			queryRows:  nil,
+			queryError: errors.New("test"),
+			expectedID: -1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectQuery("SELECT id FROM users").
+					WithArgs(tt.username).
+					WillReturnRows(tt.queryRows)
+			} else {
+				mock.ExpectQuery("SELECT id FROM users").
+					WithArgs(tt.username).
+					WillReturnError(tt.queryError)
+			}
+
+			id, err := repo.GetUserIdByUsername(ctx, tt.username)
+			require.ErrorIs(t, err, tt.queryError)
+			require.Equal(t, tt.expectedID, id)
+		})
+	}
+}
+
+func TestCheckUsernameExist(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	repo := New(db, logger)
+	tests := []struct {
+		name           string
+		username       string
+		queryRows      *sqlmock.Rows
+		queryError     error
+		expectedExists bool
+	}{
+		{
+			name:     "successfull test",
+			username: "Kirill",
+			queryRows: sqlmock.NewRows([]string{"exists"}).
+				AddRow(true),
+			queryError:     nil,
+			expectedExists: true,
+		},
+		{
+			name:           "bad test",
+			username:       "",
+			queryRows:      nil,
+			queryError:     errors.New("test"),
+			expectedExists: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectQuery("SELECT EXISTS").
+					WithArgs(tt.username).
+					WillReturnRows(tt.queryRows)
+			} else {
+				mock.ExpectQuery("SELECT EXISTS").
+					WithArgs(tt.username).
+					WillReturnError(tt.queryError)
+			}
+			exists, err := repo.CheckUsernameExists(ctx, tt.username)
+			require.ErrorIs(t, err, tt.queryError)
+			require.Equal(t, tt.expectedExists, exists)
+		})
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "sparkit")
+	logger := zap.NewNop()
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock: %v", err)
+	}
+	defer db.Close()
+	repo := New(db, logger)
+	tests := []struct {
+		name        string
+		userId      int
+		password    string
+		queryResult driver.Result
+		queryError  error
+	}{
+		{
+			name:        "successfull test",
+			userId:      1,
+			password:    "123456",
+			queryResult: sqlmock.NewResult(1, 1),
+			queryError:  nil,
+		},
+		{
+			name:        "bad test",
+			userId:      1,
+			password:    "123-456",
+			queryResult: nil,
+			queryError:  errors.New("test"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.queryError == nil {
+				mock.ExpectExec("UPDATE").
+					WithArgs(tt.password, tt.userId).
+					WillReturnResult(tt.queryResult)
+			} else {
+				mock.ExpectExec("UPDATE").
+					WithArgs(tt.password, tt.userId).
+					WillReturnError(tt.queryError)
+			}
+			err := repo.ChangePassword(ctx, tt.userId, tt.password)
+			require.ErrorIs(t, err, tt.queryError)
 		})
 	}
 }

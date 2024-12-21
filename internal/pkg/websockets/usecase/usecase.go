@@ -7,10 +7,13 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/websockets/usecase Repository
+
 type Repository interface {
 	AddConnection(ctx context.Context, conn *ws.Conn, userId int) error
 	DeleteConnection(ctx context.Context, userId int) error
-	WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error
+	WriteMessage(ctx context.Context, authorID int, receiverID int, message string, username string) error
+	SendNotification(ctx context.Context, receiverID int, receiverImageLink string, authorUsername string) error
 }
 
 type UseCase struct {
@@ -45,12 +48,22 @@ func (u *UseCase) DeleteConnection(ctx context.Context, userId int) error {
 	return nil
 }
 
-func (u *UseCase) WriteMessage(ctx context.Context, authorID int, receiverID int, message string) error {
+func (u *UseCase) WriteMessage(ctx context.Context, authorID int, receiverID int, message string, username string) error {
 	u.logger.Info("Usecase WriteMessage start", zap.Int("user_id", receiverID))
-	err := u.repo.WriteMessage(ctx, authorID, receiverID, message)
+	err := u.repo.WriteMessage(ctx, authorID, receiverID, message, username)
 	if err != nil {
 		u.logger.Error("repo WriteMessage call in Usecase failed", zap.Error(err))
 		return fmt.Errorf("repo WriteMessage call in Usecase failed: %w", err)
+	}
+	return nil
+}
+
+func (u *UseCase) SendNotification(ctx context.Context, receiverID int, authorUsername string, authorImageLink string) error {
+	u.logger.Info("Usecase SendNotification start", zap.Int("user_id", receiverID))
+	err := u.repo.SendNotification(ctx, receiverID, authorImageLink, authorUsername)
+	if err != nil {
+		u.logger.Error("repo SendNotification call in Usecase failed", zap.Error(err))
+		return fmt.Errorf("repo SendNotification call in Usecase failed: %w", err)
 	}
 	return nil
 }

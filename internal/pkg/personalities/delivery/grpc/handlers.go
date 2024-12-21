@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate mockgen -destination=./mocks/mock_userUsecase.go -package=mocks . UserUsecase
 type UserUsecase interface {
 	GetFeedList(ctx context.Context, userId int, receivers []int) ([]models.User, error)
 	RegisterUser(ctx context.Context, user models.User) (int, error)
@@ -21,6 +22,7 @@ type UserUsecase interface {
 	ChangePassword(ctx context.Context, userId int, password string) error
 }
 
+//go:generate mockgen -destination=./mocks/mock_profileUsecase.go -package=mocks . ProfileUsecase
 type ProfileUsecase interface {
 	CreateProfile(ctx context.Context, profile models.Profile) (int, error)
 	UpdateProfile(ctx context.Context, id int, profile models.Profile) error
@@ -153,13 +155,14 @@ func (h *GrpcPersonalitiesHandler) CheckUsernameExists(ctx context.Context,
 func (h *GrpcPersonalitiesHandler) CreateProfile(ctx context.Context,
 	in *generatedPersonalities.CreateProfileRequest) (*generatedPersonalities.CreateProfileResponse, error) {
 	profile := models.Profile{
-		ID:        int(in.Profile.ID),
-		FirstName: in.Profile.FirstName,
-		LastName:  in.Profile.LastName,
-		Age:       int(in.Profile.Age),
-		Gender:    in.Profile.Gender,
-		Target:    in.Profile.Target,
-		About:     in.Profile.About,
+		ID:           int(in.Profile.ID),
+		FirstName:    in.Profile.FirstName,
+		LastName:     in.Profile.LastName,
+		Age:          int(in.Profile.Age),
+		Gender:       in.Profile.Gender,
+		Target:       in.Profile.Target,
+		About:        in.Profile.About,
+		BirthdayDate: in.Profile.BirthDate,
 	}
 	profileId, err := h.profileUC.CreateProfile(ctx, profile)
 	h.logger.Info("create profile error", zap.Error(err))
@@ -174,13 +177,14 @@ func (h *GrpcPersonalitiesHandler) UpdateProfile(ctx context.Context,
 	in *generatedPersonalities.UpdateProfileRequest) (*generatedPersonalities.UpdateProfileResponse, error) {
 	id := int(in.Profile.ID)
 	profile := models.Profile{
-		ID:        int(in.Profile.ID),
-		FirstName: in.Profile.FirstName,
-		LastName:  in.Profile.LastName,
-		Age:       int(in.Profile.Age),
-		Gender:    in.Profile.Gender,
-		Target:    in.Profile.Target,
-		About:     in.Profile.About,
+		ID:           int(in.Profile.ID),
+		FirstName:    in.Profile.FirstName,
+		LastName:     in.Profile.LastName,
+		Age:          int(in.Profile.Age),
+		Gender:       in.Profile.Gender,
+		Target:       in.Profile.Target,
+		About:        in.Profile.About,
+		BirthdayDate: in.Profile.BirthDate,
 	}
 	h.logger.Info("in", zap.Any("profile", profile))
 	h.logger.Info("profile", zap.Any("profile", profile))
@@ -208,6 +212,7 @@ func (h *GrpcPersonalitiesHandler) GetProfile(ctx context.Context,
 		Gender:    profile.Gender,
 		Target:    profile.Target,
 		About:     profile.About,
+		BirthDate: profile.BirthdayDate,
 	}
 	res := &generatedPersonalities.GetProfileResponse{Profile: resProfile}
 	return res, nil
@@ -224,7 +229,8 @@ func (h *GrpcPersonalitiesHandler) DeleteProfile(ctx context.Context,
 	return res, nil
 }
 
-func (h *GrpcPersonalitiesHandler) ChangePassword(ctx context.Context, in *generatedPersonalities.ChangePasswordRequest) (*generatedPersonalities.ChangePasswordResponse, error) {
+func (h *GrpcPersonalitiesHandler) ChangePassword(ctx context.Context,
+	in *generatedPersonalities.ChangePasswordRequest) (*generatedPersonalities.ChangePasswordResponse, error) {
 	err := h.userUC.ChangePassword(ctx, int(in.UserID), in.Password)
 	if err != nil {
 		return nil, fmt.Errorf("Grpc change password error : %w", err)

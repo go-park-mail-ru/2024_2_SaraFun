@@ -1,0 +1,155 @@
+syntax = "proto3";
+package payments;
+option go_package = "../internal/pkg/payments/delivery/grpc/gen/;gen";
+
+service Payment {
+  rpc GetDailyLikeBalance(GetDailyLikeBalanceRequest) returns (GetDailyLikeBalanceResponse);
+  rpc GetPurchasedLikeBalance(GetPurchasedLikeBalanceRequest) returns (GetPurchasedLikeBalanceResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc RefreshDailyLikeBalance(RefreshDailyLikeBalanceRequest) returns (RefreshDailyLikeBalanceResponse);
+  rpc ChangeBalance(ChangeBalanceRequest) returns (ChangeBalanceResponse);
+  rpc CheckAndSpendLike(CheckAndSpendLikeRequest) returns (CheckAndSpendLikeResponse);
+  rpc ChangePurchasedLikesBalance(ChangePurchasedLikesBalanceRequest) returns (ChangePurchasedLikesBalanceResponse);
+  rpc GetAllBalance(GetAllBalanceRequest) returns (GetAllBalanceResponse);
+  rpc CreateBalances(CreateBalancesRequest) returns (CreateBalancesResponse);
+  rpc BuyLikes(BuyLikesRequest) returns (BuyLikesResponse);
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc GetProducts(GetProductsRequest) returns (GetProductsResponse);
+  rpc AddAward(AddAwardRequest) returns (AddAwardResponse);
+  rpc GetAwards(GetAwardsRequest) returns (GetAwardsResponse);
+  rpc UpdateActivity(UpdateActivityRequest) returns (UpdateActivityResponse);
+  rpc CreateActivity(CreateActivityRequest) returns (CreateActivityResponse);
+}
+
+message GetDailyLikeBalanceRequest {
+  int32 UserID = 1;
+}
+
+message GetDailyLikeBalanceResponse {
+  int32 Balance = 1;
+}
+
+message GetPurchasedLikeBalanceRequest {
+  int32 UserID = 1;
+}
+
+message GetPurchasedLikeBalanceResponse {
+  int32 Balance = 1;
+}
+
+message GetBalanceRequest {
+  int32 UserID = 1;
+}
+
+message GetBalanceResponse {
+  int32 Balance = 1;
+}
+
+message RefreshDailyLikeBalanceRequest{}
+message RefreshDailyLikeBalanceResponse{}
+
+message ChangeBalanceRequest{
+  int32 UserID = 1;
+  int32 amount = 2;
+}
+
+message ChangeBalanceResponse{}
+
+message CheckAndSpendLikeRequest{
+  int32 UserID = 1;
+}
+
+message CheckAndSpendLikeResponse{}
+
+message ChangePurchasedLikesBalanceRequest {
+  int32 UserID = 1;
+  int32 Amount = 2;
+}
+
+message ChangePurchasedLikesBalanceResponse {}
+
+message GetAllBalanceRequest {
+  int32 UserID = 1;
+}
+
+message GetAllBalanceResponse {
+  int32 DailyLikeBalance = 1;
+  int32 PurchasedLikeBalance = 2;
+  int32 MoneyBalance = 3;
+}
+
+message CreateBalancesRequest {
+  int32 UserID = 1;
+  int32 MoneyAmount = 2;
+  int32 DailyAmount = 3;
+  int32 PurchasedAmount = 4;
+}
+
+message CreateBalancesResponse {
+}
+
+message BuyLikesRequest {
+  string Title = 1;
+  int32 Amount = 2;
+  int32 UserID = 3;
+  int32 Count = 4;
+}
+
+message BuyLikesResponse {}
+
+message Product {
+  string Title = 1;
+  string Description = 2;
+  string ImageLink = 3;
+  int32 Price = 4;
+  int32 Count = 5;
+}
+
+message CreateProductRequest {
+  Product Product = 1;
+}
+
+message CreateProductResponse {
+  int32 ID = 1;
+}
+
+message GetProductsRequest {
+}
+
+message GetProductsResponse {
+  repeated Product Products = 1;
+}
+
+message Award {
+  int32 DayNumber = 1;
+  string Type = 2;
+  int32 Count = 3;
+}
+
+message AddAwardRequest {
+  Award Award = 1;
+}
+
+message AddAwardResponse {
+}
+
+message GetAwardsRequest {
+}
+
+message GetAwardsResponse {
+  repeated Award Awards = 1;
+}
+
+message UpdateActivityRequest {
+  int32 UserID = 1;
+}
+
+message UpdateActivityResponse {
+  string Answer = 1;
+}
+
+message CreateActivityRequest {
+  int32 UserID = 1;
+}
+
+message CreateActivityResponse {}

@@ -89,15 +89,22 @@ func (repo *Storage) GetMatchTime(ctx context.Context, firstUser int, secondUser
 	return time, nil
 }
 
+func (repo *Storage) CheckMatchExists(ctx context.Context, firstUser int, secondUser int) (bool, error) {
+	var exists bool
+	err := repo.DB.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM reaction 
+                        WHERE type = true 
+                          AND (author = $1 AND receiver = $2) 
+                          AND author IN (SELECT receiver FROM reaction 
+                        WHERE type = true AND author = $2))`,
+		firstUser, secondUser).Scan(&exists)
+	if err != nil {
+		repo.logger.Error("Repo CheckMatchExists: failed to select", zap.Error(err))
+		return false, fmt.Errorf("failed to select: %w", err)
+	}
+	return exists, nil
+}
+
 func (repo *Storage) GetMatchesByFirstName(ctx context.Context, userID int, firstname string) ([]int, error) {
-	//rows, err := repo.DB.QueryContext(ctx, `SELECT r.author
-	//FROM reaction r
-	//JOIN users u1 ON r.author = u1.id
-	//JOIN users u2 ON r.receiver = u2.id
-	//JOIN profile p1 ON r.author.profile = p1.id
-	//JOIN profile p2 ON r.receiver.profile = p2.id
-	//WHERE r.receiver = $1 AND r.author IN (SELECT receiver FROM reaction WHERE author = $2)`, userID, userID)
-	//rows, err := repo.DB.QueryContext(ctx, `SELECT author FROM reaction WHERE receiver = $1 AND author IN (SELECT receiver FROM reaction WHERE author = $2)`, userID, userID)
 	rows, err := repo.DB.QueryContext(ctx, `SELECT r.author 
 	FROM reaction r
 	JOIN users u1 ON r.author = u1.id

@@ -6,6 +6,7 @@ import (
 	sparkiterrors "github.com/go-park-mail-ru/2024_2_SaraFun/internal/errors"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	"go.uber.org/zap"
+	"time"
 )
 
 //go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
@@ -28,7 +29,13 @@ func New(repo Repository, logger *zap.Logger) *UseCase {
 func (u *UseCase) CreateProfile(ctx context.Context, profile models.Profile) (int, error) {
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//u.logger.Info("usecase request-id", zap.String("request_id", req_id))
-	err := checkAge(profile.Age)
+	age, err := GetAge(profile.BirthdayDate)
+	if err != nil {
+		return -1, fmt.Errorf("get age error: %w", err)
+	}
+	u.logger.Info("age", zap.Int("age", age))
+	profile.Age = age
+	err = checkAge(profile.Age)
 	if err != nil {
 		return -1, err
 	}
@@ -44,7 +51,13 @@ func (u *UseCase) UpdateProfile(ctx context.Context, id int, profile models.Prof
 	//req_id := ctx.Value(consts.RequestIDKey).(string)
 	//u.logger.Info("usecase request-id", zap.String("request_id", req_id))
 	u.logger.Info("update profile", zap.Any("profile", profile))
-	err := checkAge(profile.Age)
+	age, err := GetAge(profile.BirthdayDate)
+	if err != nil {
+		return fmt.Errorf("get age error: %w", err)
+	}
+	u.logger.Info("update profile", zap.Any("age", age))
+	profile.Age = age
+	err = checkAge(profile.Age)
 	if err != nil {
 		return err
 	}
@@ -63,6 +76,12 @@ func (u *UseCase) GetProfile(ctx context.Context, id int) (models.Profile, error
 		u.logger.Error("get profile err", zap.Error(err))
 		return models.Profile{}, fmt.Errorf("get profile err: %w", err)
 	}
+	u.logger.Info("get profile", zap.Any("res", res))
+	res.Age, err = GetAge(res.BirthdayDate)
+	if err != nil {
+		u.logger.Error("get profile err", zap.Error(err))
+		return models.Profile{}, fmt.Errorf("get profile err: %w", err)
+	}
 	return res, nil
 }
 
@@ -76,11 +95,24 @@ func (u *UseCase) DeleteProfile(ctx context.Context, id int) error {
 	return nil
 }
 
+func GetAge(birthdayDate string) (int, error) {
+	birthDate, err := time.Parse("2006-01-02", birthdayDate)
+	if err != nil {
+		return -1, fmt.Errorf("birth date format error: %w", err)
+	}
+	currentDate := time.Now()
+	age := currentDate.Year() - birthDate.Year()
+	if currentDate.YearDay() < birthDate.YearDay() {
+		age--
+	}
+	return age, nil
+}
+
 func checkAge(age int) error {
-	if age < 0 {
+	if age < 18 {
 		return sparkiterrors.ErrSmallAge
 	}
-	if age > 100 {
+	if age > 120 {
 		return sparkiterrors.ErrBigAge
 	}
 	return nil

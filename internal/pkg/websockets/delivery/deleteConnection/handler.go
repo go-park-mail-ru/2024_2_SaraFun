@@ -8,6 +8,9 @@ import (
 	"net/http"
 )
 
+//go:generate mockgen -destination=./mocks/mock_usecase.go -package=mocks  UseCase
+//go:generate mockgen -destination=./mocks/mock_authClient.go -package=mocks  AuthClient
+
 type UseCase interface {
 	DeleteConnection(ctx context.Context, userId int) error
 }

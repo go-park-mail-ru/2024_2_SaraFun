@@ -130,4 +130,5 @@ message Profile{
   string Gender = 5;
   string Target = 6;
   string About = 7;
+  string BirthDate = 8;
 }

@@ -2,14 +2,17 @@ package getcurrentprofile
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
 	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	generatedPayments "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/payments/delivery/grpc/gen"
 	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
 	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
+	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"net/http"
 )
+
+//go:generate easyjson -all handler.go
 
 //go:generate mockgen -destination=./mocks/mock_ImageService.go -package=sign_up_mocks . ImageService
 type ImageService interface {
@@ -17,14 +20,8 @@ type ImageService interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_ProfileService.go -package=sign_up_mocks . ProfileService
-//type ProfileService interface {
-//	GetProfile(ctx context.Context, id int) (models.Profile, error)
-//}
 
 //go:generate mockgen -destination=./mocks/mock_UserService.go -package=sign_up_mocks . UserService
-//type UserService interface {
-//	GetProfileIdByUserId(ctx context.Context, userId int) (int, error)
-//}
 
 type PersonalitiesClient interface {
 	GetProfile(ctx context.Context,
@@ -34,39 +31,36 @@ type PersonalitiesClient interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_SessionService.go -package=sign_up_mocks . SessionService
-//type SessionService interface {
-//	GetUserIDBySessionID(ctx context.Context, sessionID string) (int, error)
-//}
 
 type SessionClient interface {
 	GetUserIDBySessionID(ctx context.Context, in *generatedAuth.GetUserIDBySessionIDRequest) (*generatedAuth.GetUserIDBYSessionIDResponse, error)
 }
 
 type Response struct {
-	Profile models.Profile `json:"profile"`
-	Images  []models.Image `json:"images"`
+	Username              string         `json:"username"`
+	Profile               models.Profile `json:"profile"`
+	Images                []models.Image `json:"images"`
+	MoneyBalance          int            `json:"money_balance"`
+	DailyLikesBalance     int            `json:"daily_likes_balance"`
+	PurchasedLikesBalance int            `json:"purchased_likes_balance"`
 }
 
-//type Handler struct {
-//	imageService   ImageService
-//	profileService ProfileService
-//	userService    UserService
-//	sessionService SessionService
-//	logger         *zap.Logger
-//}
-
+//easyjson:skip
 type Handler struct {
 	imageService        ImageService
 	personalitiesClient generatedPersonalities.PersonalitiesClient
 	sessionClient       generatedAuth.AuthClient
+	paymentsClient      generatedPayments.PaymentClient
 	logger              *zap.Logger
 }
 
-func NewHandler(imageService ImageService, personalitiesClient generatedPersonalities.PersonalitiesClient, sessionClient generatedAuth.AuthClient, logger *zap.Logger) *Handler {
+func NewHandler(imageService ImageService, personalitiesClient generatedPersonalities.PersonalitiesClient,
+	sessionClient generatedAuth.AuthClient, paymentsClient generatedPayments.PaymentClient, logger *zap.Logger) *Handler {
 	return &Handler{
 		imageService:        imageService,
 		personalitiesClient: personalitiesClient,
 		sessionClient:       sessionClient,
+		paymentsClient:      paymentsClient,
 		logger:              logger}
 }
 
@@ -94,6 +88,14 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user not found", http.StatusUnauthorized)
 		return
 	}
+	getUsernameRequest := &generatedPersonalities.GetUsernameByUserIDRequest{UserID: userId.UserId}
+
+	username, err := h.personalitiesClient.GetUsernameByUserID(ctx, getUsernameRequest)
+	if err != nil {
+		h.logger.Error("error getting username", zap.Error(err))
+		http.Error(w, "user username not found", http.StatusUnauthorized)
+		return
+	}
 
 	getProfileByUserRequest := &generatedPersonalities.GetProfileIDByUserIDRequest{UserID: userId.UserId}
 	profileId, err := h.personalitiesClient.GetProfileIDByUserID(ctx, getProfileByUserRequest)
@@ -119,20 +121,34 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	getBalancesReq := &generatedPayments.GetAllBalanceRequest{UserID: userId.UserId}
+	balance, err := h.paymentsClient.GetAllBalance(ctx, getBalancesReq)
+	if err != nil {
+		h.logger.Error("getbalanceserror", zap.Error(err))
+		http.Error(w, "не удалось получить баланс", http.StatusInternalServerError)
+		return
+	}
+
 	profileResponse := models.Profile{
-		ID:        int(profile.Profile.ID),
-		FirstName: profile.Profile.FirstName,
-		LastName:  profile.Profile.LastName,
-		Age:       int(profile.Profile.Age),
-		Gender:    profile.Profile.Gender,
-		Target:    profile.Profile.Target,
-		About:     profile.Profile.About,
+		ID:           int(profile.Profile.ID),
+		FirstName:    profile.Profile.FirstName,
+		LastName:     profile.Profile.LastName,
+		Age:          int(profile.Profile.Age),
+		Gender:       profile.Profile.Gender,
+		Target:       profile.Profile.Target,
+		About:        profile.Profile.About,
+		BirthdayDate: profile.Profile.BirthDate,
 	}
 	response := Response{
-		Profile: profileResponse,
-		Images:  links,
+		Username:              username.Username,
+		Profile:               profileResponse,
+		Images:                links,
+		MoneyBalance:          int(balance.MoneyBalance),
+		DailyLikesBalance:     int(balance.DailyLikeBalance),
+		PurchasedLikesBalance: int(balance.PurchasedLikeBalance),
 	}
-	jsonData, err := json.Marshal(response)
+	jsonData, err := easyjson.Marshal(response)
 	if err != nil {
 		h.logger.Error("json marshal error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

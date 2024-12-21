@@ -5,6 +5,7 @@ COMMUNICATIONS_BINARY=communications
 DOCKER_DIR=docker
 MESSAGE_BINARY=message
 SURVEY_BINARY=survey
+PAYMENTS_BINARY=payments
 
 build-sparkit:
 	go build -o ${SERVER_BINARY} ./cmd/main
@@ -12,6 +13,12 @@ build-sparkit:
 .PHONY: service-sparkit-image
 service-sparkit-image:
 	docker build -t sparkit-service -f ${DOCKER_DIR}/sparkit.Dockerfile .
+
+echo:
+	echo "123"
+
+echo2: echo
+	echo "321"
 
 .PHONY: builder-image
 builder-image:
@@ -31,6 +38,7 @@ sparkit-run:
 	make service-message-image
 	#make survey-builder-image
 	make service-survey-image
+	make service-payments-image
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yml up -d
 
 .PHONY: sparkit-down
@@ -39,7 +47,11 @@ sparkit-down:
 
 .PHONY: sparkit-test
 sparkit-test:
-	go test -coverprofile=coverage.out -coverpkg=$(go list ./... | grep -v "/mocks" | paste -sd ',') ./...
+	go test -json ./... -coverprofile coverprofile_.tmp -coverpkg=./... ; \
+        grep -v -e '/mocks' -e 'mock_repository.go' -e 'mock.go' -e 'docs.go' -e '_easyjson.go' -e '.pb.go' -e 'gen.go' -e 'main.go' coverprofile_.tmp > coverprofile.tmp ; \
+        rm coverprofile_.tmp ; \
+        go tool cover -html coverprofile.tmp -o ../heatmap.html; \
+        go tool cover -func coverprofile.tmp
 
 .PHONY: sparkit-test-cover
 sparkit-test-cover:
@@ -144,3 +156,22 @@ sparkit-survey-run:
 	make survey-builder-image
 	make service-survey-image
 	docker run sparkit-survey-service
+
+# docker build for payments microservice
+
+build-payments-microservice:
+	go build -o ${PAYMENTS_BINARY} ./cmd/payments
+
+.PHONY: service-payments-image
+service-payments-image:
+	docker build -t sparkit-payments-service -f ${DOCKER_DIR}/payments.Dockerfile .
+
+.PHONY: payments-builder-image
+payments-builder-image:
+	docker build -t sparkit-payments-builder -f ${DOCKER_DIR}/paymentsBuilder.Dockerfile .
+
+.PHONY: sparkit-payments-run
+sparkit-payments-run:
+	make payments-builder-image
+	make service-payments-image
+	docker run sparkit-payments-service

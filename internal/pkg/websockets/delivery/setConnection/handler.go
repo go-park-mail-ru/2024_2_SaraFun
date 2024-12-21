@@ -9,6 +9,9 @@ import (
 	"net/http"
 )
 
+//go:generate mockgen -destination=./mocks/mock_usecase.go -package=mocks UseCase
+//go:generate mockgen -destination=./mocks/mock_authClient.go -package=mocks AuthClient
+
 type UseCase interface {
 	AddConnection(ctx context.Context, conn *websocket.Conn, userId int) error
 	DeleteConnection(ctx context.Context, userId int) error
@@ -71,7 +74,10 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer func() {
 			h.logger.Info("deleteConnection defer func")
-			h.useCase.DeleteConnection(ctx, int(userId.UserId))
+			err := h.useCase.DeleteConnection(ctx, int(userId.UserId))
+			if err != nil {
+				h.logger.Error("setConnection delete connection error", zap.Error(err))
+			}
 		}()
 
 		for {

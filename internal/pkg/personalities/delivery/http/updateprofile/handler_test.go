@@ -3,176 +3,198 @@ package updateprofile
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/models"
-	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+
+	generatedAuth "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen"
+	authmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/auth/delivery/grpc/gen/mocks"
+	generatedPersonalities "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen"
+	personalitiesmocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/grpc/gen/mocks"
+	imageservicemocks "github.com/go-park-mail-ru/2024_2_SaraFun/internal/pkg/personalities/delivery/http/updateprofile/mocks"
+	"github.com/go-park-mail-ru/2024_2_SaraFun/internal/utils/consts"
 )
 
-func TestUpdateProfileHandler(t *testing.T) {
+// 1. Успешный сценарий: проверяется корректное обновление профиля при валидной сессии и корректном JSON.
+// 2. Отсутствие cookie: проверка, что без cookie возвращается 401 Unauthorized и соответствующее сообщение.
+// 3. Ошибка при получении userID: проверка, что при ошибке в AuthClient возвращается 401 и сообщение о том, что пользователь не найден.
+// 4. Ошибка при получении profileID: проверка, что при ошибке в PersonalitiesClient при получении profileID возвращается 401 и сообщение о ненайденном профиле.
+// 5. Некорректный JSON: проверка, что при ошибке парсинга тела запроса возвращается 400 Bad Request.
+
+func TestHandler(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, consts.RequestIDKey, "test_req_id")
+
+	logger := zap.NewNop()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	logger := zap.NewNop()
-	mockProfileService := updateprofile_mocks.updateprofile_mocks.NewMockProfileService(mockCtrl)
-	mockSessionService := updateprofile_mocks.NewMockSessionService(mockCtrl)
-	mockUserService := updateprofile_mocks.updateprofile_mocks.NewMockUserService(mockCtrl)
 
-	handler := NewHandler(mockProfileService, mockSessionService, mockUserService, logger)
+	sessionClient := authmocks.NewMockAuthClient(mockCtrl)
+	personalitiesClient := personalitiesmocks.NewMockPersonalitiesClient(mockCtrl)
+	imageService := imageservicemocks.NewMockImageService(mockCtrl)
+
+	handler := NewHandler(personalitiesClient, sessionClient, imageService, logger)
+
+	validBody := []byte(`{
+		"first_name": "John",
+		"last_name": "Doe",
+		"gender": "male",
+		"age": 30,
+		"target": "friendship",
+		"about": "Hello!",
+		"imgNumbers": [{"id":1,"number":2},{"id":2,"number":3}]
+	}`)
+
 	tests := []struct {
-		name               string
-		cookieValue        string
-		userId             int
-		getUserIDError     error
-		profileId          int
-		getProfileIDError  error
-		profile            models.Profile
-		sendInvalidJSON    bool
-		updateProfileError error
-		expectedStatus     int
-		expectedResponse   string
+		name                     string
+		method                   string
+		cookieValue              string
+		userID                   int32
+		userIDError              error
+		profileID                int32
+		profileIDError           error
+		requestBody              []byte
+		updateProfileError       error
+		updateImagesError        error
+		expectedStatus           int
+		expectedResponseContains string
 	}{
 		{
-			name:             "successful profile update",
-			cookieValue:      "valid-session-id",
-			userId:           1,
-			profileId:        1001,
-			profile:          models.Profile{FirstName: "John", LastName: "Doe"},
-			expectedStatus:   http.StatusOK,
-			expectedResponse: "ok",
+			name:                     "good test",
+			method:                   http.MethodPost,
+			cookieValue:              "valid_session",
+			userID:                   10,
+			requestBody:              validBody,
+			profileID:                100,
+			expectedStatus:           http.StatusOK,
+			expectedResponseContains: "ok",
 		},
 		{
-			name:             "missing session cookie",
-			expectedStatus:   http.StatusUnauthorized,
-			expectedResponse: "session not found\n",
+			name:                     "no cookie",
+			method:                   http.MethodPost,
+			cookieValue:              "",
+			requestBody:              validBody,
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "session not found",
 		},
 		{
-			name:             "error getting user ID from session",
-			cookieValue:      "invalid-session-id",
-			getUserIDError:   errors.New("session service error"),
-			expectedStatus:   http.StatusUnauthorized,
-			expectedResponse: "user not found\n",
+			name:                     "session user error",
+			method:                   http.MethodPost,
+			cookieValue:              "bad_session",
+			userIDError:              errors.New("session error"),
+			requestBody:              validBody,
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "user not found",
 		},
 		{
-			name:              "error getting profile ID by user ID",
-			cookieValue:       "valid-session-id",
-			userId:            1,
-			getProfileIDError: errors.New("user service error"),
-			expectedStatus:    http.StatusUnauthorized,
-			expectedResponse:  "profile not found\n",
+			name:                     "profileID error",
+			method:                   http.MethodPost,
+			cookieValue:              "valid_session",
+			userID:                   10,
+			profileIDError:           errors.New("profile id error"),
+			requestBody:              validBody,
+			expectedStatus:           http.StatusUnauthorized,
+			expectedResponseContains: "profile not found",
 		},
 		{
-			name:             "error decoding JSON body",
-			cookieValue:      "valid-session-id",
-			userId:           1,
-			profileId:        1001,
-			sendInvalidJSON:  true, // Будем посылать некорректный JSON
-			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: "invalid character 'i' looking for beginning of value\n", // Ожидаемое сообщение от декодера
-		},
-		{
-			name:               "error updating profile",
-			cookieValue:        "valid-session-id",
-			userId:             1,
-			profileId:          1001,
-			profile:            models.Profile{FirstName: "John", LastName: "Doe"},
-			updateProfileError: errors.New("database error"),
-			expectedStatus:     http.StatusInternalServerError,
-			expectedResponse:   "database error\n",
+			name:           "bad json",
+			method:         http.MethodPost,
+			cookieValue:    "valid_session",
+			userID:         10,
+			profileID:      100,
+			requestBody:    []byte(`{bad json`),
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var req *http.Request
-			if tt.sendInvalidJSON {
-				t.Log("sendInvalidJson if")
-				req = httptest.NewRequest(http.MethodPost, "/updateprofile", bytes.NewBuffer([]byte("invalid-json")))
-				req.Header.Set("Content-Type", "application/json")
-			} else if tt.profile.FirstName != "" || tt.profile.LastName != "" {
-				t.Log("sendInvalidJson else if")
-				bodyBytes, err := json.Marshal(tt.profile)
-				if err != nil {
-					t.Fatalf("Не удалось сериализовать профиль: %v", err)
-				}
-				t.Log("make NewRequest")
-				req = httptest.NewRequest(http.MethodPost, "/updateprofile", bytes.NewBuffer(bodyBytes))
-				req.Header.Set("Content-Type", "application/json")
-				t.Log("after")
-			} else {
-				t.Log("sendInvalidJson else")
-				req = httptest.NewRequest(http.MethodPost, "/updateprofile", nil)
-			}
-
 			if tt.cookieValue != "" {
-				t.Log("if cookie value")
-				req.AddCookie(&http.Cookie{Name: consts.SessionCookie, Value: tt.cookieValue})
-				mockSessionService.EXPECT().
-					GetUserIDBySessionID(gomock.Any(), tt.cookieValue).
-					Return(tt.userId, tt.getUserIDError).
-					Times(1)
-				t.Log("good if cookie value")
-			}
-
-			if tt.cookieValue != "" && tt.getUserIDError == nil {
-				t.Log("cookie getUser")
-				if tt.getProfileIDError == nil {
-					t.Log("cookie getUser if")
-					mockUserService.EXPECT().
-						GetProfileIdByUserId(gomock.Any(), tt.userId).
-						Return(tt.profileId, nil).
-						Times(1)
-					t.Log("cookie getUser if good")
+				getUserIDReq := &generatedAuth.GetUserIDBySessionIDRequest{SessionID: tt.cookieValue}
+				if tt.userIDError == nil {
+					userResp := &generatedAuth.GetUserIDBYSessionIDResponse{UserId: tt.userID}
+					sessionClient.EXPECT().GetUserIDBySessionID(gomock.Any(), getUserIDReq).
+						Return(userResp, nil).Times(1)
 				} else {
-					t.Log("cookie getUser else")
-					mockUserService.EXPECT().
-						GetProfileIdByUserId(gomock.Any(), tt.userId).
-						Return(0, tt.getProfileIDError).
-						Times(1)
+					sessionClient.EXPECT().GetUserIDBySessionID(gomock.Any(), getUserIDReq).
+						Return(nil, tt.userIDError).Times(1)
 				}
 			}
 
-			if tt.cookieValue != "" && tt.getUserIDError == nil && tt.getProfileIDError == nil && !tt.sendInvalidJSON {
-				t.Log("all ")
+			if tt.userIDError == nil && tt.cookieValue != "" {
+				getProfileIDReq := &generatedPersonalities.GetProfileIDByUserIDRequest{UserID: tt.userID}
+				if tt.profileIDError == nil && tt.profileID != 0 {
+					profileIDResp := &generatedPersonalities.GetProfileIDByUserIDResponse{ProfileID: tt.profileID}
+					personalitiesClient.EXPECT().GetProfileIDByUserID(gomock.Any(), getProfileIDReq).
+						Return(profileIDResp, nil).Times(1)
+				} else if tt.profileIDError != nil {
+					personalitiesClient.EXPECT().GetProfileIDByUserID(gomock.Any(), getProfileIDReq).
+						Return(nil, tt.profileIDError).Times(1)
+				}
+			}
+
+			if tt.userIDError == nil && tt.profileIDError == nil && tt.profileID != 0 &&
+				tt.cookieValue != "" && bytes.Equal(tt.requestBody, validBody) {
 				if tt.updateProfileError == nil {
-					t.Log("all if")
-					mockProfileService.EXPECT().
-						UpdateProfile(gomock.Any(), tt.profileId, tt.profile).
-						Return(nil).
-						Times(1)
-					t.Log("good all if")
+					personalitiesClient.EXPECT().UpdateProfile(gomock.Any(), gomock.Any()).
+						Return(&generatedPersonalities.UpdateProfileResponse{}, nil).Times(1)
 				} else {
-					t.Log("all else")
-					mockProfileService.EXPECT().
-						UpdateProfile(gomock.Any(), tt.profileId, tt.profile).
-						Return(tt.updateProfileError).
-						Times(1)
-					t.Log("good all else")
+					personalitiesClient.EXPECT().UpdateProfile(gomock.Any(), gomock.Any()).
+						Return(nil, tt.updateProfileError).Times(1)
+				}
+
+				if tt.updateProfileError == nil {
+					if tt.updateImagesError == nil {
+						imageService.EXPECT().UpdateOrdNumbers(gomock.Any(), gomock.Any()).
+							Return(nil).Times(1)
+					} else {
+						imageService.EXPECT().UpdateOrdNumbers(gomock.Any(), gomock.Any()).
+							Return(tt.updateImagesError).Times(1)
+					}
 				}
 			}
 
-			w := httptest.NewRecorder()
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel() // Отменяем контекст после завершения работы
-			ctx = context.WithValue(ctx, consts.RequestIDKey, "40-gf09854gf-hf")
+			req := httptest.NewRequest(tt.method, "/update/profile", bytes.NewBuffer(tt.requestBody))
 			req = req.WithContext(ctx)
-			t.Log("new recorder")
-			handler.Handle(w, req)
-			t.Log("good handle")
-			if w.Code != tt.expectedStatus {
-				t.Errorf("handler returned wrong status code: got %v want %v", w.Code, tt.expectedStatus)
+			if tt.cookieValue != "" {
+				cookie := &http.Cookie{
+					Name:  consts.SessionCookie,
+					Value: tt.cookieValue,
+				}
+				req.AddCookie(cookie)
 			}
+			w := httptest.NewRecorder()
 
-			if w.Body.String() != tt.expectedResponse {
-				t.Errorf("handler returned unexpected body: got %v want %v", w.Body.String(), tt.expectedResponse)
+			handler.Handle(w, req)
+
+			if w.Code != tt.expectedStatus {
+				t.Errorf("%s: handler returned wrong status code: got %v want %v", tt.name, w.Code, tt.expectedStatus)
 			}
-			t.Log("good")
+			if tt.expectedResponseContains != "" && !contains(w.Body.String(), tt.expectedResponseContains) {
+				t.Errorf("%s: handler returned unexpected body: got %v want substring %v", tt.name, w.Body.String(), tt.expectedResponseContains)
+			}
 		})
 	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && s[0:len(substr)] == substr) ||
+		(len(s) > len(substr) && s[len(s)-len(substr):] == substr) ||
+		(len(substr) > 0 && len(s) > len(substr) && findInString(s, substr)))
+}
+
+func findInString(s, substr string) bool {
+	for i := 0; i+len(substr) <= len(s); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

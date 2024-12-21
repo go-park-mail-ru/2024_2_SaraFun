@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=./mocks/mock_repository.go -package=mocks . Repository
 type Repository interface {
 	AddSurvey(ctx context.Context, survey models.Survey) (int, error)
 	GetSurveyInfo(ctx context.Context) ([]models.Survey, error)
@@ -45,7 +46,7 @@ func (u *UseCase) GetSurveyInfo(ctx context.Context) (map[string]models.SurveySt
 		return stats, fmt.Errorf("get survey info: %w", err)
 	}
 	for _, survey := range surveys {
-		if _, ok := stats[survey.Question]; ok == false {
+		if _, ok := stats[survey.Question]; !ok {
 			_stat := models.SurveyStat{
 				Question: survey.Question,
 				Grade:    survey.Grade,

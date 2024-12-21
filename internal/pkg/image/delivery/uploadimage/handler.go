@@ -44,77 +44,43 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	limitedReader := http.MaxBytesReader(w, r.Body, 32<<20)
 	defer r.Body.Close()
 
-	//bodyContent, err := io.ReadAll(limitedReader)
-	//if err != nil && !errors.Is(err, io.EOF) {
-	//	h.logger.Error("Error reading limited body", zap.Error(err))
-	//	if errors.As(err, new(*http.MaxBytesError)) {
-	//		http.Error(w, "request entity too large", http.StatusRequestEntityTooLarge)
-	//		return
-	//	}
-	//}
-
-	//err := json.NewDecoder(r.Body).Decode(&number)
-	//if err != nil {
-	//	h.logger.Error("Error parsing request body", zap.Error(err))
-	//	http.Error(w, "Bad Request", http.StatusBadRequest)
-	//	return
-	//}
 	r.Body = limitedReader
-	//err := json.NewDecoder(limitedReader).Decode(&number)
-	//if err != nil {
-	//	h.logger.Error("Error parsing request body", zap.Error(err))
-	//	http.Error(w, "Bad Request", http.StatusBadRequest)
-	//	return
-	//}
-	//h.logger.Info("body content", zap.Binary("body content", bodyContent))
-	//fileFormat := http.DetectContentType(bodyContent)
-	//h.logger.Info("File format", zap.String("file_format", fileFormat))
-	//if fileFormat != "image/png" && fileFormat != "image/jpeg" && fileFormat != "image/jpg" {
-	//	h.logger.Error("Invalid image format", zap.String("request_id", req_id))
-	//	http.Error(w, "invalid image format", http.StatusBadRequest)
-	//	return
-	//}
 
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		h.logger.Error("parse multipart form", zap.Error(err))
-		http.Error(w, "bad image", http.StatusBadRequest)
+		http.Error(w, "Изображение не подходит", http.StatusBadRequest)
 		return
 	}
 
 	file, header, err := r.FormFile("image")
 	if err != nil {
 		h.logger.Error("failed to parse multipart form", zap.Error(err))
-		http.Error(w, "bad image file", http.StatusBadRequest)
+		http.Error(w, "Плохой файл", http.StatusBadRequest)
 		return
 	}
 	if header == nil {
 		h.logger.Error("failed to parse multipart form")
-		http.Error(w, "bad image file", http.StatusBadRequest)
+		http.Error(w, "Плохой файл", http.StatusBadRequest)
 		return
 	}
 	number := r.FormValue("number")
-	//if err != nil {
-	//	h.logger.Error("failed to parse multipart form", zap.Error(err))
-	//	http.Error(w, "bad image number", http.StatusBadRequest)
-	//	return
-	//}
 
 	fileHeader := make([]byte, 512)
 
 	if _, err := file.Read(fileHeader); err != nil {
-		http.Error(w, "bad image header", http.StatusBadRequest)
+		http.Error(w, "Неверный формат", http.StatusBadRequest)
 		return
 	}
 
 	if _, err := file.Seek(0, 0); err != nil {
-		http.Error(w, "bad image header", http.StatusBadRequest)
+		http.Error(w, "Неверный формат", http.StatusBadRequest)
 		return
 	}
 	fileFormat := http.DetectContentType(fileHeader)
 	h.logger.Info("File format", zap.String("file_format", fileFormat))
 	if fileFormat != "image/png" && fileFormat != "image/jpeg" && fileFormat != "image/jpg" {
 		h.logger.Error("Invalid image format", zap.String("request_id", req_id))
-		http.Error(w, "invalid image format", http.StatusBadRequest)
+		http.Error(w, "Плохой формат изображения", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
@@ -125,7 +91,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(consts.SessionCookie)
 	if err != nil {
 		h.logger.Error("failed to get session cookie", zap.Error(err))
-		http.Error(w, "session not found", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	log.Print("good session cookie")
@@ -133,18 +99,19 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	userId, err := h.sessionService.GetUserIDBySessionID(ctx, getUserRequest)
 	if err != nil {
 		h.logger.Error("failed to get user id", zap.Error(err))
-		http.Error(w, "user session err", http.StatusInternalServerError)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 	num, err := strconv.Atoi(number)
 	if err != nil {
 		h.logger.Error("failed to convert number", zap.Error(err))
-		http.Error(w, "invalid number", http.StatusBadRequest)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
+		return
 	}
 	id, err := h.imageService.SaveImage(ctx, file, fileExt, int(userId.UserId), num)
 	if err != nil {
 		h.logger.Error("failed to save image", zap.Error(err))
-		http.Error(w, "save image err", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 
@@ -152,16 +119,16 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.Marshal(response)
 	if err != nil {
 		h.logger.Error("failed to marshal image", zap.Error(err))
-		http.Error(w, "save image err", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
 		h.logger.Error("failed to write response", zap.Error(err))
-		http.Error(w, "save image err", http.StatusInternalServerError)
+		http.Error(w, "Что-то пошло не так :(", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	h.logger.Info("image saved successfully")
+	h.logger.Info("Изображение сохранено успешно")
 }
